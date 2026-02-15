@@ -1,0 +1,19 @@
+{
+  "accentColor": "#235f8c",
+  "cssTheme": "Minimal",
+  "enabledCssSnippets": [
+    "Cardlink",
+    "dashboard",
+    "Arabic",
+    "Callout",
+    "Aligner",
+    "Arrange",
+    "Coller"
+  ],
+  "interfaceFontFamily": "Noto Naskh Arabic",
+  "monospaceFontFamily": "Noto Naskh Arabic",
+  "textFontFamily": "Noto Naskh Arabic",
+  "baseFontSize": 16.5,
+  "theme": "system",
+  "showViewHeader": true
+}

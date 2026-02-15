@@ -1,0 +1,51 @@
+{
+  "collapse-filter": true,
+  "search": "",
+  "showTags": false,
+  "showAttachments": false,
+  "hideUnresolved": true,
+  "showOrphans": true,
+  "collapse-color-groups": true,
+  "colorGroups": [
+    {
+      "query": "path:\"001 Dashboard/Dashboard/Trackers\" ",
+      "color": {
+        "a": 1,
+        "rgb": 2043537
+      }
+    },
+    {
+      "query": "path:\"002 Notes/002 lessons\" ",
+      "color": {
+        "a": 1,
+        "rgb": 5986536
+      }
+    },
+    {
+      "query": "path:\"001 Dashboard\"  ",
+      "color": {
+        "a": 1,
+        "rgb": 2836638
+      }
+    },
+    {
+      "query": "path:\"003 Daily/001 Active Diaries\"  ",
+      "color": {
+        "a": 1,
+        "rgb": 6184542
+      }
+    }
+  ],
+  "collapse-display": true,
+  "showArrow": false,
+  "textFadeMultiplier": 0,
+  "nodeSizeMultiplier": 1.25442779291553,
+  "lineSizeMultiplier": 0.354155313351499,
+  "collapse-forces": true,
+  "centerStrength": 0.599941611521993,
+  "repelStrength": 11.5628649279875,
+  "linkStrength": 0.25116776956014,
+  "linkDistance": 270,
+  "scale": 0.4426463281395078,
+  "close": false
+}

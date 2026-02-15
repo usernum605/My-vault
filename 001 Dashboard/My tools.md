@@ -1,0 +1,123 @@
+---
+banner: https://images.unsplash.com/photo-1527685216219-c7bee79b0089?q=80&w=1674&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D
+banner_y: "50"
+cssclasses:
+  - card
+  - cardlink
+  - page-grid
+  - pen-blue
+  - center-everything
+icon: lucide-tool-case
+tags:
+  - self↑up
+---
+#### أدوات مفيدة
+
+[Google Ai Studio](https://aistudio.google.com/u/1/prompts/)
+#### بعض أدوات الذكاء الاصطناعي والمواقع
+##### الاصوات
+[المؤثرات الصوتية والبصرية](https://mixkit.co/)
+[أداة ترجمة الفيديو(مدبلج)](https://virbo.wondershare.com/app/video-translate)
+[الكلام بالذكاء الاصطناعي](https://elevenlabs.io/text-to-speech)
+[إزالة الموسيقى ](https://vocalremover.org/)
+[تشكيل الكلام](https://tashkeel.alsharekh.org)
+##### السكريبت والأفكار 
+[ذكاء اصطناعي يجاوب مع إعطاء الصور](https://www.perplexity.ai/) 
+[تحويل الصوت إلى كلام](https://ar.vidnoz.com/audio-to-text.html?utm_source=chatgpt.com)
+[شات جي بي تي](https://chat.openai.com/)
+[كاتب](https://katteb.com/ar/dashboard/) 
+##### الجانب البصري
+[أداة تحريك الصور يدويا(تحدد المنطقة المراد تحريكها)](https://runwayml.com)
+[ستايل قصص مصورة(مثل قناة رجل المانجا)](https://skyreels.ai/)
+[أداة حذف العنصر من الصورة](https://cleanup.pictures)
+[المؤثرات البصرية و الصوتية](https://mixkit.co/)
+[إزالة العلامة المائية](https://anieraser.media.io/app)
+[استخراج آخر فريم](https://finalframe.net/dev3/)
+[بنغ لإنشاء الرسوم ](https://www.bing.com/images/create?darkschemeovr=1)
+[أيقونات للمونتاج](https://www.flaticon.com/?k=1706041480790&log-in=google)
+[صور للمونتاج](https://www.pexels.com/)
+[فاير ادوبي](https://firefly.adobe.com/)
+[الأسطورة](https://www.krea.ai/image)
+##### أخرى 
+[موقع يعطيك أدوات الذكاء الاصطناعي](https://www.futuretools.io/)
+[أداة ميكروسوفت ديزاينر](https://designer.microsoft.com)
+[القرآن الكريم مع الترجمة](https://quran4all.net/ar/) 
+[أداة تصنع فيديو بمفردها](https://studio.zebracat.ai/)
+[برنامج كاب كات](https://www.capcut.com/my-edit?enter_from=signup&current_page=landing_page&from_page=landing_page)
+[الإيميل المستعار](https://temp-mail.org/)
+[الديسكورد](https://discord.com/channels/@me)
+#### أدوات مفيدة في استخدامي لاوبسيديان 
+###### وضع الفيديو في اوبسيديان
+```Internet
+url: https://www.classynemesis.com/projects/ytembed/
+height: 400px
+toolbar: false
+```
+
+#### أدوات للبرمجة
+##### أدوات للبرمجة بشكل عام
+[شات جي بي تي](https://chat.openai.com)
+[مكان وضع الأكواد](https://codepen.io)
+###### طرق لاستعمال أدوات البرمجة
+<iframe src="https://www.youtube.com/embed/Aw6m-50cqfM?vq=hd1080" width="100%" height="315" title="عمل لعبة بالذكاء الاصطناعي (حول افكارك لالعاب)" frameborder="0" allowfullscreen></iframe>
+<iframe src="https://www.youtube.com/embed/lwxNfRBj_sk?vq=hd1080" width="100%" height="315" title="A YouTube video" frameborder="0" allowfullscreen></iframe>
+
+[تحويل ملف الأكواد إلى برنامج يمكن تصديره](https://wl.tools/tiiny_host)
+###### game Assets 
+1. موقع Kenney
+
+```dataviewjs
+const linkData = {
+  url: "https://kenney.nl/assets",
+  title: "Assets · Kenney",
+  host: "kenney.nl", 
+  favicon: "https://kenney.nl/data/img/logo@2.png",
+  image: "https://kenney.nl/data/img/kenney-promo.png",
+  description: "Massive collection of free game assets, sprites, and 3D models"
+};
+
+dv.el("div", `
+<div class="auto-card-link-container">
+  <a class="auto-card-link-card" href="${linkData.url}">
+    <div class="auto-card-link-main">
+      <div class="auto-card-link-title">${linkData.title}</div>
+      <div class="auto-card-link-description">${linkData.description}</div>
+      <div class="auto-card-link-host">
+        ${linkData.favicon ? `<img class="auto-card-link-favicon" src="${linkData.favicon}">` : ""}
+        <span>${linkData.host}</span>
+      </div>
+    </div>
+    ${linkData.image ? `<img class="auto-card-link-thumbnail" src="${linkData.image}">` : ""}
+  </a>
+</div>
+`);
+```
+
+
+2. موقع game assets
+```dataviewjs
+const d = {
+    url: "https://www.gamedevmarket.net/",
+    title: "Game Assets for Indie Developers",
+    description: "marketplace for high quality, affordable 2D, 3D, GUI & Audio game assets, handcrafted by talented creators around the world.",
+    host: "www.gamedevmarket.net",
+    favicon: "https://www.gamedevmarket.net/favicon.png",
+    image: "https://cdn.gamedevmarket.net/no-cover.png" // No image URL was provided
+};
+
+dv.el("div", `
+<div class="auto-card-link-container">
+  <a class="auto-card-link-card" href="${d.url}">
+    <div class="auto-card-link-main">
+      <div class="auto-card-link-title">${d.title}</div>
+      <div class="auto-card-link-description">${d.description}</div>
+      <div class="auto-card-link-host">
+        ${d.favicon ? `<img class="auto-card-link-favicon" src="${d.favicon}">` : ""}
+        <span>${d.host}</span>
+      </div>
+    </div>
+    ${d.image ? `<img class="auto-card-link-thumbnail" src="${d.image}">` : ""}
+  </a>
+</div>
+`);
+```

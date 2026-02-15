@@ -1,0 +1,62 @@
+/* تنسيق القراءة وااكتابة */
+
+.markdown-reading-view,
+.markdown-preview-view {
+    overflow-y: auto;
+    overflow-x: hidden !important; 
+}
+/* تنسيق صندوق الأذكار */
+
+.callout[data-callout="adhkar"] {
+    --callout-color: 0, 128, 128; /* لون أخضر تيل هادئ */
+    --callout-icon: lucide-sun;
+
+    border-radius: 15px;
+    background-color: var(--background-secondary-alt);
+    border: 1px solid rgba(var(--callout-color), 0.3);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+
+    padding: 20px;
+    margin-bottom: 20px;
+
+    direction: rtl; /* اتجاه النص من اليمين لليسار */
+
+    /* منع الصندوق من حبس السكرول */
+    overflow: visible;
+    overscroll-behavior: auto;
+}
+/* تنسيق عنوان الذكر */
+
+.callout[data-callout="adhkar"] .callout-title {
+    font-family: 'Amiri', 'Traditional Arabic', serif;
+    font-weight: bold;
+    font-size: 1.25em;
+    color: rgb(var(--callout-color));
+
+    border-bottom: 1px solid rgba(var(--callout-color), 0.3);
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+}
+/* تنسيق نص الذكر */
+
+.callout[data-callout="adhkar"] .callout-content {
+    font-family: 'Amiri', 'Traditional Arabic', serif;
+    font-size: 1.4em; /* تكبير الخط لسهولة القراءة */
+    line-height: 1.8;
+
+    color: var(--text-normal);
+    text-align: justify;
+}
+/* تمييز الكلمات المكررة مثل (ثلاث مرات) */
+
+.callout[data-callout="adhkar"] .callout-content em,
+.callout[data-callout="adhkar"] .callout-content strong {
+    color: #d97706; /* لون برتقالي هادئ للتنبيه */
+    font-size: 0.9em;
+}
+
+
+/* تحسين شكل الأقواس القرآنية ﴿ ﴾ */
+.callout[data-callout="adhkar"] .callout-content {
+    color: var(--text-normal);
+}
