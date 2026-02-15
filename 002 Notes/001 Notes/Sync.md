@@ -12,8 +12,4 @@ proot-distro login ubuntu
 cd shared/obsidian/'obsidian N'
 git remote set-url origin https://usernum605:token_name@github.com/usernum605/My-vault.git
 git push -u origin main # --force
-### Note About Sync
-- 
-
-##### Links
-- [[```
+```
