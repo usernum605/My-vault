@@ -1,0 +1,50 @@
+{
+  "enableBanner": true,
+  "bannerProperty": "banner",
+  "bannerPositionProperty": "banner_y",
+  "bannerHeight": 150,
+  "bannerMargin": 0,
+  "bannerFading": true,
+  "enableIcon": true,
+  "iconProperty": "icon",
+  "iconSize": 40,
+  "iconTopMargin": 70,
+  "iconTopMarginWithoutBanner": -10,
+  "iconLeftMargin": 30,
+  "iconGap": 10,
+  "bannerIconGap": 0,
+  "iconInTitle": true,
+  "showFileExplorerIcons": true,
+  "folderIcons": {
+    "001 Dashboard/Dashboard": "lucide-layout",
+    "001 Dashboard/Dashboard/Trackers": "lucide-area-chart",
+    "001 Dashboard/Dashboard/Bases": "lucide-layout",
+    "004 Files": "lucide-folder-archive"
+  },
+  "hiddenProperties": [
+    "ui",
+    "icon",
+    "banner",
+    "aliases",
+    "tags",
+    "cssclasses",
+    "banner_y",
+    "excalidraw-plugin"
+  ],
+  "temporaryHiddenProperties": [
+    "cssclasses",
+    "tags",
+    "ui"
+  ],
+  "temporaryViewTimeout": 30,
+  "defaultNotePath": "",
+  "uiProperty": "ui",
+  "enableCache": true,
+  "cacheExpiryDays": 1000000,
+  "hideScrollbars": true,
+  "propertyVisibilityDuration": 30,
+  "bannerInvert": false,
+  "bannerInvertDarkMode": "never",
+  "imageCache": {},
+  "cacheTimestamps": {}
+}

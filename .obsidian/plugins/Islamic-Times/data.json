@@ -1,0 +1,140 @@
+{
+  "language": "ar",
+  "locationMode": "auto",
+  "latitude": "",
+  "longitude": "",
+  "city": "Relizane",
+  "country": "DZ",
+  "method": -1,
+  "athanAudioPath": "004 Files/001 Attach/Sounds/Athan.mp3",
+  "hijriDateFormat": "iso",
+  "enablePreAthan": true,
+  "preAthanOffsetMinutes": 10,
+  "preAthanAudioPath": "004 Files/001 Attach/Sounds/pre-athan.m4a",
+  "enableIqamaFeature": true,
+  "iqamaMinutes": {
+    "Fajr": 10,
+    "Dhuhr": 5,
+    "Asr": 5,
+    "Maghrib": 1,
+    "Isha": 5
+  },
+  "iqamaEnabled": {
+    "Fajr": true,
+    "Dhuhr": true,
+    "Asr": true,
+    "Maghrib": true,
+    "Isha": true
+  },
+  "iqamaAudioPath": "004 Files/001 Attach/Sounds/iqama.m4a",
+  "enabledPrayers": {
+    "Fajr": true,
+    "Dhuhr": true,
+    "Asr": true,
+    "Maghrib": true,
+    "Isha": true
+  },
+  "enablePrayerOffsets": false,
+  "prayerOffsets": {
+    "Fajr": 0,
+    "Sunrise": 0,
+    "Dhuhr": 0,
+    "Asr": 0,
+    "Maghrib": 0,
+    "Isha": 0,
+    "Midnight": 0
+  },
+  "fastingEnabled": true,
+  "fastingAudioPath": "004 Files/001 Attach/Sounds/fasting.m4a",
+  "fastingWeekdays": {
+    "Sun": false,
+    "Mon": true,
+    "Tue": false,
+    "Wed": false,
+    "Thu": true,
+    "Fri": false,
+    "Sat": false
+  },
+  "fastingHijriDays": "13, 14, 15",
+  "fastingAlert": {
+    "prayer": "Fajr",
+    "offsetMinutes": 10,
+    "direction": "before"
+  },
+  "supplications": {
+    "morning": {
+      "enabled": true,
+      "reference": "sunrise",
+      "direction": "before",
+      "offsetMinutes": 20,
+      "audioPath": "004 Files/001 Attach/Sounds/morning.m4a"
+    },
+    "evening": {
+      "enabled": true,
+      "reference": "sunset",
+      "direction": "before",
+      "offsetMinutes": 30,
+      "audioPath": "004 Files/001 Attach/Sounds/afternoon.m4a"
+    },
+    "night": {
+      "enabled": true,
+      "reference": "Isha",
+      "direction": "after",
+      "offsetMinutes": 30,
+      "audioPath": "004 Files/001 Attach/Sounds/night.m4a"
+    }
+  },
+  "enableStatusBar": true,
+  "enableOfflineFallback": true,
+  "tryWakeLockOnMobile": true,
+  "showSystemNotification": true,
+  "displayReference": "sunrise",
+  "cached": {
+    "prayerTimes": {
+      "Fajr": "06:19",
+      "Sunrise": "07:45",
+      "Dhuhr": "13:12",
+      "Asr": "16:14",
+      "Maghrib": "18:39",
+      "Isha": "20:00",
+      "Midnight": "01:12"
+    },
+    "hijri": {
+      "date": "27-08-1447",
+      "format": "DD-MM-YYYY",
+      "day": "27",
+      "weekday": {
+        "en": "Al Ahad",
+        "ar": "الاحد"
+      },
+      "month": {
+        "number": 8,
+        "en": "Shaʿbān",
+        "ar": "شَعْبان",
+        "days": 29
+      },
+      "year": "1447",
+      "designation": {
+        "abbreviated": "AH",
+        "expanded": "Anno Hegirae"
+      },
+      "holidays": [],
+      "adjustedHolidays": [],
+      "method": "HJCoSA"
+    },
+    "fetchedAtISO": "2026-02-15T04:46:52.782Z"
+  },
+  "enableDailyNotes": true,
+  "dailyNotesFolder": "003 Daily/001 Active Diaries",
+  "dailyNotesDateFormat": "gregorian",
+  "englishNoteTemplate": "",
+  "englishNoteTemplatePath": "",
+  "englishNoteTemplateMode": "text",
+  "arabicNoteTemplate": "---\nicon: lucide-notebook-pen\nbanner: https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?q=80&w=1472&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D\ncssclasses:\n  - card\ntags:\n  - Islamic-day\nThe number of pages you finished reading from the Quran:\nRead Quran:\nThe number of pages you have memorized from the Quran:\nMemorizing the Quran:\nlinks pages:\n  - \"[[warsh.pdf]]\"\n  - \"[[Azkaru]]\"\n  - \"[[003 Tasks.base]]\"\n  - \"[[Tracker A]]\"\nui: preview\nbanner_y: 40\n---\n## مهام هذا اليوم \n\n### ==مهام الصباح==\n- [ ] <strong style='color: steelblue'>دقيقة</strong> ذكر اسم الله عند الاستيقاظ <!-- (@{{date}} 02:00)  -->\n- [ ] <strong style='color: steelblue'>٥٠ دقيقة</strong> أداء صلاة الصبح والفجر وقيام الليل <!-- (@{{date}} before-fajr 55m) -->\n- [ ] <strong style='color: steelblue'>٢٠ دقيقة</strong> قراءة [[Azkaru#☀️ أذكار الصباح والمساء|أذكار الصباح]] <!-- (@{{date}} after-fajr 20m) -->\n- [ ] <strong style='color: steelblue'>٢٠ دقيقة</strong> تعلم مهارة عن طريق مشاهدة [فيديوهات مفيدة](https://www.youtube.com/feed/subscriptions)   ثم المشاهدة للمعرفة والإفادة<!-- (@{{date}} 10:00) -->\n- [ ] <strong style='color: steelblue'>١٥ دقيقة</strong> أداء صلاة الظهر مع النوافل <!-- (@{{date}} before-dhuhr 35m) -->\n\n### ==مهام المساء==\n- [ ] <strong style='color: steelblue'>١٠ دقائق</strong> أداء صلاة العصر <!-- (@{{date}} after-asr 20m) -->\n- [ ] <strong style='color: steelblue'>٢٠ دقيقة</strong> قراءة [[Azkaru#☀️ أذكار الصباح والمساء|أذكار المساء]] <!-- (@{{date}} before-maghrib 30m) -->\n- [ ] <strong style='color: steelblue'>١٠ دقيقة</strong> قراءة [القرآن الكريم](warsh.pdf) <!-- (@{{date}} before-maghrib 10m) -->\n- [ ] <strong style='color: steelblue'>٣٠ دقيقة</strong> خوض تجربة مفيدة أو ممارسة هواية ممتعة جديدة للترويح عن النفس<!-- (@{{date}}) -->\n- [ ] <strong style='color: steelblue'>١٥ دقيقة</strong> لصلاة المغرب مع النوافل<!-- (@{{date}} after-maghrib 30m) -->\n- [ ] <strong style='color: steelblue'>٣٠ دقيقة</strong> حفظ القرآن الكريم <!-- (@{{date}} after-maghrib 20m) -->\n- [ ] <strong style='color: steelblue'>٢٠ دقيقة</strong> [[learn English|تعلم الانجليزية]] <!-- (@{{date}} 20:00) -->\n- [ ] <strong style='color: steelblue'>٢٥ دقيقة</strong> أداء صلاة العشاء مع النوافل والشفع والوتر <!-- (@{{date}} after-isha 20m) -->\n- [ ] <strong style='color: steelblue'>٨ دقائق</strong> قراءة [[Azkaru#🌙 أذكار النوم|أذكار النوم]] <!-- (@{{date}} after-isha 30m) -->\n\n### ==المراجعة النهائية==\n\n#### في هذا اليوم من الراجح سكة الحسنات ام سكة الذنوب\n##### حسنة\n- [ ] <span class=\"backdrop-blur-xl2\"><u>سكة الحسنات</u></span>\n\n#####  <span style=\"color: #8b1000;\">ذنب</span>\n- [ ] <span style=\"color: #8A0000;\"><u>سكة الذنوب</u></span>\n\n \n{{SPECIAL_DAYS}}",
+  "arabicNoteTemplatePath": "004 Files/004 Temple/Today Tem.md",
+  "arabicNoteTemplateMode": "file",
+  "enableReminders": true,
+  "reminderAudioPath": "004 Files/001 Attach/Sounds/Tazkira.m4a",
+  "hideScrollbars": true,
+  "timeFormat": "12h"
+}

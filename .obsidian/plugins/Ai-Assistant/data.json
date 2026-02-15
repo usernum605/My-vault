@@ -1,0 +1,108 @@
+{
+  "baseUrl": "http://127.0.0.1:8000",
+  "localModel": "qwen2.5-3b-instruct",
+  "localEndpoint": "/v1/chat/completions",
+  "temperature": 7,
+  "max_tokens": 25600,
+  "autoCheckHealth": true,
+  "timeoutMs": 42000,
+  "showTokenCounter": false,
+  "shortcuts": {
+    "newConversation": "Ctrl+Shift+N",
+    "attachFile": "Ctrl+Shift+F",
+    "settings": "Ctrl+Shift+S",
+    "toggleTokenCounter": "Ctrl+Shift+T",
+    "saveConversation": "Ctrl+S"
+  },
+  "conversationsFolder": "004 Files/003 AI Conversations",
+  "currentMode": "cloud",
+  "cloudApiType": "gemini",
+  "openaiApiKey": "",
+  "openaiModel": "gpt-3.5-turbo",
+  "openaiEndpoint": "https://api.openai.com/v1/chat/completions",
+  "geminiApiKey": "AIzaSyBkTKhDlK1AwcOhskA6XhPXJXsncsXebjA",
+  "geminiModel": "gemini-2.5-flash",
+  "geminiEndpoint": "https://generativelanguage.googleapis.com/v1beta/models",
+  "anthropicApiKey": "",
+  "anthropicModel": "claude-3-haiku-20240307",
+  "anthropicEndpoint": "https://api.anthropic.com/v1/messages",
+  "customApiKey": "",
+  "customModel": "",
+  "customEndpoint": "",
+  "customHeaders": "{}",
+  "customBodyTemplate": "{\"messages\": {{messages}}, \"model\": \"{{model}}\"}",
+  "quickSettingsEnabled": true,
+  "quickConversationsEnabled": true,
+  "autoSaveConversations": false,
+  "sessions": [
+    {
+      "id": "1770925270153",
+      "name": "محادثة افتراضية",
+      "systemPrompt": "",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Translate to Arabic \n[مرفق 1 ملف]",
+          "attachments": [
+            {
+              "name": "Prompt",
+              "path": "002 Notes/001 Notes/Prompt.md",
+              "content": "---\nicon: lucide-notebook-pen\nbanner: https://images.unsplash.com/photo-1517842645767-c639042777db?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bm90ZXN8ZW58MHx8MHx8fDA%3D\ncssclasses:\n  - card\ntags:\n---\n# prompt 1\n\n**Subject: Comprehensive Rebuild of the Obsidian Stylesh Vault Plugin for Stability and Performance**\n\n\"I am developing an Obsidian plugin that displays a banner and an icon based on file properties (YAML). The current code (attached) suffers from fundamental issues with performance, element duplication, and memory leaks.\n\nYour task is to completely rebuild the code according to the following technical standards:\n\n1.  **Events & Lifecycle Engineering:**\n    *   **Prevent Memory Leaks:** All events must be registered exclusively via `this.registerEvent` and `this.registerMarkdownPostProcessor`.\n    *   **`setTimeout` Alternative:** Completely eliminate `setTimeout` functions. Use `this.app.workspace.onLayoutReady()` to ensure the UI is ready, and use `MutationObserver` only if necessary to monitor specific elements.\n    *   **Component Management:** Link the banner and icon to a class that inherits from `Component` to ensure `unload()` is called and the DOM is cleaned up when a note is closed or switched.\n\n2.  **UI Rendering (Live Preview & Reading Mode):**\n    *   **Live Preview (Editor Extensions System):** Use `StateField` and `ViewPlugin` from the `@codemirror/view` library. The banner and icon must be injected as `Decoration.widget` to be part of the page flow in CodeMirror 6. This prevents elements from disappearing on scroll.\n    *   **Reading Mode:** Use `registerMarkdownPostProcessor` to inject elements at the beginning of `el`.\n    *   **Prevent Duplication:** Use unique identifiers (IDs) for each injected element, and check for the element's existence based on `TFile.path` before creating it.\n\n3.  **Data and Image Processing (Performance):**\n    *   **Metadata Cache:** Do not traverse the DOM to find properties. Use `this.app.metadataCache.getFileCache(file)` to get values instantly.\n    *   **Image Optimization:** Add `img.loading = \"lazy\"` property for banners, and implement a simple `Map` system to cache external image links to avoid re-downloading them with every note switch.\n\n4.  **Property Control (Hidden Properties):**\n    *   Instead of manual hiding via CSS, use `this.app.metadataTypeManager` (if possible) or implement a custom `property-render` to programmatically hide `banner` and `icon` properties from Obsidian's official properties interface to ensure compatibility with future updates.\n\n5.  **Design and Structure (CSS & Layout):**\n    *   **Normal Flow:** Make the banner appear as a block element that naturally pushes content downwards. Do not use `position: absolute` except for the icon if it overlaps with the banner.\n    *   **Compatibility:** Use official Obsidian CSS variables (e.g., `--file-line-width`) to ensure the banner follows the line width specified in user settings (Readable line length).\"\n6. Improving the icon rendering system (Persistence):\nProblem: Currently, the icon is deleted and rebuilt with every switch between read and edit mode, which consumes device resources.\nThe solution required: I want to use a Cached View. Instead of re-rendering, have the plugin check if the icon is already in the View Container when switching.\nUse Map to store the icon state for each open file (TFile.path). If the modes are switched for the same file, re-attach the existin\n\n[تم قص المحتوى تلقائياً...]"
+            }
+          ],
+          "timestamp": 1770925522029
+        },
+        {
+          "role": "user",
+          "content": "Start",
+          "attachments": [],
+          "timestamp": 1770981198556
+        },
+        {
+          "role": "user",
+          "content": "Go",
+          "attachments": [],
+          "timestamp": 1770994324675
+        },
+        {
+          "role": "user",
+          "content": "Hi",
+          "attachments": [],
+          "timestamp": 1771059111760
+        },
+        {
+          "role": "user",
+          "content": "Start",
+          "attachments": [],
+          "timestamp": 1771059290616
+        }
+      ]
+    },
+    {
+      "id": "1770981473155",
+      "name": "ai",
+      "systemPrompt": "",
+      "messages": [
+        {
+          "role": "user",
+          "content": "ساعدني في تحسين البرومت التالي وجعله باللغة العربية: هذه إضافة plugin لتطبيق اوبسيديان واريد التعديل عليها:\nتعديل جزئية الستريمنج الخاصة فقط بالذكاء المحلي و2 بروفايدرز openai and anthropic لان فعلها مع الذكاء الإصطناعي السحابي جيمناي تحديدا صعب بعض الشيء سوف اعطي مثال (الكود السابق للبلاغين القديمة)\nتحسين طريقة التفاعل حيث يجب أن يتمكن المستخدم من فعل كل شيء داخل الملاحظة، ميزات مثل كلمة تحدث مع الذكاء الإصطناعي عند عمل تحديد للنص فلا يجب أن يكون كل عمل الاضافة محصور في الشريط الجانبي فقط",
+          "attachments": [],
+          "timestamp": 1770981506648
+        }
+      ]
+    },
+    {
+      "id": "1770994236863",
+      "name": "hi",
+      "systemPrompt": "",
+      "messages": [
+        {
+          "role": "user",
+          "content": "مرحبا",
+          "attachments": [],
+          "timestamp": 1770994242646
+        }
+      ]
+    }
+  ]
+}

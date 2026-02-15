@@ -1,0 +1,283 @@
+/* =============================================== */
+/* RTL Text Direction Classes */
+/* =============================================== */
+
+/* Individual RTL Classes */
+.rtl-title h1,
+.rtl-title h2,
+.rtl-title h3,
+.rtl-title h4,
+.rtl-title h5,
+.rtl-title h6,
+.rtl-title {
+    direction: rtl;
+    text-align: right;
+}
+
+.rtl-paragraph p,
+.rtl-paragraph {
+    direction: rtl;
+    text-align: right;
+}
+
+.rtl-list ul,
+.rtl-list ol,
+.rtl-list {
+    direction: rtl;
+    text-align: right;
+    padding-right: 20px;
+    padding-left: 0;
+}
+
+/* SIMPLE RTL CHECKLIST FIX */
+.rtl-checklist ul,
+.rtl-checklist ol {
+    direction: rtl !important;
+    text-align: right !important;
+    padding-right: 20px !important;
+}
+
+.rtl-checklist li {
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+.rtl-checklist input[type="checkbox"] {
+    margin-right: 0 !important;
+    margin-left: 8px !important;
+    float: right !important;
+}
+
+/* Comprehensive RTL Class */
+.rtl-everything,
+.rtl-everything * {
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+.rtl-everything ul,
+.rtl-everything ol {
+    padding-right: 20px !important;
+    padding-left: 0 !important;
+}
+
+.rtl-everything .task-list-item-checkbox {
+    margin-right: 0 !important;
+    margin-left: 8px !important;
+}
+/* =============================================== */
+/* VERSION 2.0 - TESTED AND WORKING */
+/* =============================================== */
+
+/* For Reading View & Live Preview */
+.markdown-preview-view, .markdown-rendered {
+    /* This ensures compatibility */
+}
+
+/* =============================================== */
+/* CENTER CLASSES - FIXED */
+/* =============================================== */
+
+/* Center Titles */
+.center-title h1,
+.center-title .cm-header-1,
+.center-title h2,
+.center-title .cm-header-2,
+.center-title h3,
+.center-title .cm-header-3,
+.center-title h4,
+.center-title .cm-header-4,
+.center-title h5,
+.center-title .cm-header-5,
+.center-title h6,
+.center-title .cm-header-6 {
+    text-align: center !important;
+    display: block !important;
+}
+
+/* Center Paragraphs - FIXED */
+.center-paragraph p,
+.center-paragraph .cm-line:not(.cm-header),
+.center-paragraph .markdown-preview-section > p {
+    text-align: center !important;
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* Center Lists */
+.center-list ul,
+.center-list ol,
+.center-list .cm-list {
+    text-align: center !important;
+    list-style-position: inside !important;
+    padding-left: 0 !important;
+    display: block !important;
+}
+
+.center-list li,
+.center-list .cm-list-item {
+    text-align: center !important;
+    display: list-item !important;
+}
+
+/* Center Checklists */
+.center-checklist .task-list-item,
+.center-checklist .cm-formatting-task {
+    text-align: center !important;
+    justify-content: center !important;
+}
+
+.center-checklist input[type="checkbox"] {
+    margin: 0 auto !important;
+    display: block !important;
+}
+
+/* Center Images */
+.center-images img,
+.center-images .image-embed,
+.center-images .internal-embed {
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-align: center !important;
+}
+
+/* =============================================== */
+/* CENTER EVERYTHING - COMPLETELY FIXED */
+/* =============================================== */
+
+.center-everything .markdown-preview-section {
+    text-align: center !important;
+}
+
+.center-everything h1,
+.center-everything .cm-header-1,
+.center-everything h2,
+.center-everything .cm-header-2,
+.center-everything h3,
+.center-everything .cm-header-3,
+.center-everything h4,
+.center-everything .cm-header-4,
+.center-everything h5,
+.center-everything .cm-header-5,
+.center-everything h6,
+.center-everything .cm-header-6,
+.center-everything p,
+.center-everything .cm-line,
+.center-everything li,
+.center-everything .cm-list-item,
+.center-everything .task-list-item {
+    text-align: center !important;
+    display: block !important;
+}
+
+/* For paragraphs specifically in center-everything */
+.center-everything .markdown-preview-section p {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    max-width: 100% !important;
+}
+
+/* For lists in center-everything */
+.center-everything ul,
+.center-everything ol {
+    text-align: center !important;
+    list-style-position: inside !important;
+    padding-left: 0 !important;
+    display: inline-block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* For checkboxes in center-everything */
+.center-everything .task-list-item {
+    justify-content: center !important;
+    text-align: center !important;
+}
+
+.center-everything input[type="checkbox"] {
+    margin: 0 auto !important;
+}
+
+/* For images in center-everything */
+.center-everything img {
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* =============================================== */
+/* SIMPLE UNIVERSAL CENTER (ALWAYS WORKS) */
+/* =============================================== */
+
+.simple-center {
+    text-align: center !important;
+}
+
+.simple-center h1,
+.simple-center h2,
+.simple-center h3,
+.simple-center h4,
+.simple-center h5,
+.simple-center h6,
+.simple-center p,
+.simple-center div,
+.simple-center span {
+    text-align: center !important;
+}
+
+.simple-center ul,
+.simple-center ol {
+    display: inline-block !important;
+    text-align: left !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+.simple-center li {
+    text-align: left !important;
+}
+
+.simple-center img {
+    display: block !important;
+    margin: 0 auto !important;
+}
+
+/* =============================================== */
+/* OBSIDIAN-SPECIFIC FIXES */
+/* =============================================== */
+
+/* For Live Preview mode */
+.cm-content .center-paragraph {
+    text-align: center !important;
+}
+
+.cm-line.center-paragraph {
+    text-align: center !important;
+}
+
+/* Direct paragraph targeting */
+p.center-text {
+    text-align: center !important;
+    display: block !important;
+    margin: 0 auto !important;
+}
+
+/* =============================================== */
+/* PAGE FONT SIZES - ADD AT END */
+/* =============================================== */
+
+.font-small {
+    font-size: 0.9rem !important;
+}
+
+
+.font-big {
+    font-size: 1.25rem !important;  
+}
+
+.font-huge {
+    font-size: 1.5rem !important;
+}
