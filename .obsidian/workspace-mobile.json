@@ -13,13 +13,13 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "001 Dashboard/Dashboard/Dashboard.md",
-                "mode": "preview",
+                "file": "004 Files/002 Archive/Pomodoro.md",
+                "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "Dashboard"
+              "title": "Pomodoro"
             }
           }
         ]
@@ -208,10 +208,11 @@
   },
   "active": "d9e579326aec9ba7",
   "lastOpenFiles": [
+    "004 Files/002 Archive/Termux commands Pomo.md",
+    "004 Files/002 Archive/Sync.md",
     "001 Dashboard/Dashboard/Dashboard.md",
     "002 Notes/001 Notes/Po.md",
     "002 Notes/001 Notes/Just test for learn about github.md",
-    "004 Files/002 Archive/Sync.md",
     "004 Files/001 Attach/001 Attach.zip",
     "004 Files/005 Canva/أحكام التجويد.canvas",
     "002 Notes/001 Notes/github.com.md",
@@ -235,7 +236,6 @@
     "004 Files/002 Archive/Page Coller.md",
     "004 Files/002 Archive/أذكار المساء.md",
     "003 Daily/001 Tasks/2026-02-12.md",
-    "001 Dashboard/Azkaru.md",
     "warsh.pdf",
     "warsh.pdf.txt",
     "Obsi/004 Files/001 Attach/Sounds/Recorders/Maw3tha.m4a",

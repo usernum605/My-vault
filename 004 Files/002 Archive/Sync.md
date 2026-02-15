@@ -1,15 +1,14 @@
 ---
-icon: lucide-notebook-pen
-banner: https://images.unsplash.com/photo-1517842645767-c639042777db?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bm90ZXN8ZW58MHx8MHx8fDA%3D
+banner: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQaE9KO_-t4YpMroMWhq8KpPHZQQ0TSjkA6_G3gt5QaBg&s=10
 cssclasses:
   - card
 links pages:
   - "[[002 Notes]]"
 The Topic: Dev life
+banner_y: 33
 ---
 ```bash
 proot-distro login ubuntu
-cd shared/obsidian/'obsidian N'
-git remote set-url origin https://usernum605:token_name@github.com/usernum605/My-vault.git
-git push -u origin main # --force
+cd shared/obsidian/obsidian\ N
+sync
 ```
