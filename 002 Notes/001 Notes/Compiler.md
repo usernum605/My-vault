@@ -7,7 +7,7 @@ tags:
   - quick-notes
   - self↑up/programing
 links pages:
-  - "[[002 Notes]]"
+  - "[[003 Notes]]"
 The Topic:
   - Projects
 ---

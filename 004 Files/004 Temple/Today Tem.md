@@ -11,7 +11,7 @@ The number of pages you have memorized from the Quran:
 Memorizing the Quran:
 links pages:
   - "[[warsh.pdf]]"
-  - "[[003 Tasks]]"
+  - "[[005 Diaries]]"
   - "[[Tracker A]]"
 ui: preview
 banner_y: 40
@@ -43,7 +43,7 @@ icon: lucide-calendar-minus-2
 - [ ] <strong style='color: steelblue'>٣٠ دقيقة</strong> خوض تجربة مفيدة أو ممارسة هواية ممتعة جديدة للترويح عن النفس<!-- (@{{date}}) -->
 - [ ] <strong style='color: steelblue'>١٥ دقيقة</strong> لصلاة المغرب مع النوافل<!-- (@{{date}} after-maghrib 30m) -->
 - [ ] <strong style='color: steelblue'>٣٠ دقيقة</strong> حفظ القرآن الكريم <!-- (@{{date}} after-maghrib 20m) -->
-- [ ] <strong style='color: steelblue'>٢٠ دقيقة</strong> [[learn English|تعلم الانجليزية]] <!-- (@{{date}} 20:00) -->
+- [ ] <strong style='color: steelblue'>٢٠ دقيقة</strong> [[learn English|تعلم الانجليزية]] <!-- (@{{date}} s20:00) -->
 - [ ] <strong style='color: steelblue'>٢٥ دقيقة</strong> أداء صلاة العشاء مع النوافل والشفع والوتر <!-- (@{{date}} after-isha 20m) -->
 - [ ] <strong style='color: steelblue'>٨ دقائق</strong> قراءة [[أذكار النوم]] <!-- (@{{date}} after-isha 30m) -->
 
@@ -53,10 +53,8 @@ icon: lucide-calendar-minus-2
 ##### الحمد لله الذي وفقني في: 
 - 
 - 
-- 
 
 ##### __نفسي التي امرتتي بالسوء وغفلاتي:__ 
-- 
 - 
 - 
 

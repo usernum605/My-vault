@@ -75,6 +75,12 @@
           "content": "Start",
           "attachments": [],
           "timestamp": 1771059290616
+        },
+        {
+          "role": "user",
+          "content": "كيف اعمل underline",
+          "attachments": [],
+          "timestamp": 1771224441518
         }
       ]
     },

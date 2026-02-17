@@ -1,6 +1,6 @@
 ---
 links pages:
-  - "[[005 My projects]]"
+  - "[[002 My projects]]"
 ---
 ```base
 filters:
@@ -12,7 +12,8 @@ views:
     order:
       - file.name
     sort: []
-    cardSize: 320
+    cardSize: 220
     image: note.banner
     imageAspectRatio: 0.45
+
 ```

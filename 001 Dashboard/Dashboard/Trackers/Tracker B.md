@@ -9,67 +9,83 @@ banner_y: 68
 ```dataviewjs
 // ---------- DATE ENGINE ----------
 const hijriMonths = {
-    "محرّم": 1, "muharram": 1, "صفر": 2, "safar": 2, "ربيع الأول": 3, "rabi' al-awwal": 3,
-    "ربيع الآخر": 4, "rabi' al-thani": 4, "جمادى الأولى": 5, "jumada al-ula": 5,
-    "جمادى الآخرة": 6, "jumada al-akhirah": 6, "رجب": 7, "rajab": 7, "شعبان": 8, "sha'ban": 8,
-    "رمضان": 9, "ramadan": 9, "شوال": 10, "shawwal": 10, "ذو القعدة": 11, "dhu al-qi'dah": 11,
+    "محرّم": 1, "muharram": 1, "صفر": 2, "safar": 2, "ربيع الأول": 3,
+    "rabi' al-awwal": 3, "ربيع الآخر": 4, "rabi' al-thani": 4,
+    "جمادى الأولى": 5, "jumada al-ula": 5,
+    "جمادى الآخرة": 6, "jumada al-akhirah": 6,
+    "رجب": 7, "rajab": 7, "شعبان": 8, "sha'ban": 8,
+    "رمضان": 9, "ramadan": 9, "شوال": 10, "shawwal": 10,
+    "ذو القعدة": 11, "dhu al-qi'dah": 11,
     "ذو الحجة": 12, "dhu al-hijjah": 12
 };
 
 function hijriToGregorian(y, m, d) {
     let jd = Math.floor((11 * y + 3) / 30) + 354 * y + 30 * m - Math.floor((m - 1) / 2) + d + 1948440 - 385;
     if (jd > 2299160) {
-        let l = jd + 68569; let n = Math.floor((4 * l) / 146097); l = l - Math.floor((146097 * n + 3) / 4);
-        let i = Math.floor((4000 * (l + 1)) / 1461001); l = l - Math.floor((1461 * i) / 4) + 31;
-        let j = Math.floor((80 * l) / 2447); d = l - Math.floor((2447 * j) / 80); l = Math.floor(j / 11);
-        m = j + 2 - 12 * l; y = 100 * (n - 49) + i + l;
+        let l = jd + 68569; let n = Math.floor((4 * l) / 146097); l -= Math.floor((146097 * n + 3) / 4);
+        let i = Math.floor((4000 * (l + 1)) / 1461001); l -= Math.floor((1461 * i) / 4) + 31;
+        let j = Math.floor((80 * l) / 2447); d = l - Math.floor((2447 * j) / 80);
+        l = Math.floor(j / 11); m = j + 2 - 12 * l; y = 100 * (n - 49) + i + l;
     }
     return moment(`${y}-${m}-${d}`, "YYYY-M-D");
 }
 
 function parseAnyDate(fileName) {
-    // 1. Try Gregorian (YYYY-MM-DD) - Priority
     let greg = fileName.match(/(\d{4}-\d{2}-\d{2})/);
-    if (greg && parseInt(greg[0].split('-')[0]) > 1900) return moment(greg[0], "YYYY-MM-DD");
+    if (greg && parseInt(greg[0].split('-')[0]) > 1900)
+        return moment(greg[0], "YYYY-MM-DD");
 
-    // 2. Try Hijri Numeric (1447-07-28)
     let hijriNum = fileName.match(/(14\d{2})-(\d{1,2})-(\d{1,2})/);
-    if (hijriNum) return hijriToGregorian(parseInt(hijriNum[1]), parseInt(hijriNum[2]), parseInt(hijriNum[3]));
+    if (hijriNum)
+        return hijriToGregorian(parseInt(hijriNum[1]), parseInt(hijriNum[2]), parseInt(hijriNum[3]));
 
-    // 3. Try Hijri Text (28 Rajab 1447)
     for (let monthName in hijriMonths) {
         if (fileName.toLowerCase().includes(monthName.toLowerCase())) {
             let yearMatch = fileName.match(/14\d{2}/);
             let dayMatch = fileName.match(/(?:^|\s|—)(\d{1,2})(?:\s|$)/);
-            if (yearMatch && dayMatch) {
+            if (yearMatch && dayMatch)
                 return hijriToGregorian(parseInt(yearMatch[0]), hijriMonths[monthName], parseInt(dayMatch[1]));
-            }
         }
     }
     return null;
 }
 
+// ---------- TASK COMPLETION ----------
 function getTaskCompletion(page, searchTerms) {
-    if (!page.file.tasks) return {complete: 0, halfComplete: 0};
-    
+    if (!page.file.tasks) return { complete: 0, halfComplete: 0 };
+
     let complete = 0;
     let halfComplete = 0;
-    
+
     page.file.tasks.forEach(t => {
-        // Check if task text matches any search terms
         const taskTextLower = t.text.toLowerCase();
-        const matchesTask = searchTerms.some(term => taskTextLower.includes(term.toLowerCase()));
-        
-        if (matchesTask) {
-            if (t.completed) {
-                complete = 1; // [x] - Fully complete
-            } else if (t.text.includes('[/]')) {
-                halfComplete = 0.5; // [/] - Half complete
-            }
+        const matchesTask = searchTerms.some(term =>
+            taskTextLower.includes(term.toLowerCase())
+        );
+
+        if (!matchesTask) return;
+
+        if (t.completed) {
+            complete = 1;
+            halfComplete = 0;
+        }
+        else if (t.text.trim().startsWith("[/]")) {
+            halfComplete = 0.5;
         }
     });
-    
-    return {complete, halfComplete};
+
+    return { complete, halfComplete };
+}
+
+// ---------- GLOW ENGINE ----------
+function getGlowIntensity(streak) {
+    const maxStreak = 14;
+    const normalized = Math.min(streak / maxStreak, 1);
+
+    return {
+        blur: 5 + normalized * 25,
+        alpha: 0.4 + normalized * 0.6
+    };
 }
 
 // ---------- CONFIG ----------
@@ -81,47 +97,42 @@ const items = [
     { icon: "🌃", label: "Isha", terms: ["Isha", "العشاء"], target: 7 },
 ];
 
-const allPages = dv.pages('"003 Daily/001 Tasks"');
+const allPages = dv.pages('"003 Daily/001 Active Diaries"');
 const today = moment().startOf('day');
 const weekStart = today.clone().startOf('isoWeek');
 const weekEnd = today.clone().endOf('isoWeek');
 
 const data = items.map(item => {
-    // Get all pages where this specific task is done
+
     const completedPages = [];
     const halfCompletedPages = [];
-    
+
     allPages.forEach(p => {
         const d = parseAnyDate(p.file.name);
-        if (d && d.isValid()) {
-            const completion = getTaskCompletion(p, item.terms);
-            
-            if (completion.complete === 1) {
-                completedPages.push(p);
-            } else if (completion.halfComplete === 0.5) {
-                halfCompletedPages.push(p);
-            }
-        }
+        if (!d || !d.isValid()) return;
+
+        const completion = getTaskCompletion(p, item.terms);
+
+        if (completion.complete === 1)
+            completedPages.push(p);
+        else if (completion.halfComplete === 0.5)
+            halfCompletedPages.push(p);
     });
 
-    // Weekly Count - Count full completions as 1, half completions as 0.5
     let done = 0;
-    
+
     completedPages.forEach(p => {
         const d = parseAnyDate(p.file.name);
-        if (d.isBetween(weekStart, weekEnd, null, "[]")) {
+        if (d.isBetween(weekStart, weekEnd, null, "[]"))
             done += 1;
-        }
-    });
-    
-    halfCompletedPages.forEach(p => {
-        const d = parseAnyDate(p.file.name);
-        if (d.isBetween(weekStart, weekEnd, null, "[]")) {
-            done += 0.5;
-        }
     });
 
-    // Streak Calculation - Only consider full completions for streak
+    halfCompletedPages.forEach(p => {
+        const d = parseAnyDate(p.file.name);
+        if (d.isBetween(weekStart, weekEnd, null, "[]"))
+            done += 0.5;
+    });
+
     const sortedDates = completedPages
         .map(p => parseAnyDate(p.file.name))
         .filter(d => d && d.isValid() && d.isSameOrBefore(today))
@@ -141,75 +152,75 @@ const data = items.map(item => {
         }
     }
 
-    // Get today's completion status
     let todayComplete = 0;
     let todayHalfComplete = 0;
-    
-    // Find today's page
+
     for (let page of allPages) {
         const d = parseAnyDate(page.file.name);
         if (d && d.isValid() && d.isSame(today, 'day')) {
-            const todayCompletion = getTaskCompletion(page, item.terms);
-            todayComplete = todayCompletion.complete;
-            todayHalfComplete = todayCompletion.halfComplete;
+            const tComp = getTaskCompletion(page, item.terms);
+            todayComplete = tComp.complete;
+            todayHalfComplete = tComp.halfComplete;
             break;
         }
     }
 
-    return { 
-        ...item, 
-        done, 
-        streak, 
+    return {
+        ...item,
+        done,
+        streak,
         progress: Math.min(done / item.target, 1),
         todayComplete,
         todayHalfComplete
     };
 });
 
-// ---------- RENDER ----------
-const container = dv.el("div", "", { attr: { style: `display: flex; flex-direction: column; align-items: center; padding: 20px;` } });
+// ---------- WARNING ----------
+const todayHalfCount = data.filter(d => d.todayHalfComplete === 0.5).length;
 
-// Header
-const header = dv.el("div", "", { attr: { style: `text-align: center; margin-bottom: 20px;` } });
-header.appendChild(dv.el("div", "Salat Performance", { attr: { style: `font-size: 1.3em; font-weight: 300; color: var(--text-muted); letter-spacing: 0.1em;` } }));
-header.appendChild(dv.el("div", `Week ${today.isoWeek()} (${today.format("YYYY")})`, { attr: { style: `font-size: 0.8em; color: var(--text-faint);` } }));
+// ---------- RENDER ----------
+const container = dv.el("div", "", {
+    attr: { style: `display:flex;flex-direction:column;align-items:center;padding:20px;` }
+});
+
+const header = dv.el("div", "", { attr: { style: `text-align:center;margin-bottom:20px;` }});
+header.appendChild(dv.el("div", "Salat Performance",
+    { attr: { style: `font-size:1.3em;font-weight:300;color:var(--text-muted);letter-spacing:0.1em;` }}));
+header.appendChild(dv.el("div",
+    `Week ${today.isoWeek()} (${today.format("YYYY")})`,
+    { attr: { style: `font-size:0.8em;color:var(--text-faint);` }}));
 
 container.appendChild(header);
 
-// Create canvas
+if (todayHalfCount > 2) {
+    const warning = dv.el("div", "لا تضيع نفسك", {
+        attr: { style: `font-weight:900;color:#ff0000;font-size:1.2em;margin-bottom:10px;` }
+    });
+    container.appendChild(warning);
+}
+
+// ---------- CANVAS ----------
 const canvas = document.createElement("canvas");
-canvas.width = 500; 
+canvas.width = 500;
 canvas.height = 500;
 canvas.style.maxWidth = "100%";
 const ctx = canvas.getContext("2d");
-const centerX = 250; 
+
+const centerX = 250;
 const centerY = 250;
 const maxRadius = 160;
 
-// 1. Draw circular background with concentric circles
-ctx.strokeStyle = "rgba(128, 128, 128, 0.1)";
+// Background circles
+ctx.strokeStyle = "rgba(128,128,128,0.1)";
 for (let i = 1; i <= 5; i++) {
-    ctx.beginPath(); ctx.arc(centerX, centerY, (maxRadius / 5) * i, 0, Math.PI * 2); ctx.stroke();
-}
-
-// 2. Draw radial lines (pentagon sides) from center to vertices
-ctx.strokeStyle = "rgba(128, 128, 128, 0.1)";
-for (let i = 0; i < 5; i++) {
-    const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
-    const x = centerX + Math.cos(angle) * maxRadius;
-    const y = centerY + Math.sin(angle) * maxRadius;
-    
     ctx.beginPath();
-    ctx.moveTo(centerX, centerY);
-    ctx.lineTo(x, y);
+    ctx.arc(centerX, centerY, (maxRadius / 5) * i, 0, Math.PI * 2);
     ctx.stroke();
 }
 
-
-// 4. Draw progress polygon (pentagon shape based on completion)
-ctx.save();
-ctx.fillStyle = "rgba(99, 102, 241, 0.15)";
-ctx.strokeStyle = "rgba(99, 102, 241, 0.8)";
+// Progress polygon
+ctx.fillStyle = "rgba(99,102,241,0.15)";
+ctx.strokeStyle = "rgba(99,102,241,0.8)";
 ctx.lineWidth = 3;
 ctx.beginPath();
 
@@ -218,73 +229,64 @@ for (let i = 0; i < 5; i++) {
     const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
     const x = centerX + Math.cos(angle) * (maxRadius * progress);
     const y = centerY + Math.sin(angle) * (maxRadius * progress);
-    
-    if (i === 0) {
-        ctx.moveTo(x, y);
-    } else {
-        ctx.lineTo(x, y);
-    }
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
 }
 ctx.closePath();
 ctx.fill();
 ctx.stroke();
-ctx.restore();
 
-// 5. Draw labels and icons at vertices
+// ---------- LABELS ----------
 data.forEach((item, i) => {
+
     const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
     const x = centerX + Math.cos(angle) * (maxRadius + 50);
     const y = centerY + Math.sin(angle) * (maxRadius + 50);
-    
-    ctx.textAlign = "center";
-    ctx.beginPath();
 
-    // Set icon color based on today's completion status
-    let iconColor = "var(--text-normal)";
-    let iconGlow = false;
-    
+    let iconColor = "var(--text-muted)";
+    let labelColor = "var(--text-normal)";
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = "transparent";
+
     if (item.todayComplete === 1) {
-        // Complete state - green with glow
-        iconColor = "#90EE90";
-        ctx.shadowColor = "#90EE90";
-        ctx.shadowBlur = 8;
-        iconGlow = true;
-    } else if (item.todayHalfComplete === 0.5) {
-        // Half-complete state - dark color
-        iconColor = "#333";
-        ctx.shadowColor = "transparent";
-    } else {
-        // Incomplete
-        iconColor = "var(--text-muted)";
-        ctx.shadowColor = "transparent";
+        const glow = getGlowIntensity(item.streak);
+        const glowColor = `rgba(255,250,205,${glow.alpha})`;
+
+        iconColor = glowColor;
+        labelColor = glowColor;
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = glow.blur;
     }
-    
-    // Draw icon
+    else if (item.todayHalfComplete === 0.5) {
+        iconColor = "#222";
+        labelColor = "#222";
+    }
+
+    ctx.textAlign = "center";
+
+    // Icon
     ctx.fillStyle = iconColor;
     ctx.font = "24px sans-serif";
     ctx.fillText(item.icon, x, y - 20);
-    
-    // Reset shadow
-    if (iconGlow) {
-        ctx.shadowBlur = 0;
-    }
-    
-    // Draw label with progress
+    ctx.shadowBlur = 0;
+
+    // Label
     ctx.font = "bold 12px sans-serif";
-    ctx.fillStyle = "var(--text-normal)";
-    
-    // Show decimal for half-complete days
+    ctx.fillStyle = labelColor;
+    ctx.fillText(item.label, x, y);
+
+    // Progress
     const displayDone = item.done % 1 === 0 ? item.done : item.done.toFixed(1);
-    ctx.fillText(`${item.label}`, x, y);
-    
-    // Draw progress count
     ctx.font = "10px sans-serif";
     ctx.fillStyle = "var(--text-muted)";
     ctx.fillText(`${displayDone}/${item.target}`, x, y + 15);
-    
-    // Draw streak
+
+    // Streak
     ctx.font = "bold 11px sans-serif";
-    ctx.fillStyle = item.streak > 2 ? "#10b981" : "#ef4444";
+    if (item.todayHalfComplete === 0.5) {
+        ctx.fillStyle = "#000000";
+    } else {
+        ctx.fillStyle = item.streak > 2 ? "#10b981" : "#ef4444";
+    }
     ctx.fillText(`${item.streak}🔥`, x, y + 30);
 });
 
@@ -304,7 +306,7 @@ const items = [
     { icon: "🌌", label: "Bedtime", terms: ["Bedtime Athkar", "أذكار النوم"], target: 7 },
 ];
 
-const allPages = dv.pages('"003 Daily/001 Tasks"');
+const allPages = dv.pages('"003 Daily/001 Active Diaries"');
 const today = moment().startOf('day');
 const weekStart = today.clone().startOf('isoWeek');
 const weekEnd = today.clone().endOf('isoWeek');
@@ -417,7 +419,7 @@ function isTaskComplete(page, term) {
 }
 
 // ------------------ DATA PROCESSING ------------------
-const allPages = dv.pages('"003 Daily/001 Tasks"');
+const allPages = dv.pages('"003 Daily/001 Active Diaries"');
 const today = moment().startOf('day');
 const weekStart = today.clone().startOf('isoWeek');
 const weekEnd = today.clone().endOf('isoWeek');
@@ -529,7 +531,7 @@ container.appendChild(canvas);
 
 ```dataviewjs
 // نقل الملفات الأقدم من 30 يوم
-const tasksFolder = "003 Daily/001 Tasks";
+const tasksFolder = "003 Daily/001 Active Diaries";
 const archiveFolder = "003 Daily/002 Archived Diaries";
 const threeDaysAgo = moment().subtract(30, 'days');
 

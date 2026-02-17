@@ -1,3 +1,6 @@
+---
+icon: lucide-timer
+---
 ```dataviewjs
 // Create main container
 const container = dv.el('div', '', {cls: 'pomodoro-container'});

@@ -7,7 +7,7 @@ cssclasses:
 tags:
   - quick-notes
 links pages:
-  - "[[002 Notes]]"
+  - "[[003 Notes]]"
 The Topic:
 ---
 ### Note About {{title}}

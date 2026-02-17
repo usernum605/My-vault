@@ -3,9 +3,10 @@ banner: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQaE9KO_-t4YpMroMWh
 cssclasses:
   - card
 links pages:
-  - "[[002 Notes]]"
+  - "[[003 Notes]]"
 The Topic: Dev life
 banner_y: 33
+icon: sync-small
 ---
 ```bash
 proot-distro login ubuntu

@@ -3,15 +3,14 @@ cssclasses:
   - card
   - list-cards
   - cards-cols-2
+  - center-title
 banner: https://www.litmus.com/wp-content/uploads/2023/09/template_hero.svg
 icon: lucide-layout-grid
 links pages:
-  - "[[Azkaru]]"
-  - "[[001 Dash]]"
-  - "[[002 Notes]]"
-  - "[[003 Tasks]]"
+  - "[[000 Ultimate Base]]"
 banner_y: 33
 ---
+# <span><u>Dashboard</u></span>
 
 - Basic files
     - [[Self Education]]
@@ -24,10 +23,17 @@ banner_y: 33
 -  side files
     - [[Azkaru]]
     - [[My tools]]
-    - [[000 My notes]]
+    - [[004 My notes]]
     - [[learn English]]
     - [[points of my knowledge]]
     - [[My YouTube Channels]]
 - Pomodoro![[Pomodoro]]
 
+# <span><u>My Projects</u></span>
 
+![[002 My projects]]
+
+# <span><u>The Tracker</u></span>
+
+
+![[Tracker A]]

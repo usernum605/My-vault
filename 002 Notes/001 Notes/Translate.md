@@ -7,7 +7,7 @@ tags:
   - self↑up/programing
   - quick-notes
 links pages:
-  - "[[002 Notes]]"
+  - "[[003 Notes]]"
 The Topic:
   - Obsidian plugins
 ---

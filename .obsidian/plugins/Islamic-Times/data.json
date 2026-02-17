@@ -91,21 +91,21 @@
   "displayReference": "sunrise",
   "cached": {
     "prayerTimes": {
-      "Fajr": "06:19",
-      "Sunrise": "07:45",
+      "Fajr": "06:17",
+      "Sunrise": "07:43",
       "Dhuhr": "13:12",
-      "Asr": "16:14",
-      "Maghrib": "18:39",
-      "Isha": "20:00",
+      "Asr": "16:15",
+      "Maghrib": "18:41",
+      "Isha": "20:02",
       "Midnight": "01:12"
     },
     "hijri": {
-      "date": "27-08-1447",
+      "date": "29-08-1447",
       "format": "DD-MM-YYYY",
-      "day": "27",
+      "day": "29",
       "weekday": {
-        "en": "Al Ahad",
-        "ar": "الاحد"
+        "en": "Al Thalaata",
+        "ar": "الثلاثاء"
       },
       "month": {
         "number": 8,
@@ -122,11 +122,12 @@
       "adjustedHolidays": [],
       "method": "HJCoSA"
     },
-    "fetchedAtISO": "2026-02-15T04:46:52.782Z"
+    "fetchedAtISO": "2026-02-17T04:42:36.884Z"
   },
   "enableDailyNotes": true,
   "dailyNotesFolder": "003 Daily/001 Active Diaries",
   "dailyNotesDateFormat": "gregorian",
+  "autoOpenIslamicNoteOnStartup": true,
   "englishNoteTemplate": "",
   "englishNoteTemplatePath": "",
   "englishNoteTemplateMode": "text",
@@ -134,7 +135,8 @@
   "arabicNoteTemplatePath": "004 Files/004 Temple/Today Tem.md",
   "arabicNoteTemplateMode": "file",
   "enableReminders": true,
-  "reminderAudioPath": "004 Files/001 Attach/Sounds/Tazkira.m4a",
+  "reminderAudioPath": "004 Files/001 Attach/Sounds/Ayam.m4a",
+  "openIslamicNoteInNewTab": false,
   "hideScrollbars": true,
   "timeFormat": "12h"
 }

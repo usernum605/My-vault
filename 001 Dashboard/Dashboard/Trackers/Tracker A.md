@@ -2,9 +2,8 @@
 banner: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT04Qfg17fYOhAm0JdPEKF75zJAlvXtBwENt_MzslXpSw&s=10
 icon: lucide-line-chart
 cssclasses:
-  - dashboard
   - card
-ui: preview
+  - dashboard
 links pages:
   - "[[Tracker B]]"
 ---
@@ -15,7 +14,7 @@ links pages:
   searchTarget: Read Quran
   folder: "003 Daily"
   datasetName: الأيام التي قرأت فيهم القرآن
-  fixedScale: 0.8
+  fixedScale: 0.6
   month:
       color: steelblue
       todayRingColor: none
@@ -23,8 +22,8 @@ links pages:
 - ```tracker
   searchType: frontmatter
   searchTarget: The number of pages you finished reading from the Quran
-  folder: "003 Daily/001 Tasks"
-  fixedScale: 0.8
+  folder: "003 Daily/001 Active Diaries"
+  fixedScale: 0.6
   line:
      yAxisLabel: pages
      fillGap: true
@@ -36,7 +35,7 @@ links pages:
 -  ```tracker
    searchType: frontmatter
    searchTarget: The number of pages you finished reading from the Quran
-   folder: "003 Daily/001 Tasks"
+   folder: "003 Daily/001 Active Diaries"
    fixedScale: 0.4
    summary:
      template: "أقصى عدد:  {{max()::i}} صفحة تمت قراءتها في اليوم\nالمتوسط:  {{average()::i}} صفحة يوميا\nأصغر عدد:  {{min()::i}} صفحة تمت قراءتها في اليوم\nالمجموع : {{sum()::i}}صفحة من القرآن الكريم"
@@ -45,7 +44,7 @@ links pages:
 - ```tracker
   searchType: frontmatter
   searchTarget: The number of pages you finished reading from the Quran
-  folder: "003 Daily/001 Tasks"
+  folder: "003 Daily/001 Active Diaries"
   fixedScale: 0.8
   bullet: 
       title: عدد الصفحات التي قرأتها من القرآن هذا الشهر
@@ -62,7 +61,7 @@ links pages:
   searchTarget: Memorizing the Quran
   folder: "003 Daily"
   datasetName: الأيام التي حفظت فيهم القرآن
-  fixedScale: 0.8
+  fixedScale: 0.6
   month:
       color: steelblue
       todayRingColor: none
@@ -71,7 +70,7 @@ links pages:
   searchType: frontmatter
   searchTarget: The number of pages you have memorized from the Quran
   folder: "003 Daily"
-  fixedScale: 0.8
+  fixedScale: 0.7
   line:
      yAxisLabel: pages
      fillGap: true

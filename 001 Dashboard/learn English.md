@@ -8,6 +8,7 @@ cssclasses:
   - cards-cols-2
   - card
   - list-cards
+  - cards-cover
 icon: lucide-languages
 ---
 > انت تعرف أهمية الإنجليزية ولكنك كسول وهذه هي مشكلتك لذا استعن بالله ولا تعجز

@@ -18,7 +18,7 @@ Your task is to completely rebuild the code according to the following technical
     *   **Component Management:** Link the banner and icon to a class that inherits from `Component` to ensure `unload()` is called and the DOM is cleaned up when a note is closed or switched.
 
 2.  **UI Rendering (Live Preview & Reading Mode):**
-    *   **Live Preview (Editor Extensions System):** Use `StateField` and `ViewPlugin` from the `@codemirror/view` library. The banner and icon must be injected as `Decoration.widget` to be part of the page flow in CodeMirror 6. This prevents elements from disappearing on scroll.
+    *   **Live Preview (Editor Extensions System):** 
     *   **Reading Mode:** Use `registerMarkdownPostProcessor` to inject elements at the beginning of `el`.
     *   **Prevent Duplication:** Use unique identifiers (IDs) for each injected element, and check for the element's existence based on `TFile.path` before creating it.
 
@@ -29,15 +29,18 @@ Your task is to completely rebuild the code according to the following technical
 4.  **Property Control (Hidden Properties):**
     *   Instead of manual hiding via CSS, use `this.app.metadataTypeManager` (if possible) or implement a custom `property-render` to programmatically hide `banner` and `icon` properties from Obsidian's official properties interface to ensure compatibility with future updates.
 
-5.  **Design and Structure (CSS & Layout):**
-    *   **Normal Flow:** Make the banner appear as a block element that naturally pushes content downwards. Do not use `position: absolute` except for the icon if it overlaps with the banner.
-    *   **Compatibility:** Use official Obsidian CSS variables (e.g., `--file-line-width`) to ensure the banner follows the line width specified in user settings (Readable line length)."
-6. Improving the icon rendering system (Persistence):
-Problem: Currently, the icon is deleted and rebuilt with every switch between read and edit mode, which consumes device resources.
-The solution required: I want to use a Cached View. Instead of re-rendering, have the plugin check if the icon is already in the View Container when switching.
-Use Map to store the icon state for each open file (TFile.path). If the modes are switched for the same file, re-attach the existing icon element instead of destroying and recreating it.
-The icon is deleted and its resources released only when a tab onclose event occurs or the active file changes.
-What's required now: Give me the complete code with all the improvements and features, without the /* continuing as in the previous code. I want a complete, integrated code.
+5. Improving the icon rendering system (Persistence):
+     Problem: Currently, the icon is deleted and rebuilt with every switch between read and edit mode, which consumes device resources.
+     The solution required: I want to use a Cached View. Instead of re-rendering, have the plugin check if the icon is already in the View Container when switching.
+     Use Map to store the icon state for each open file (TFile.path). If the modes are switched for the same file, re-attach the existing icon element instead of destroying and recreating it.
+     The icon is deleted and its resources released only when a tab onclose event occurs or the active file changes.
+     What's required now: Give me the complete code with all the improvements and features, without the /* continuing as in the previous code. I want a complete, integrated code.
+
+# optional
+1.  **Design and Structure (CSS & Layout):
+    *  Save all things like there are
+    * **Compatibility:** Use official Obsidian CSS variables (e.g., `--file-line-width`) to ensure the banner follows the line width specified in user settings (Readable line length)."
+
 
 # prompt 2
 

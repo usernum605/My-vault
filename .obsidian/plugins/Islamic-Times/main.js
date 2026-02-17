@@ -383,7 +383,6 @@ const TRANSLATIONS = {
 		dateformatdesc: "اختر طريقة عرض التاريخ الهجري",
 		notedateformat: "تنسيق تاريخ الملاحظة الإسلامية",
 		notedateformatdesc: "اختر التاريخ (التواريخ) المراد تضمينها في اسم ملف الملاحظة وعنوانها",
-		
 		// Note Templates
 		noteTemplate: "قالب الملاحظة",
 		noteTemplateDesc: "تخصيص محتوى الملاحظات الإسلامية.",
@@ -689,6 +688,7 @@ const DEFAULT_SETTINGS = {
 	enableDailyNotes: true,
 	dailyNotesFolder: "deen",
 	dailyNotesDateFormat: "both",
+	autoOpenIslamicNoteOnStartup: false,
 	// Note Templates - UPDATED
 	englishNoteTemplate: "",
 	englishNoteTemplatePath: "",
@@ -704,7 +704,6 @@ const DEFAULT_SETTINGS = {
 module.exports = class PrayerAthanPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
-
 		// Initialize runtime fields
 		this.audio = null;
 		this._currentAudioURL = null;
@@ -775,6 +774,31 @@ module.exports = class PrayerAthanPlugin extends Plugin {
 				this.fetchPrayerTimes();
 			}
 		}, 60_000));
+		this.app.workspace.onLayoutReady(async () => {
+    this.fetchPrayerTimes();
+    if (this.settings.tryWakeLockOnMobile) console.log("Prayer Times: Wake Lock enabled.");
+    
+    // Initialize Reminders if enabled
+    if (this.settings.enableReminders) {
+        await this.scanVaultForReminders();
+        this.registerEvent(this.app.vault.on("modify", (file) => this.scanFileForReminders(file)));
+        this.registerEvent(this.app.vault.on("delete", (file) => this.reminders.delete(file.path)));
+        this.registerEvent(this.app.vault.on("rename", (file, oldPath) => {
+            if (this.reminders.has(oldPath)) {
+                this.reminders.set(file.path, this.reminders.get(oldPath));
+                this.reminders.delete(oldPath);
+            }
+        }));
+    }
+
+    // ⭐ NEW: Auto‑open Islamic note on startup if enabled
+    if (this.settings.autoOpenIslamicNoteOnStartup) {
+        // Small delay to ensure vault is fully ready
+        setTimeout(() => {
+            this.createOrOpenHijriDailyNote();
+        }, 1000);
+    }
+});
 	}
 
 	onunload() {
@@ -1546,214 +1570,181 @@ module.exports = class PrayerAthanPlugin extends Plugin {
 	   Daily note creator with template support - UPDATED VERSION
 	----------------------------*/
 	async createOrOpenHijriDailyNote() {
-		try {
-			if (!this.settings?.enableDailyNotes) { 
-				new Notice("Daily notes export is disabled in settings."); 
-				return; 
-			}
-			
-			const now = this.fetchedAt ? new Date(this.fetchedAt) : new Date();
-			const todayGregorian = new Date(now);
-			const tomorrowGregorian = new Date(now);
-			tomorrowGregorian.setDate(todayGregorian.getDate() + 1);
-			const todayISO = todayGregorian.toISOString().slice(0, 10);
-			const weekdayKey = d => ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()];
-			const todayWeekday = weekdayKey(todayGregorian);
-			const tomorrowWeekday = weekdayKey(tomorrowGregorian);
+    try {
+        if (!this.settings?.enableDailyNotes) {
+            new Notice("Daily notes export is disabled in settings.");
+            return;
+        }
 
-			const hijriText = this._formatHijri() || "";
-			let hijriDay = null;
-			if (this.hijri) {
-				const raw = this.hijri.day || (this.hijri.date && this.hijri.date.split("-")[0]);
-				const n = Number(raw);
-				if (Number.isFinite(n)) hijriDay = n;
-			}
-			let tomorrowHijriDay = null;
-			if (Number.isFinite(hijriDay)) {
-				tomorrowHijriDay = hijriDay + 1;
-				if (tomorrowHijriDay > 30) tomorrowHijriDay -= 30;
-			}
-			const hijriMonth = (this.hijri?.month && (this.hijri.month.en || this.hijri.month)) || "";
+        const now = this.fetchedAt ? new Date(this.fetchedAt) : new Date();
+        const todayGregorian = new Date(now);
+        const tomorrowGregorian = new Date(now);
+        tomorrowGregorian.setDate(todayGregorian.getDate() + 1);
+        const todayISO = todayGregorian.toISOString().slice(0, 10);
+        const weekdayKey = d => ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()];
+        const todayWeekday = weekdayKey(todayGregorian);
+        const tomorrowWeekday = weekdayKey(tomorrowGregorian);
 
-			const hijriFastingDays = this._parseHijriDayList(this.settings.fastingHijriDays || "");
-			const weekdayFasting = this.settings.fastingWeekdays || {};
-			const todayIsFasting = (Number.isFinite(hijriDay) && hijriFastingDays.includes(hijriDay)) || !!weekdayFasting[todayWeekday];
-			const tomorrowIsFasting = (Number.isFinite(tomorrowHijriDay) && hijriFastingDays.includes(tomorrowHijriDay)) || !!weekdayFasting[tomorrowWeekday];
+        const hijriText = this._formatHijri() || "";
+        let hijriDay = null;
+        if (this.hijri) {
+            const raw = this.hijri.day || (this.hijri.date && this.hijri.date.split("-")[0]);
+            const n = Number(raw);
+            if (Number.isFinite(n)) hijriDay = n;
+        }
+        let tomorrowHijriDay = null;
+        if (Number.isFinite(hijriDay)) {
+            tomorrowHijriDay = hijriDay + 1;
+            if (tomorrowHijriDay > 30) tomorrowHijriDay -= 30;
+        }
+        const hijriMonth = (this.hijri?.month && (this.hijri.month.en || this.hijri.month)) || "";
 
-			const detectHolyDays = (dayNum) => {
-				if (!Number.isFinite(dayNum) || !hijriMonth) return [];
-				const m = hijriMonth.toLowerCase();
-				const out = [];
-				if (m.includes("shawwal") && dayNum === 1) out.push("Eid al-Fitr");
-				if (m.includes("dhul") && m.includes("hijjah") && dayNum === 9) out.push("Day of Arafah");
-				if (m.includes("dhul") && m.includes("hijjah") && dayNum === 10) out.push("Eid al-Adha");
-				if (m.includes("muharram") && dayNum === 1) out.push("Islamic New Year");
-				if (m.includes("muharram") && dayNum === 10) out.push("Ashura");
-				if (m.includes("rajab") && dayNum === 27) out.push("Isra and Mi'raj");
-				if (m.includes("ramadan") && dayNum === 1) out.push("Start of Ramadan");
-				return out;
-			};
+        const hijriFastingDays = this._parseHijriDayList(this.settings.fastingHijriDays || "");
+        const weekdayFasting = this.settings.fastingWeekdays || {};
+        const todayIsFasting = (Number.isFinite(hijriDay) && hijriFastingDays.includes(hijriDay)) || !!weekdayFasting[todayWeekday];
+        const tomorrowIsFasting = (Number.isFinite(tomorrowHijriDay) && hijriFastingDays.includes(tomorrowHijriDay)) || !!weekdayFasting[tomorrowWeekday];
 
-			const todayHoly = detectHolyDays(hijriDay);
-			const tomorrowHoly = detectHolyDays(tomorrowHijriDay);
+        const detectHolyDays = (dayNum) => {
+            if (!Number.isFinite(dayNum) || !hijriMonth) return [];
+            const m = hijriMonth.toLowerCase();
+            const out = [];
+            if (m.includes("shawwal") && dayNum === 1) out.push("Eid al-Fitr");
+            if (m.includes("dhul") && m.includes("hijjah") && dayNum === 9) out.push("Day of Arafah");
+            if (m.includes("dhul") && m.includes("hijjah") && dayNum === 10) out.push("Eid al-Adha");
+            if (m.includes("muharram") && dayNum === 1) out.push("Islamic New Year");
+            if (m.includes("muharram") && dayNum === 10) out.push("Ashura");
+            if (m.includes("rajab") && dayNum === 27) out.push("Isra and Mi'raj");
+            if (m.includes("ramadan") && dayNum === 1) out.push("Start of Ramadan");
+            return out;
+        };
 
-			const folder = this.settings.dailyNotesFolder || "Daily";
-			const fmt = this.settings.dailyNotesDateFormat || "both";
-			let title;
-			if (fmt === "gregorian") title = todayISO;
-			else if (fmt === "hijri") title = hijriText || todayISO;
-			else title = `${todayISO} — ${hijriText}`;
+        const todayHoly = detectHolyDays(hijriDay);
+        const tomorrowHoly = detectHolyDays(tomorrowHijriDay);
 
-			const safeTitle = title.replace(/[\/\\:?<>|*"']/g, "").trim();
-			const path = `${folder}/${safeTitle}.md`;
+        const folder = this.settings.dailyNotesFolder || "Daily";
+        const fmt = this.settings.dailyNotesDateFormat || "both";
+        let title;
+        if (fmt === "gregorian") title = todayISO;
+        else if (fmt === "hijri") title = hijriText || todayISO;
+        else title = `${todayISO} — ${hijriText}`;
 
-			// Build the content sections
-			const prayerTimesSection = [];
-			prayerTimesSection.push(`## ${this.t("note_prayer_times")}`);
-			for (const p of ["Fajr","Dhuhr","Asr","Maghrib","Isha"]) {
-				if (this.prayerTimes?.[p]) {
-					prayerTimesSection.push(`- [ ] ${this.tPrayer(p)} — ${this._formatTime(this.prayerTimes[p])}`);
-				}
-			}
-			const prayerTimesContent = prayerTimesSection.join("\n");
+        const safeTitle = title.replace(/[\/\\:?<>|*"']/g, "").trim();
+        const path = `${folder}/${safeTitle}.md`;
 
-			const prayerTimesTableContent = this._generatePrayerTimesTable();
-			
-			const checklistSection = [];
-			checklistSection.push(`## ${this.t("note_checklist")}`);
-			checklistSection.push(`- [ ] ${this.t("note_morning")}`);
-			checklistSection.push(`- [ ] ${this.t("note_evening")}`);
-			checklistSection.push(`- [ ] ${this.t("note_bedtime")}`);
-			const checklistContent = checklistSection.join("\n");
+        // Build the content sections
+        const prayerTimesSection = [];
+        prayerTimesSection.push(`## ${this.t("note_prayer_times")}`);
+        for (const p of ["Fajr","Dhuhr","Asr","Maghrib","Isha"]) {
+            if (this.prayerTimes?.[p]) {
+                prayerTimesSection.push(`- [ ] ${this.tPrayer(p)} — ${this._formatTime(this.prayerTimes[p])}`);
+            }
+        }
+        const prayerTimesContent = prayerTimesSection.join("\n");
 
-			const specialDaysSection = [];
-			if (todayHoly.length || tomorrowHoly.length || todayIsFasting || tomorrowIsFasting) {
-	  		specialDaysSection.push(`## ${this.t("note_special_days")}`);
-				if (todayHoly.length) specialDaysSection.push(`- <b style="font-size: 1.0em">${this.t("note_today_holy")}:</b> ${todayHoly.join(", ")}`);
-				if (tomorrowHoly.length) specialDaysSection.push(`- <b style="font-size: 1.0em">${this.t("note_tomorrow_holy")}:</b> ${tomorrowHoly.join(", ")}`);
-				if (todayIsFasting) specialDaysSection.push(`- <b style="font-size: 1.0em">${this.t("note_today_fasting")}</b>`);
-				if (tomorrowIsFasting) specialDaysSection.push(`- <b style="font-size: 1.0em">${this.t("note_tomorrow_fasting")}</b>`);
-			}
-			const specialDaysContent = specialDaysSection.join("\n");
+        const prayerTimesTableContent = this._generatePrayerTimesTable();
 
-			const fastingAnalysisContent = this._generateFastingAnalysis(todayIsFasting, tomorrowIsFasting, todayHoly, tomorrowHoly);
+        const checklistSection = [];
+        checklistSection.push(`## ${this.t("note_checklist")}`);
+        checklistSection.push(`- [ ] ${this.t("note_morning")}`);
+        checklistSection.push(`- [ ] ${this.t("note_evening")}`);
+        checklistSection.push(`- [ ] ${this.t("note_bedtime")}`);
+        const checklistContent = checklistSection.join("\n");
 
-			// الحصول على القالب المناسب بناءً على اللغة
-			let templateContent = "";
-			const isArabic = this.settings.language === "ar";
-			
-			if (isArabic) {
-				if (this.settings.arabicNoteTemplateMode === "file" && this.settings.arabicNoteTemplatePath) {
-					// قراءة القالب من ملف
-					const templateFile = this.app.vault.getAbstractFileByPath(this.settings.arabicNoteTemplatePath);
-					if (templateFile instanceof TFile) {
-						templateContent = await this.app.vault.read(templateFile);
-					} else {
-						templateContent = this.settings.arabicNoteTemplate || "";
-					}
-				} else {
-					templateContent = this.settings.arabicNoteTemplate || "";
-				}
-			} else {
-				if (this.settings.englishNoteTemplateMode === "file" && this.settings.englishNoteTemplatePath) {
-					// قراءة القالب من ملف
-					const templateFile = this.app.vault.getAbstractFileByPath(this.settings.englishNoteTemplatePath);
-					if (templateFile instanceof TFile) {
-						templateContent = await this.app.vault.read(templateFile);
-					} else {
-						templateContent = this.settings.englishNoteTemplate || "";
-					}
-				} else {
-					templateContent = this.settings.englishNoteTemplate || "";
-				}
-			}
+        const specialDaysSection = [];
+        if (todayHoly.length || tomorrowHoly.length || todayIsFasting || tomorrowIsFasting) {
+            specialDaysSection.push(`## ${this.t("note_special_days")}`);
+            if (todayHoly.length) specialDaysSection.push(`- <b style="font-size: 1.0em">${this.t("note_today_holy")}:</b> ${todayHoly.join(", ")}`);
+            if (tomorrowHoly.length) specialDaysSection.push(`- <b style="font-size: 1.0em">${this.t("note_tomorrow_holy")}:</b> ${tomorrowHoly.join(", ")}`);
+            if (todayIsFasting) specialDaysSection.push(`- <b style="font-size: 1.0em">${this.t("note_today_fasting")}</b>`);
+            if (tomorrowIsFasting) specialDaysSection.push(`- <b style="font-size: 1.0em">${this.t("note_tomorrow_fasting")}</b>`);
+        }
+        const specialDaysContent = specialDaysSection.join("\n");
 
-			// إذا كان القالب فارغاً، استخدم القالب الافتراضي
-			if (!templateContent.trim()) {
-				templateContent = isArabic ? 
-					"\n{{PRAYER_TIMES}}\n\n\n{{CHECKLIST}}\n\n \n{{SPECIAL_DAYS}}" :
-					"{{PRAYER_TIMES}}\n\n#{{CHECKLIST}}\n\n{{SPECIAL_DAYS}}";
-			}
+        const fastingAnalysisContent = this._generateFastingAnalysis(todayIsFasting, tomorrowIsFasting, todayHoly, tomorrowHoly);
 
-			// تعريف المتغيرات الديناميكية
-			const dynamicVariables = {
-				// التواريخ
-				'{{DATE}}': todayISO,
-				'{{date}}': todayISO,
-				'{{HIJRI_DATE}}': hijriText,
-				'{{hijri_date}}': hijriText,
-				'{{HIJRI_DAY}}': hijriDay ? String(hijriDay) : "",
-				'{{hijri_day}}': hijriDay ? String(hijriDay) : "",
-				'{{HIJRI_MONTH}}': hijriMonth,
-				'{{hijri_month}}': hijriMonth,
-				'{{HIJRI_YEAR}}': this.hijri?.year ? String(this.hijri.year) : "",
-				'{{hijri_year}}': this.hijri?.year ? String(this.hijri.year) : "",
-				'{{GREGORIAN_DATE}}': todayISO,
-				'{{gregorian_date}}': todayISO,
-				
-				// مواقيت الصلاة كجدول
-				'{{PRAYER_TIMES_TABLE}}': prayerTimesTableContent,
-				
-				// مواقيت الصلاة كقائمة
-				'{{PRAYER_TIMES}}': prayerTimesContent,
-				
-				// قائمة المهام
-				'{{CHECKLIST}}': checklistContent,
-				
-				// الأيام الخاصة
-				'{{SPECIAL_DAYS}}': specialDaysContent,
-				
-				// تحليل الصيام
-				'{{FASTING_ANALYSIS}}': fastingAnalysisContent,
-				
-				// اليوم الحالي
-				'{{WEEKDAY}}': todayWeekday,
-				'{{weekday}}': todayWeekday,
-				'{{DAY_NAME}}': this.t(todayWeekday),
-				'{{day_name}}': this.t(todayWeekday),
-			};
+        // Get template content based on language
+        let templateContent = "";
+        const isArabic = this.settings.language === "ar";
 
-			// استبدال جميع المتغيرات في القالب
-			let content = templateContent;
-			for (const [variable, value] of Object.entries(dynamicVariables)) {
-				content = content.split(variable).join(value);
-			}
+        if (isArabic) {
+            if (this.settings.arabicNoteTemplateMode === "file" && this.settings.arabicNoteTemplatePath) {
+                const templateFile = this.app.vault.getAbstractFileByPath(this.settings.arabicNoteTemplatePath);
+                if (templateFile instanceof TFile) {
+                    templateContent = await this.app.vault.read(templateFile);
+                } else {
+                    templateContent = this.settings.arabicNoteTemplate || "";
+                }
+            } else {
+                templateContent = this.settings.arabicNoteTemplate || "";
+            }
+        } else {
+            if (this.settings.englishNoteTemplateMode === "file" && this.settings.englishNoteTemplatePath) {
+                const templateFile = this.app.vault.getAbstractFileByPath(this.settings.englishNoteTemplatePath);
+                if (templateFile instanceof TFile) {
+                    templateContent = await this.app.vault.read(templateFile);
+                } else {
+                    templateContent = this.settings.englishNoteTemplate || "";
+                }
+            } else {
+                templateContent = this.settings.englishNoteTemplate || "";
+            }
+        }
 
-			let file = this.app.vault.getAbstractFileByPath(path);
+        if (!templateContent.trim()) {
+            templateContent = isArabic ?
+                "\n{{PRAYER_TIMES}}\n\n\n{{CHECKLIST}}\n\n \n{{SPECIAL_DAYS}}" :
+                "{{PRAYER_TIMES}}\n\n#{{CHECKLIST}}\n\n{{SPECIAL_DAYS}}";
+        }
 
-			// فقط أنشئ الملاحظة إذا لم تكن موجودة
-			if (!(file instanceof TFile)) {
-				// إنشاء ملف جديد بالمحتوى
-				await this.app.vault.create(path, `${content}\n`);
-				file = this.app.vault.getAbstractFileByPath(path);
-				new Notice("New daily note created successfully.");
-			} else {
-			}
+        // Define dynamic variables
+        const dynamicVariables = {
+            '{{DATE}}': todayISO,
+            '{{date}}': todayISO,
+            '{{HIJRI_DATE}}': hijriText,
+            '{{hijri_date}}': hijriText,
+            '{{HIJRI_DAY}}': hijriDay ? String(hijriDay) : "",
+            '{{hijri_day}}': hijriDay ? String(hijriDay) : "",
+            '{{HIJRI_MONTH}}': hijriMonth,
+            '{{hijri_month}}': hijriMonth,
+            '{{HIJRI_YEAR}}': this.hijri?.year ? String(this.hijri.year) : "",
+            '{{hijri_year}}': this.hijri?.year ? String(this.hijri.year) : "",
+            '{{GREGORIAN_DATE}}': todayISO,
+            '{{gregorian_date}}': todayISO,
+            '{{PRAYER_TIMES_TABLE}}': prayerTimesTableContent,
+            '{{PRAYER_TIMES}}': prayerTimesContent,
+            '{{CHECKLIST}}': checklistContent,
+            '{{SPECIAL_DAYS}}': specialDaysContent,
+            '{{FASTING_ANALYSIS}}': fastingAnalysisContent,
+            '{{WEEKDAY}}': todayWeekday,
+            '{{weekday}}': todayWeekday,
+            '{{DAY_NAME}}': this.t(todayWeekday),
+            '{{day_name}}': this.t(todayWeekday),
+        };
 
-			// فتح الملف
-			if (file instanceof TFile) {
-				// التحقق إذا كان الملف مفتوحاً بالفعل
-				let existingLeaf = null;
-				this.app.workspace.iterateAllLeaves(leaf => {
-					if (leaf.view instanceof MarkdownView && leaf.view.file && leaf.view.file.path === file.path) {
-						existingLeaf = leaf;
-					}
-				});
-				
-				if (existingLeaf) {
-					// الملف مفتوح بالفعل، اعرضه
-					this.app.workspace.revealLeaf(existingLeaf);
-					existingLeaf.setViewState({ type: "markdown", state: existingLeaf.view.getState() });
-				} else {
-					// الملف غير مفتوح، افتحه في نافذة جديدة
-					await this.app.workspace.getLeaf(true).openFile(file);
-				}
-			}
-		} catch (err) {
-			console.error("Daily note creation failed:", err);
-			new Notice("Failed to create or open daily note.");
-		}
-	}
+        let content = templateContent;
+        for (const [variable, value] of Object.entries(dynamicVariables)) {
+            content = content.split(variable).join(value);
+        }
+
+        let file = this.app.vault.getAbstractFileByPath(path);
+
+        if (!(file instanceof TFile)) {
+            await this.app.vault.create(path, `${content}\n`);
+            file = this.app.vault.getAbstractFileByPath(path);
+            new Notice("New daily note created successfully.");
+        }
+
+        // ⭐ NEW: Open the note in a new tab
+        if (file) {
+            const leaf = this.app.workspace.getLeaf('tab'); // forces a new tab
+            await leaf.openFile(file);
+        }
+
+    } catch (err) {
+        console.error("Daily note creation failed:", err);
+        new Notice("Failed to create or open daily note.");
+    }
+}
 
 	// دالة مساعدة لإنشاء جدول مواقيت الصلاة
 	_generatePrayerTimesTable() {
@@ -3118,7 +3109,16 @@ const markdownContent = `> [!Tips] available variable
 
 MarkdownRenderer.renderMarkdown(markdownContent, placeholderInfo, '', null);
 		}
-
+		// After the dateformat dropdown
+    new Setting(containerEl)
+    .setName("Auto-open Islamic note on startup")
+    .setDesc("Automatically create/open the daily Islamic note when Obsidian starts.")
+    .addToggle(t => t
+        .setValue(this.plugin.settings.autoOpenIslamicNoteOnStartup)
+        .onChange(async (val) => {
+            this.plugin.settings.autoOpenIslamicNoteOnStartup = val;
+            await this.plugin.saveSettings();
+        }));
 		// --- 10. More Settings ---
 		containerEl.createEl("h3", { text: this.plugin.t("moresetting") });
 		
