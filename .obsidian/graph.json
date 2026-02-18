@@ -1,6 +1,6 @@
 {
-  "collapse-filter": true,
-  "search": "",
+  "collapse-filter": false,
+  "search": "Yo",
   "showTags": true,
   "showAttachments": false,
   "hideUnresolved": true,
@@ -60,6 +60,6 @@
   "repelStrength": 11.5628649279875,
   "linkStrength": 0.268538341767225,
   "linkDistance": 30,
-  "scale": 0.5721560550536757,
+  "scale": 0.8400702333528635,
   "close": false
 }

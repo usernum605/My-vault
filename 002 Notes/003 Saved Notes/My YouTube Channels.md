@@ -8,7 +8,7 @@ cssclasses:
   - page-black
 ---
 ![](https://youtu.be/J-Hs6Btgdtk?si=Gjv4d8COZ2M0V4sE)
-
+- [YouTube](https://www.youtube.com/) 
 ###### قنوات الأمن السبراني
 
 https://m.youtube.com/@MohamadAJ-b9r
