@@ -16,7 +16,7 @@ links pages:
 #### تتبع المهام الدينية
 ```dataview
 TASK
-FROM "003 Daily/001 Tasks"
+FROM "003 Daily/001 Active Diaries"
 where file.day = date(today) AND !completed
 ```
 
@@ -98,7 +98,7 @@ dv.el("div", `
 
 ###### حفظ القرآن الكريم
 [ترتيل للحفظ](https://download.tarteel.ai/)
-![[Tracker A#Tracker habit Read Quran]]
+![[Tracker A#Tracker Read Quran]]
 ***
 #### قنواتي الإسلامية
 ١.قناة [هيثم طاعت](https://www.youtube.com/@Dr.Haitham_Talaat/videos)
@@ -106,9 +106,10 @@ dv.el("div", `
 ٣.قناة[١٨٠ درجة](https://www.youtube.com/@ahmedabobakry_180degree/videos)
 ٤.قناة [أنس أكشن](https://www.youtube.com/@AnasAction/videos)
 ٥.قناة [عبد الرحمان بابقي](https://www.youtube.com/@abdulrahmanbabgi7639/videos) 
-[[My YouTube Channels]]
+٦.**للاستزادة:** [[My YouTube Channels#قنوات دينية|قنواتي الاسلامية]]
 ***
-#### اذكار وأحاديث 
+#### اذكار وأحاديث
+
 ![[Athkar & Adia]]
 
 ***

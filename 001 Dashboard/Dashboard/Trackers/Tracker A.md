@@ -36,7 +36,7 @@ links pages:
    searchType: frontmatter
    searchTarget: The number of pages you finished reading from the Quran
    folder: "003 Daily/001 Active Diaries"
-   fixedScale: 0.4
+   fixedScale: 0.3
    summary:
      template: "أقصى عدد:  {{max()::i}} صفحة تمت قراءتها في اليوم\nالمتوسط:  {{average()::i}} صفحة يوميا\nأصغر عدد:  {{min()::i}} صفحة تمت قراءتها في اليوم\nالمجموع : {{sum()::i}}صفحة من القرآن الكريم"
      style:
@@ -45,7 +45,7 @@ links pages:
   searchType: frontmatter
   searchTarget: The number of pages you finished reading from the Quran
   folder: "003 Daily/001 Active Diaries"
-  fixedScale: 0.8
+  fixedScale: 0.6
   bullet: 
       title: عدد الصفحات التي قرأتها من القرآن هذا الشهر
       orientation: vertical

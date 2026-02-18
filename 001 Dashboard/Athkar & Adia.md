@@ -2,7 +2,6 @@
 icon: lucide-speech
 banner: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQOtDnXg3CxfNsdAimCk33f7I5R7IyFKruiKfUtckCt6w&s=10
 cssclasses:
-  - cardlink
   - card
 banner_y: 62
 aliases:

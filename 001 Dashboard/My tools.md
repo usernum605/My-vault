@@ -3,7 +3,6 @@ banner: https://images.unsplash.com/photo-1527685216219-c7bee79b0089?q=80&w=1674
 banner_y: "50"
 cssclasses:
   - card
-  - cardlink
   - page-grid
   - pen-blue
   - center-everything
