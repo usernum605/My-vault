@@ -19,9 +19,9 @@ views:
     sort: []
     summaries: {}
     columnSize:
-      file.name: 165
-      file.links: 203
-      file.tags: 263
+      file.name: 140
+      file.links: 140
+      file.tags: 210
     rowHeight: medium
 
 ```

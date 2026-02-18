@@ -520,13 +520,13 @@ settings:
 		title: Use strict embed style globally
 		description: Transclusions appear seamlessly in the flow of text. Can be enabled per file using the embed-strict helper class
 		type: class-toggle
-		default: false
+		default: true
 	-
 		id: embed-hide-title
 		title: Hide embed titles
 		description: Hide title of the transcluded file (if strict embed is off)
 		type: class-toggle
-		default: false
+		default: true
 	-
 		id: embed-underline
 		title: Underline embedded text
@@ -667,6 +667,13 @@ settings:
 		default-light: '#'
 		default-dark: '#'
 	-
+        id: h1-neon-color
+        title: H1 Color
+        description: Color for H1 headers glow
+        type: variable-color
+        format: hex
+        default: '#FF00FF'
+	-
 		id: h1-variant
 		title: H1 font variant
 		type: variable-select
@@ -734,6 +741,13 @@ settings:
 		format: hex
 		default-light: '#'
 		default-dark: '#'
+	-
+        id: h2-neon-color
+        title: H2 Color
+        description: Color for H2 headers glow
+        type: variable-color
+        format: hex
+        default: '#00FFFF'
 	-
 		id: h2-variant
 		title: H2 font variant
@@ -803,6 +817,13 @@ settings:
 		default-light: '#'
 		default-dark: '#'
 	-
+        id: h3-neon-color
+        title: H3 Color
+        description: Color for H3 headers glow
+        type: variable-color
+        format: hex
+        default: '#00FF00'
+	-
 		id: h3-variant
 		title: H3 font variant
 		type: variable-select
@@ -870,6 +891,13 @@ settings:
 		format: hex
 		default-light: '#'
 		default-dark: '#'
+	-
+        id: h4-neon-color
+        title: H4 Color
+        description: Color for H4 headers glow
+        type: variable-color
+        format: hex
+        default: '#FFFF00'
 	-
 		id: h4-variant
 		title: H4 font variant
@@ -939,6 +967,13 @@ settings:
 		default-light: '#'
 		default-dark: '#'
 	-
+        id: h5-neon-color
+        title: H5 Color
+        description: Color for H5 headers glow
+        type: variable-color
+        format: hex
+        default: '#FF0000'
+	-
 		id: h5-variant
 		title: H5 font variant
 		type: variable-select
@@ -1006,6 +1041,13 @@ settings:
 		format: hex
 		default-light: '#'
 		default-dark: '#'
+	-
+        id: h6-neon-color
+        title: H6 Color
+        description: Color for H6 headers glow
+        type: variable-color
+        format: hex
+        default: '#0000FF'
 	-
 		id: h6-variant
 		title: H6 font variant
@@ -2220,58 +2262,6 @@ settings:
         type: class-toggle
         default: true
     -
-        id: neon-glow-intensity
-        title: Glow Intensity
-        description: Adjust the intensity of the neon glow (0.1em to 1.5em)
-        type: variable-number-slider
-        default: 0.5
-        min: 0.1
-        max: 1.5
-        step: 0.1
-        format: em
-    -
-        id: h1-neon-color
-        title: H1 Color
-        description: Color for H1 headers glow
-        type: variable-color
-        format: hex
-        default: '#FF00FF'
-    -
-        id: h2-neon-color
-        title: H2 Color
-        description: Color for H2 headers glow
-        type: variable-color
-        format: hex
-        default: '#00FFFF'
-    -
-        id: h3-neon-color
-        title: H3 Color
-        description: Color for H3 headers glow
-        type: variable-color
-        format: hex
-        default: '#00FF00'
-    -
-        id: h4-neon-color
-        title: H4 Color
-        description: Color for H4 headers glow
-        type: variable-color
-        format: hex
-        default: '#FFFF00'
-    -
-        id: h5-neon-color
-        title: H5 Color
-        description: Color for H5 headers glow
-        type: variable-color
-        format: hex
-        default: '#FF0000'
-    -
-        id: h6-neon-color
-        title: H6 Color
-        description: Color for H6 headers glow
-        type: variable-color
-        format: hex
-        default: '#0000FF'
-    -
         id: neon-bullets
         title: Neon Bullets
         description: Enable neon glow on bullet points
@@ -2289,6 +2279,16 @@ settings:
         description: Enable neon glow on task checkboxes
         type: class-toggle
         default: true
+    -
+        id: neon-glow-intensity
+        title: Glow Intensity
+        description: Adjust the intensity of the neon glow (0.1em to 1.5em)
+        type: variable-number-slider
+        default: 0.5
+        min: 0.1
+        max: 1.5
+        step: 0.1
+        format: em
 */
 
 .cm-line hr,

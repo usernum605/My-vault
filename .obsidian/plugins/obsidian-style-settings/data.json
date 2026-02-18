@@ -124,7 +124,6 @@
   "minimal-style@@mobile-right-sidebar-width": 450,
   "minimal-style@@ribbon-style": "ribbon-hidden",
   "minimal-cards-style@@cards-padding": "1em",
-  "neon-headers-settings@@neon-glow-intensity": 1.4,
   "80s-neon-theme@@background-image-enabled": false,
   "80s-neon-theme@@background-image-url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRARpwBGMKDtgaAApILknp-S1nsLUQXDEXFCKv2GNka-A&s=10",
   "80s-neon-theme@@background-image-blur": 0,
@@ -145,5 +144,10 @@
   "minimal-style@@graph-node-focused@@light": "#766818",
   "minimal-style@@bg1@@light": "#FBFFDE",
   "minimal-style@@ax3@@dark": "#235F8C",
-  "minimal-style@@ax3@@light": "#8D5353"
+  "minimal-style@@ax3@@light": "#8D5353",
+  "minimal-style@@h5-neon-color": "#E4BB78",
+  "minimal-style@@h2-neon-color": "#0061B1",
+  "minimal-style@@h3-neon-color": "#BA2828",
+  "minimal-style@@h4-neon-color": "#FF6E40",
+  "minimal-style@@h6-neon-color": "#C8C8C8"
 }
