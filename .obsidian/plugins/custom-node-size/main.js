@@ -129,7 +129,13 @@ class CombinedSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.fwdMultiplier)
 				.onChange(async v => {
 					this.plugin.settings.fwdMultiplier = v;
-					await this.plugin.saveSettings();
+					await this.plugin.saveSettings();	
+					this.plugin.updateLoop = false;
+          const leaf = this.app.workspace.getLeavesOfType("graph").first();
+          if (leaf) {
+	this.plugin.updateLoop = true;
+	this.plugin.loop(leaf.view.renderer.nodes);
+}
 				}));
 
 		new Setting(containerEl)
@@ -139,6 +145,12 @@ class CombinedSettingTab extends PluginSettingTab {
 				.onChange(async v => {
 					this.plugin.settings.bwdMultiplier = v;
 					await this.plugin.saveSettings();
+					this.plugin.updateLoop = false;
+          const leaf = this.app.workspace.getLeavesOfType("graph").first();
+          if (leaf) {
+	this.plugin.updateLoop = true;
+	this.plugin.loop(leaf.view.renderer.nodes);
+}
 				}));
 
 		new Setting(containerEl)
@@ -148,6 +160,12 @@ class CombinedSettingTab extends PluginSettingTab {
 				.onChange(async v => {
 					this.plugin.settings.manualMultiplier = v;
 					await this.plugin.saveSettings();
+					this.plugin.updateLoop = false;
+          const leaf = this.app.workspace.getLeavesOfType("graph").first();
+          if (leaf) {
+	this.plugin.updateLoop = true;
+	this.plugin.loop(leaf.view.renderer.nodes);
+}
 				}));
 
     new Setting(containerEl)
@@ -157,6 +175,12 @@ class CombinedSettingTab extends PluginSettingTab {
 	    	.onChange(async v => {
 	      		this.plugin.settings.fwdTree = v;
 	      		await this.plugin.saveSettings();
+	      		this.plugin.updateLoop = false;
+            const leaf = this.app.workspace.getLeavesOfType("graph").first();
+            if (leaf) {
+	this.plugin.updateLoop = true;
+	this.plugin.loop(leaf.view.renderer.nodes);
+}
 		}));
 
 		new Setting(containerEl)
@@ -166,6 +190,12 @@ class CombinedSettingTab extends PluginSettingTab {
 				.onChange(async v => {
 					this.plugin.settings.manualOverride = v;
 					await this.plugin.saveSettings();
+					this.plugin.updateLoop = false;
+          const leaf = this.app.workspace.getLeavesOfType("graph").first();
+          if (leaf) {
+	this.plugin.updateLoop = true;
+	this.plugin.loop(leaf.view.renderer.nodes);
+}
 				}));
 	}
 }

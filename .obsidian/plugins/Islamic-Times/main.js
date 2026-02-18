@@ -1734,10 +1734,36 @@ module.exports = class PrayerAthanPlugin extends Plugin {
             new Notice("New daily note created successfully.");
         }
 
-        // ⭐ NEW: Open the note in a new tab
+        // ⭐ COMPLETELY REWRITTEN: Find existing leaf with this file
         if (file) {
-            const leaf = this.app.workspace.getLeaf('tab'); // forces a new tab
-            await leaf.openFile(file);
+            // Get all leaves that have views with files
+            const allLeaves = this.app.workspace.getLeavesOfType('markdown');
+            let existingLeaf = null;
+            
+            // Debug: Log all open files
+            console.log("Checking for existing file:", file.path);
+            
+            for (const leaf of allLeaves) {
+                if (leaf.view && leaf.view.file) {
+                    console.log("Open file:", leaf.view.file.path);
+                    if (leaf.view.file.path === file.path) {
+                        existingLeaf = leaf;
+                        console.log("Found existing leaf!");
+                        break;
+                    }
+                }
+            }
+            
+            if (existingLeaf) {
+                // If found, set it as active
+                this.app.workspace.setActiveLeaf(existingLeaf, { focus: true });
+                console.log("Activated existing leaf");
+            } else {
+                // If not found, open in a new tab
+                console.log("Opening in new tab");
+                const newLeaf = this.app.workspace.getLeaf('tab');
+                await newLeaf.openFile(file);
+            }
         }
 
     } catch (err) {
