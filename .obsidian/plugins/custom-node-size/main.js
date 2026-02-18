@@ -62,7 +62,7 @@ class CombinedGraphPlugin extends Plugin {
 
 		// forward
 		if (this.settings.fwdTree)
-			weight += this.forwardTree(node, node.id) * this.settings.fwdMultiplier;
+			weight += this.forwardTree(node, node.id) * 0.4 * this.settings.fwdMultiplier;
 		else
 			weight += Object.keys(node.forward || {}).length * this.settings.fwdMultiplier;
 
