@@ -150,6 +150,15 @@ class CombinedSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
+    new Setting(containerEl)
+    	.setName("Use forward tree")
+    	.addToggle(t => t
+    		.setValue(this.plugin.settings.fwdTree)
+	    	.onChange(async v => {
+	      		this.plugin.settings.fwdTree = v;
+	      		await this.plugin.saveSettings();
+		}));
+
 		new Setting(containerEl)
 			.setName("Manual override")
 			.addToggle(t => t

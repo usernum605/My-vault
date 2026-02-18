@@ -659,29 +659,29 @@ these to suit your own folder structure and vault theme!
 }
 
 /* ================== ENHANCED IMAGE RECOLORING ================== */
-/* Apply to ALL container elements with the recolor-images class */
-.recolor-images,
-.recolor-images .markdown-preview-view,
-.recolor-images .markdown-reading-view {
+/* Apply to ALL container elements with the color-images class */
+.color-images,
+.color-images .markdown-preview-view,
+.color-images .markdown-reading-view {
   /* This ensures the class propagates */
 }
 
 /* Target images in various contexts */
-.recolor-images img,
-.recolor-images .image-embed img,
-.recolor-images .internal-embed img,
-.recolor-images .markdown-embed img {
+.color-images img,
+.color-images .image-embed img,
+.color-images .internal-embed img,
+.color-images .markdown-embed img {
   transition: filter 0.3s ease;
 }
 
 /* Special handling for blockquote images */
-.recolor-images blockquote img {
+.color-images blockquote img {
   filter: inherit;
 }
 
 /* ================== UNIVERSAL IMAGE RECOLORING FOR ALL PAGES ================== */
-/* Apply to ANY page with recolor-images class */
-.recolor-images img:not([src*=".svg"]):not([src*="#icon"]):not([src*="data:image/svg+xml"]) {
+/* Apply to ANY page with color-images class */
+.color-images img:not([src*=".svg"]):not([src*="#icon"]):not([src*="data:image/svg+xml"]) {
   /* Base filter for regular images */
   filter: 
     brightness(var(--img-brightness, 0.9)) 
@@ -694,9 +694,9 @@ these to suit your own folder structure and vault theme!
 /* ================== PAGE-SPECIFIC ENHANCED FILTERS ================== */
 
 /* WHITE PAGE - Light background */
-.recolor-images.page-white,
-.recolor-images.page-white .markdown-preview-view,
-.recolor-images.page-white .markdown-reading-view {
+.color-images.page-white,
+.color-images.page-white .markdown-preview-view,
+.color-images.page-white .markdown-reading-view {
   --img-brightness: 0.95;
   --img-contrast: 1.05;
   --img-sepia: 0.1;
@@ -704,9 +704,9 @@ these to suit your own folder structure and vault theme!
 }
 
 /* MANILA PAGE - Warm background */
-.recolor-images.page-manila,
-.recolor-images.page-manila .markdown-preview-view,
-.recolor-images.page-manila .markdown-reading-view {
+.color-images.page-manila,
+.color-images.page-manila .markdown-preview-view,
+.color-images.page-manila .markdown-reading-view {
   --img-brightness: 0.98;
   --img-contrast: 1.08;
   --img-sepia: 0.15;
@@ -715,9 +715,9 @@ these to suit your own folder structure and vault theme!
 }
 
 /* BLUEPRINT PAGE - Blue background */
-.recolor-images.page-blueprint,
-.recolor-images.page-blueprint .markdown-preview-view,
-.recolor-images.page-blueprint .markdown-reading-view {
+.color-images.page-blueprint,
+.color-images.page-blueprint .markdown-preview-view,
+.color-images.page-blueprint .markdown-reading-view {
   --img-brightness: 0.9;
   --img-contrast: 1.15;
   --img-sepia: 0.3;
@@ -726,9 +726,9 @@ these to suit your own folder structure and vault theme!
 }
 
 /* BLACK PAGE - Keep your original black page settings */
-.recolor-images.page-black,
-.recolor-images.page-black .markdown-preview-view,
-.recolor-images.page-black .markdown-reading-view {
+.color-images.page-black,
+.color-images.page-black .markdown-preview-view,
+.color-images.page-black .markdown-reading-view {
   --img-brightness: 0.85;
   --img-contrast: 1.1;
   --img-sepia: 0.3;
@@ -739,40 +739,40 @@ these to suit your own folder structure and vault theme!
 /* These work with ANY page type when combined with pen-color class */
 
 /* Red Pen - warm tint */
-.recolor-images.pen-red,
-.recolor-images .pen-red {
+.color-images.pen-red,
+.color-images .pen-red {
   --img-hue-rotate: 340deg;
   --img-saturate: 1.4;
   --img-sepia: 0.4;
 }
 
 /* Blue Pen - cool tint */
-.recolor-images.pen-blue,
-.recolor-images .pen-blue {
+.color-images.pen-blue,
+.color-images .pen-blue {
   --img-hue-rotate: 210deg;
   --img-saturate: 1.3;
   --img-sepia: 0.25;
 }
 
 /* Green Pen - green tint */
-.recolor-images.pen-green,
-.recolor-images .pen-green {
+.color-images.pen-green,
+.color-images .pen-green {
   --img-hue-rotate: 100deg;
   --img-saturate: 1.3;
   --img-sepia: 0.3;
 }
 
 /* Purple Pen - purple tint */
-.recolor-images.pen-purple,
-.recolor-images .pen-purple {
+.color-images.pen-purple,
+.color-images .pen-purple {
   --img-hue-rotate: 280deg;
   --img-saturate: 1.3;
   --img-sepia: 0.3;
 }
 
 /* White Pen - bright and desaturated */
-.recolor-images.pen-white,
-.recolor-images .pen-white {
+.color-images.pen-white,
+.color-images .pen-white {
   --img-brightness: 1.1;
   --img-contrast: 1.2;
   --img-sepia: 0.05;
@@ -780,8 +780,8 @@ these to suit your own folder structure and vault theme!
 }
 
 /* Black Pen - dark and muted */
-.recolor-images.pen-black,
-.recolor-images .pen-black {
+.color-images.pen-black,
+.color-images .pen-black {
   --img-brightness: 0.9;
   --img-contrast: 1.15;
   --img-sepia: 0.4;
@@ -789,8 +789,8 @@ these to suit your own folder structure and vault theme!
 }
 
 /* Gray Pen - grayscale */
-.recolor-images.pen-gray,
-.recolor-images .pen-gray {
+.color-images.pen-gray,
+.color-images .pen-gray {
   --img-brightness: 1;
   --img-contrast: 1.05;
   --img-sepia: 0.2;
@@ -804,18 +804,18 @@ these to suit your own folder structure and vault theme!
 }
 
 /* For SVG/icon graphics - keep original complex filter */
-.recolor-images img[src*=".svg"],
-.recolor-images img[src$="#icon"],
-.recolor-images img[src*="data:image/svg+xml"] {
+.color-images img[src*=".svg"],
+.color-images img[src$="#icon"],
+.color-images img[src*="data:image/svg+xml"] {
   filter: var(--image-effect, none) !important;
 }
 
 /* ================== DEBUG/VERIFICATION STYLES ================== */
 /* Add visual feedback to verify classes are applied */
-.page-manila.recolor-images.pen-red::before,
-.page-white.recolor-images.pen-blue::before,
-.page-blueprint.recolor-images.pen-green::before,
-.page-black.recolor-images.pen-purple::before {
+.page-manila.color-images.pen-red::before,
+.page-white.color-images.pen-blue::before,
+.page-blueprint.color-images.pen-green::before,
+.page-black.color-images.pen-purple::before {
   content: "✓ Enhanced Recoloring Active";
   position: fixed;
   top: 10px;
@@ -1039,7 +1039,7 @@ div>pre {
 
 /* ================== FORCEFUL OVERRIDES ================== */
 /* Use !important to override any conflicting styles */
-.markdown-preview-view.recolor-images img:not([src*=".svg"]):not([src*="#icon"]):not([src*="data:image/svg+xml"]) {
+.markdown-preview-view.color-images img:not([src*=".svg"]):not([src*="#icon"]):not([src*="data:image/svg+xml"]) {
   filter: 
     brightness(var(--img-brightness, 0.9)) 
     contrast(var(--img-contrast, 1.1)) 
@@ -1049,11 +1049,14 @@ div>pre {
 }
 
 /* Ensure blockquote images are targeted */
-.markdown-preview-view.recolor-images blockquote img,
-.markdown-preview-view.recolor-images .markdown-preview-section blockquote img {
+.markdown-preview-view.color-images blockquote img,
+.markdown-preview-view.color-images .markdown-preview-section blockquote img {
   filter: inherit !important;
 }
-
+/* Recolors images on the page with the current accent color. */
+.recolor-images img {
+  filter: var(--image-effect);
+}
 /* Make sure the page background applies */
 .markdown-preview-view.page-white,
 .markdown-preview-view.page-manila,

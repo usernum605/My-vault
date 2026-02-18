@@ -6,6 +6,7 @@ links pages:
 banner: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJShHBWwcAi8tdOP3G7E_YVFEYR76-DdWUqgq3AHPxBw&s=10
 cssclasses:
   - invert-banner
+  - recolor-images
 ---
 ### obsidian uses
 https://youtu.be/hSTy_BInQs8?si=O7oCgg3ZjlEHJZim
