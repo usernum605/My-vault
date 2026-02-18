@@ -12,4 +12,5 @@ icon: sync-small
 proot-distro login ubuntu
 cd shared/obsidian/obsidian\ N
 sync
+
 ```
