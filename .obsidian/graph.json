@@ -1,17 +1,24 @@
 {
-  "collapse-filter": false,
-  "search": "YouTube ",
+  "collapse-filter": true,
+  "search": "",
   "showTags": true,
-  "showAttachments": true,
+  "showAttachments": false,
   "hideUnresolved": true,
   "showOrphans": true,
   "collapse-color-groups": true,
   "colorGroups": [
     {
-      "query": "path:\"001 Dashboard/Dashboard/Trackers\" ",
+      "query": "path:\"001 Dashboard/Dashboard/Trackers\"",
       "color": {
         "a": 1,
-        "rgb": 2043537
+        "rgb": 65280
+      }
+    },
+    {
+      "query": "path:\"001 Dashboard/Dashboard/Bases\"  ",
+      "color": {
+        "a": 1,
+        "rgb": 65280
       }
     },
     {
@@ -29,6 +36,13 @@
       }
     },
     {
+      "query": "path:\"004 Files/002 Archive\"  ",
+      "color": {
+        "a": 1,
+        "rgb": 6178881
+      }
+    },
+    {
       "query": "path:\"003 Daily/001 Active Diaries\"  ",
       "color": {
         "a": 1,
@@ -39,13 +53,13 @@
   "collapse-display": true,
   "showArrow": false,
   "textFadeMultiplier": 0,
-  "nodeSizeMultiplier": 1.25442779291553,
+  "nodeSizeMultiplier": 0.924931880108992,
   "lineSizeMultiplier": 0.354155313351499,
   "collapse-forces": true,
-  "centerStrength": 0.599941611521993,
+  "centerStrength": 0.766981315687038,
   "repelStrength": 11.5628649279875,
-  "linkStrength": 0.25116776956014,
-  "linkDistance": 76,
-  "scale": 0.717871038864306,
+  "linkStrength": 0.268538341767225,
+  "linkDistance": 30,
+  "scale": 0.5721560550536757,
   "close": false
 }
