@@ -29,7 +29,6 @@
     "tags",
     "cssclasses",
     "banner_y",
-    "excalidraw-plugin",
     "node_size"
   ],
   "temporaryHiddenProperties": [
@@ -45,7 +44,7 @@
   "cacheExpiryDays": 1000000,
   "hideScrollbars": true,
   "showPropertiesOnCreate": true,
-  "showPropertiesOnCreateDuration": 60,
+  "showPropertiesOnCreateDuration": 30,
   "propertyVisibilityDuration": 30,
   "bannerInvert": false,
   "bannerInvertDarkMode": "never",
