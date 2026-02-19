@@ -44,6 +44,10 @@ module.exports = class StyleshVault extends Plugin {
         this.renderedIcons = new Map();
         this.pendingIconRenders = new Set();
         
+        // NEW: Track which files have had their icons rendered to avoid re-rendering on mode switch
+        this.renderedFiles = new Set();
+        this.currentRenderedFile = null;
+        
         this.forceModeWatchers = new Map();
         this.newlyCreatedFiles = new Map();
         this.newFileTimer = null;
@@ -74,6 +78,7 @@ module.exports = class StyleshVault extends Plugin {
                 this.renderedIcons.clear();
                 this.iconRenderPromises.clear();
                 this.pendingIconRenders.clear();
+                this.renderedFiles.clear(); // NEW: Clear file cache as well
                 await this.clearImageCache();
                 this.updateAllViews();
                 new Notice('Icons refreshed and cache cleared');
@@ -766,6 +771,7 @@ module.exports = class StyleshVault extends Plugin {
         this.pendingFetches.clear();
         this.renderedIcons.clear();
         this.iconRenderPromises.clear();
+        this.renderedFiles.clear(); // NEW: Clear file cache
         await this.saveCache();
         this.debouncedUpdate();
     }
@@ -892,6 +898,33 @@ module.exports = class StyleshVault extends Plugin {
         contentEl.classList.add("has-banner");
     }
 
+    // NEW: Ensure icons are visible without re-rendering
+    ensureIconsVisible(containers, contentEl, fm, sourcePath) {
+        const iconValue = fm?.[this.settings.iconProperty];
+        
+        if (!iconValue) return;
+        
+        // Check if icons exist in both views
+        if (this.settings.iconInTitle) {
+            const titleIcon = contentEl.querySelector(".pp-title-icon");
+            if (!titleIcon && iconValue) {
+                // Icon missing in this view, render it
+                this.renderIcon(contentEl, containers, fm, sourcePath);
+            } else if (titleIcon && titleIcon.getAttribute("data-icon") !== iconValue) {
+                this.updateIconContent(titleIcon, iconValue, sourcePath);
+            }
+        } else {
+            containers.forEach(container => {
+                const iconWrapper = container.querySelector(":scope > .icon-wrapper");
+                if (!iconWrapper && iconValue) {
+                    this.renderIcon(contentEl, containers, fm, sourcePath);
+                } else if (iconWrapper && iconWrapper.getAttribute("data-icon") !== iconValue) {
+                    this.updateIconContent(iconWrapper, iconValue, sourcePath);
+                }
+            });
+        }
+    }
+
     async processView(view) {
         const file = view.file;
         if (!file) return;
@@ -910,8 +943,21 @@ module.exports = class StyleshVault extends Plugin {
 
             contentEl.querySelectorAll(".markdown-embed .banner-image, .markdown-embed .icon-wrapper, .markdown-embed .pp-title-icon").forEach(el => el.remove());
 
-            await this.renderBanner(contentEl, containers, fm, file.path);
-            await this.renderIcon(contentEl, containers, fm, file.path);
+            // Check if this file already has rendered icons
+            const iconValue = fm?.[this.settings.iconProperty] || 'no-icon';
+            const fileKey = `${file.path}-${iconValue}`;
+            
+            if (!this.renderedFiles.has(fileKey)) {
+                // First time rendering this file (or icon changed)
+                await this.renderBanner(contentEl, containers, fm, file.path);
+                await this.renderIcon(contentEl, containers, fm, file.path);
+                this.renderedFiles.add(fileKey);
+                this.currentRenderedFile = fileKey;
+            } else {
+                // File already has icons rendered, just ensure they're visible in both views
+                await this.renderBanner(contentEl, containers, fm, file.path); // Banner still needs to be handled (but it's already efficient)
+                this.ensureIconsVisible(containers, contentEl, fm, file.path);
+            }
         } catch (error) {
             console.error("Error processing view:", error);
         }
@@ -982,6 +1028,7 @@ module.exports = class StyleshVault extends Plugin {
         this.renderedIcons.clear();
         this.iconRenderPromises.clear();
         this.pendingIconRenders.clear();
+        this.renderedFiles.clear(); // NEW: Clear file cache
     }
 
     updateAllViews() {
@@ -1067,6 +1114,31 @@ module.exports = class StyleshVault extends Plugin {
         }
 
         const renderKey = `${sourcePath}-${iconValue}`;
+        
+        // NEW: Check if icons already exist before rendering
+        const existingIcons = this.settings.iconInTitle 
+            ? contentEl.querySelectorAll(".pp-title-icon").length
+            : containers.some(c => c.querySelector(":scope > .icon-wrapper"));
+        
+        if (existingIcons > 0) {
+            // Icons already exist, just ensure they have the right icon value
+            if (this.settings.iconInTitle) {
+                contentEl.querySelectorAll(".pp-title-icon").forEach(iconEl => {
+                    if (iconEl.getAttribute("data-icon") !== iconValue) {
+                        this.updateIconContent(iconEl, iconValue, sourcePath);
+                    }
+                });
+            } else {
+                containers.forEach(container => {
+                    const iconWrapper = container.querySelector(":scope > .icon-wrapper");
+                    if (iconWrapper && iconWrapper.getAttribute("data-icon") !== iconValue) {
+                        this.updateIconContent(iconWrapper, iconValue, sourcePath);
+                    }
+                });
+            }
+            return;
+        }
+
         if (this.pendingIconRenders.has(renderKey)) {
             return;
         }
@@ -1130,6 +1202,75 @@ module.exports = class StyleshVault extends Plugin {
             if (iconEl.getAttribute("data-icon") !== iconValue) {
                 iconEl.setAttribute("data-icon", iconValue);
                 await this.appendIconContent(iconEl, iconValue, sourcePath);
+            }
+        }
+    }
+
+    // NEW: Update icon content without full re-render
+    async updateIconContent(container, iconValue, sourcePath) {
+        container.setAttribute("data-icon", iconValue);
+        container.empty();
+        
+        const lucideIcon = getIcon(iconValue);
+        if (lucideIcon) {
+            lucideIcon.classList.add("pp-svg-icon");
+            container.appendChild(lucideIcon);
+            return;
+        }
+        
+        if (this.isEmoji(iconValue)) {
+            const emojiDiv = container.createDiv({ cls: "pp-text-icon" });
+            emojiDiv.innerText = iconValue;
+            return;
+        }
+        
+        const formattedSrc = this.formatImageLink(iconValue);
+        if (!formattedSrc) {
+            console.warn("Empty icon source:", iconValue);
+            return;
+        }
+        
+        const img = document.createElement("img");
+        img.alt = "Icon";
+        
+        try {
+            let imgSrc;
+            if (formattedSrc.startsWith("http")) {
+                imgSrc = await Promise.race([
+                    this.resolveLink(formattedSrc, sourcePath),
+                    new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error("Image load timeout")), 5000)
+                    )
+                ]);
+            } else if (formattedSrc.startsWith("data:")) {
+                imgSrc = formattedSrc;
+            } else {
+                imgSrc = await this.resolveLink(formattedSrc, sourcePath);
+            }
+            
+            img.src = imgSrc;
+            
+            img.onerror = () => {
+                console.warn(`Failed to load icon image: ${formattedSrc}`);
+                img.remove();
+                
+                const fallbackIcon = getIcon("lucide-file");
+                if (fallbackIcon) {
+                    fallbackIcon.classList.add("pp-svg-icon");
+                    container.appendChild(fallbackIcon);
+                }
+            };
+            
+            img.onload = () => {
+                container.appendChild(img);
+            };
+            
+        } catch (error) {
+            console.error("Error resolving icon:", error);
+            const fallbackIcon = getIcon("lucide-file");
+            if (fallbackIcon) {
+                fallbackIcon.classList.add("pp-svg-icon");
+                container.appendChild(fallbackIcon);
             }
         }
     }
@@ -1464,6 +1605,9 @@ class IconSuggestModal extends SuggestModal {
             this.app.fileManager.processFrontMatter(this.targetItem, (fm) => { 
                 fm[this.plugin.settings.iconProperty] = iconValue; 
             });
+            // Clear cache for this file so it re-renders with new icon
+            const oldKeys = Array.from(this.plugin.renderedFiles).filter(key => key.startsWith(this.targetItem.path));
+            oldKeys.forEach(key => this.plugin.renderedFiles.delete(key));
         } else if (this.targetItem instanceof TFolder) { 
             this.plugin.settings.folderIcons[this.targetItem.path] = iconValue; 
             this.plugin.saveSettings(); 

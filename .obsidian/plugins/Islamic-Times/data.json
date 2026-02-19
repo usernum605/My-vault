@@ -91,21 +91,21 @@
   "displayReference": "sunrise",
   "cached": {
     "prayerTimes": {
-      "Fajr": "06:16",
-      "Sunrise": "07:41",
+      "Fajr": "06:15",
+      "Sunrise": "07:40",
       "Dhuhr": "13:12",
       "Asr": "16:16",
-      "Maghrib": "18:42",
-      "Isha": "20:03",
+      "Maghrib": "18:43",
+      "Isha": "20:04",
       "Midnight": "01:12"
     },
     "hijri": {
-      "date": "01-09-1447",
+      "date": "02-09-1447",
       "format": "DD-MM-YYYY",
-      "day": "1",
+      "day": "2",
       "weekday": {
-        "en": "Al Arba'a",
-        "ar": "الاربعاء"
+        "en": "Al Khamees",
+        "ar": "الخميس"
       },
       "month": {
         "number": 9,
@@ -118,13 +118,11 @@
         "abbreviated": "AH",
         "expanded": "Anno Hegirae"
       },
-      "holidays": [
-        "1st Day of Ramadan"
-      ],
+      "holidays": [],
       "adjustedHolidays": [],
       "method": "HJCoSA"
     },
-    "fetchedAtISO": "2026-02-18T01:43:01.770Z"
+    "fetchedAtISO": "2026-02-19T04:59:03.268Z"
   },
   "enableDailyNotes": true,
   "dailyNotesFolder": "003 Daily/001 Active Diaries",

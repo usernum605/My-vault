@@ -35,10 +35,11 @@
   "temporaryHiddenProperties": [
     "cssclasses",
     "tags",
-    "ui"
+    "ui",
+    "node_size"
   ],
   "temporaryViewTimeout": 30,
-  "defaultNotePath": "004 Files/001 Attach/warsh.pdf",
+  "defaultNotePath": "001 Dashboard/Dashboard/Dashboard.md",
   "uiProperty": "ui",
   "enableCache": true,
   "cacheExpiryDays": 1000000,

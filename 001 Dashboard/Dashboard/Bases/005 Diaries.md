@@ -1,3 +1,8 @@
+---
+links pages:
+  - "path: 003 Daily"
+---
+
 ```base
 filters:
   and:

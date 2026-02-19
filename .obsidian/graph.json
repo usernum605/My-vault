@@ -1,8 +1,8 @@
 {
-  "collapse-filter": false,
+  "collapse-filter": true,
   "search": "",
   "showTags": true,
-  "showAttachments": false,
+  "showAttachments": true,
   "hideUnresolved": true,
   "showOrphans": true,
   "collapse-color-groups": true,
@@ -11,14 +11,14 @@
       "query": "path:\"001 Dashboard/Dashboard/Trackers\"",
       "color": {
         "a": 1,
-        "rgb": 65280
+        "rgb": 6197614
       }
     },
     {
       "query": "path:\"001 Dashboard/Dashboard/Bases\"  ",
       "color": {
         "a": 1,
-        "rgb": 65280
+        "rgb": 8500116
       }
     },
     {
@@ -46,7 +46,7 @@
       "query": "path:\"003 Daily/001 Active Diaries\"  ",
       "color": {
         "a": 1,
-        "rgb": 6184542
+        "rgb": 10067632
       }
     }
   ],
@@ -56,10 +56,10 @@
   "nodeSizeMultiplier": 0.924931880108992,
   "lineSizeMultiplier": 0.354155313351499,
   "collapse-forces": true,
-  "centerStrength": 0.766981315687038,
-  "repelStrength": 11.5628649279875,
-  "linkStrength": 0.268538341767225,
-  "linkDistance": 30,
-  "scale": 0.7537384758019825,
-  "close": true
+  "centerStrength": 0.711366290385364,
+  "repelStrength": 11.3614246788634,
+  "linkStrength": 0.269170883612301,
+  "linkDistance": 67,
+  "scale": 0.6850787255632181,
+  "close": false
 }

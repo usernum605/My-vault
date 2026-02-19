@@ -1,3 +1,8 @@
+---
+links pages:
+  - "path: 001 Dashboard"
+---
+
 
 ```base
 filters:

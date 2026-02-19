@@ -1,15 +1,16 @@
 ---
 cssclasses:
-  - card
   - list-cards
   - cards-cols-2
   - center-title
   - dashboard
+  - card
 banner: https://www.litmus.com/wp-content/uploads/2023/09/template_hero.svg
 icon: lucide-layout-grid
 links pages:
   - "[[000 Ultimate Base]]"
 banner_y: 33
+ui: preview
 ---
 # <span><u>Dashboard</u></span>
 

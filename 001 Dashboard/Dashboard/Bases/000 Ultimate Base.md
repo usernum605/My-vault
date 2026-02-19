@@ -2,13 +2,17 @@
 ui: edit
 cssclasses:
   - center-everything
-  - card
   - list-cards
   - cards-cols-2
+  - card
+links pages:
+  - " path: 002 Notes"
+  - "path: 001 Dashboard"
+  - "[[Dashboard]]"
 ---
 ## MY PROJECTS
 ![[002 My projects]]
-## DASHBOARD
+##  DASHBOARD
 ![[001 Dash]]
 ## MY NOTES
 ![[004 My notes]]

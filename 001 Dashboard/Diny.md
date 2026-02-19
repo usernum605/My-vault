@@ -11,7 +11,7 @@ aliases:
 links pages:
   - "[[Azkaru]]"
   - "[[warsh.pdf]]"
-  - "[[sermons]]"
+  - "[[Mawaidh]]"
 ---
 #### تتبع المهام الدينية
 ```dataview

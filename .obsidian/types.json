@@ -8,6 +8,7 @@
     "The number of pages you have memorized from the Quran": "number",
     "The number of pages you finished reading from the Quran": "number",
     "Read Quran": "checkbox",
-    "node_size": "number"
+    "node_size": "number",
+    "links pages": "multitext"
   }
 }

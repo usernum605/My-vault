@@ -9,6 +9,7 @@ cssclasses:
   - pen-blue
 tags:
   - islamic/dine
+  - islamic/Mawaidh
 ---
 سورة الحديد ![[057.mp3]]
 سورة الحجر![[015.mp3]]

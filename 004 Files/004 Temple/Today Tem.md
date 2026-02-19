@@ -58,7 +58,7 @@ icon: lucide-calendar-minus-2
 - 
 - 
 
-##### <span class="backdrop-blur-xl2" style="color: #ffffff" ><u>ماذا يجب أن نعمل من أجل التحسن مسبقا:</u></span> 
+##### <span class="backdrop-blur-xl2" style="color: #ffffff" ><u>ماذا يجب أن نعمل من أجل التحسن مستقبلا:</u></span> 
 - 
 - 
 

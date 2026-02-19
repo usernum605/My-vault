@@ -1,6 +1,7 @@
 ---
 links pages:
   - "[[002 My projects]]"
+  - " path: 002 Notes"
 ---
 ```base
 filters:

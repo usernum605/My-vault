@@ -1,4 +1,3 @@
-
 .markdown-reading-view .block-language-cardlink {
   margin: var(--p-spacing) 0;
 }
@@ -57,5 +56,5 @@
 .auto-card-link-thumbnail {
   height: 100%;
   object-fit: cover;
-  max-width: 50%;
+  max-width: 50% !important;
 }
