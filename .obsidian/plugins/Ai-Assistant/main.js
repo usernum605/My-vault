@@ -3,48 +3,33 @@ const { Plugin, ItemView, Modal, Notice, MarkdownView, MarkdownRenderer } = requ
 const VIEW_TYPE = 'ai-sidebar';
 
 const DEFAULT_SETTINGS = {
-  // ===  النموذج المحلي ===
-  baseUrl: "http://127.0.0.1:8000",
-  localModel: "qwen2.5-3b-instruct",
+  baseUrl: "http://127.0.0.1:11434",
+  localModel: "llama2",
   localEndpoint: "/v1/chat/completions",
-  
-  // ===  عامة ===
   temperature: 0.7,
-  max_tokens: 256,
+  max_tokens: 2048,
   autoCheckHealth: true,
   timeoutMs: 120000,
   showTokenCounter: true,
-  
-  // === اختصارات ===
   shortcuts: {
     newConversation: 'Ctrl+Shift+N',
     saveConversation: 'Ctrl+Shift+S',
-    settings: 'Ctrl+Shift+P'
+    settings: 'Ctrl+Shift+P',
+    askSelection: 'Ctrl+Shift+A',
+    editSelection: 'Ctrl+Shift+E'
   },
-  
-  // === مجلد المحادثات المحفوظة ===
   conversationsFolder: "AI Conversations",
-  
-  // === نظام APIs المتعدد ===
-  currentMode: 'local', // 'local' أو 'cloud'
-  cloudApiType: 'gemini', // 'openai', 'gemini', 'anthropic', 'custom'
-  
-  // ===  OpenAI ===
+  currentMode: 'local',
+  cloudApiType: 'openai',
   openaiApiKey: "",
   openaiModel: "gpt-3.5-turbo",
   openaiEndpoint: "https://api.openai.com/v1/chat/completions",
-  
-  // ===  Gemini ===
   geminiApiKey: "",
-  geminiModel: "gemini-2.5-flash",
+  geminiModel: "gemini-1.5-flash",
   geminiEndpoint: "https://generativelanguage.googleapis.com/v1beta/models",
-  
-  // ===  Anthropic (Claude) ===
   anthropicApiKey: "",
   anthropicModel: "claude-3-haiku-20240307",
   anthropicEndpoint: "https://api.anthropic.com/v1/messages",
-  
-  // ===  مخصصة ===
   customApiKey: "",
   customModel: "",
   customEndpoint: "",
@@ -52,145 +37,334 @@ const DEFAULT_SETTINGS = {
   customBodyTemplate: '{"messages": {{messages}}, "model": "{{model}}"}'
 };
 
-// دالة مساعدة لقَص النص
+// ==================== UTILITY FUNCTIONS ====================
+
 function trimContent(text, maxChars = 4000) {
   if (text.length <= maxChars) return text;
-  return text.slice(0, maxChars) + "\n\n[تم قص المحتوى تلقائياً...]";
+  return text.slice(0, maxChars) + "\n\n[Content truncated automatically...]";
 }
 
-// ----- دالة تقدير التوكنات (تقريبية) -----
 function estimateTokens(text) {
   if (!text) return 0;
   return Math.ceil(text.length / 4);
 }
 
-// ========== دوال الطلب العامة ==========
-async function makeRequest(url, headers, body, streaming, opts) {
-  if (streaming) {
-    return handleStreamingRequest(url, headers, body, opts);
-  } else {
-    return handleNormalRequest(url, headers, body, opts);
+// ==================== CUSTOM ERROR CLASSES ====================
+
+class NetworkError extends Error {
+  constructor(statusCode, message, statusText) {
+    super(message);
+    this.name = 'NetworkError';
+    this.statusCode = statusCode;
+    this.statusText = statusText;
   }
 }
 
-async function handleNormalRequest(url, headers, body, opts) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), opts.timeoutMs || 120000);
-
-  try {
-    console.log("Sending request to:", url);
-    console.log("Request body:", body);
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: headers,
-      body: body,
-      signal: controller.signal
-    });
-
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("API Error Response:", errorText);
-      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-    }
-
-    const data = await response.json();
-    console.log("API Response:", data);
-    
-    // استخراج النص من مختلف الـ APIs
-    if (data.choices && data.choices[0] && data.choices[0].message) {
-      return { final: data.choices[0].message.content };
-    } else if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-      return { final: data.candidates[0].content.parts[0].text };
-    } else if (data.content && data.content[0] && data.content[0].text) {
-      return { final: data.content[0].text };
-    } else if (data.message && data.message.content) {
-      return { final: data.message.content };
-    } else if (data.choices && data.choices[0] && data.choices[0].text) {
-      return { final: data.choices[0].text };
-    } else {
-      console.warn("Unexpected response format:", data);
-      return { final: JSON.stringify(data) };
-    }
-  } catch (error) {
-    clearTimeout(timeout);
-    console.error("Request failed:", error);
-    throw error;
+class TimeoutError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'TimeoutError';
   }
 }
 
-async function handleStreamingRequest(url, headers, body, opts) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), opts.timeoutMs || 120000);
+class StreamingError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'StreamingError';
+  }
+}
 
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: headers,
-      body: body,
-      signal: controller.signal
-    });
+class AuthenticationError extends Error {
+  constructor(message, provider) {
+    super(message);
+    this.name = 'AuthenticationError';
+    this.provider = provider;
+  }
+}
 
-    clearTimeout(timeout);
+class RateLimitError extends Error {
+  constructor(message, provider, retryAfter) {
+    super(message);
+    this.name = 'RateLimitError';
+    this.provider = provider;
+    this.retryAfter = retryAfter;
+  }
+}
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+// ==================== NETWORK MANAGER ====================
+
+class NetworkManager {
+  constructor(plugin) {
+    this.plugin = plugin;
+    this.abortControllers = new Map();
+    this.maxRetries = 3;
+    this.retryDelay = 1000;
+    this.connectionPool = new Map();
+  }
+
+  async fetchWithRetry(url, options, requestId = null) {
+    const controller = new AbortController();
+    if (requestId) {
+      this.abortControllers.set(requestId, controller);
     }
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let acc = '';
+    const timeoutMs = options.timeout || this.plugin.settings.timeoutMs || 120000;
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+    let lastError;
+    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+      try {
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal,
+          cache: 'no-cache',
+          credentials: 'omit',
+          mode: 'cors'
+        });
 
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n').filter(line => line.trim() !== '');
-
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6);
-          if (data === '[DONE]') {
-            return { final: acc };
-          }
-
-          try {
-            const parsed = JSON.parse(data);
-            let text = '';
-            if (parsed.choices && parsed.choices[0] && parsed.choices[0].delta) {
-              text = parsed.choices[0].delta.content || '';
-            } else if (parsed.candidates && parsed.candidates[0] && parsed.candidates[0].content) {
-              text = parsed.candidates[0].content.parts[0].text || '';
-            } else if (parsed.content && parsed.content[0] && parsed.content[0].text) {
-              text = parsed.content[0].text || '';
-            } else if (parsed.message && parsed.message.content) {
-              text = parsed.message.content || '';
-            }
-
-            if (text) {
-              acc += text;
-              if (opts.onChunk) {
-                opts.onChunk(text);
-              }
-            }
-          } catch (e) {
-            console.error('Error parsing streaming chunk:', e);
+        if (!response.ok) {
+          const errorText = await response.text();
+          
+          if (response.status === 401 || response.status === 403) {
+            throw new AuthenticationError(`Authentication failed: ${response.status}`, url);
+          } else if (response.status === 429) {
+            const retryAfter = response.headers.get('Retry-After') || 60;
+            throw new RateLimitError(`Rate limit exceeded`, url, parseInt(retryAfter));
+          } else {
+            throw new NetworkError(response.status, errorText, response.statusText);
           }
         }
+
+        clearTimeout(timeoutId);
+        if (requestId) {
+          this.abortControllers.delete(requestId);
+        }
+
+        return response;
+      } catch (error) {
+        lastError = error;
+        
+        if (error.name === 'AbortError') {
+          clearTimeout(timeoutId);
+          throw new TimeoutError(`Request timeout after ${timeoutMs}ms`);
+        }
+
+        if (error instanceof AuthenticationError || error instanceof RateLimitError) {
+          throw error;
+        }
+
+        if (this.shouldRetry(error, attempt)) {
+          const delay = this.calculateBackoff(attempt);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        
+        break;
       }
     }
 
-    return { final: acc };
-  } catch (error) {
-    clearTimeout(timeout);
-    throw error;
+    clearTimeout(timeoutId);
+    if (requestId) {
+      this.abortControllers.delete(requestId);
+    }
+
+    throw this.normalizeError(lastError);
+  }
+
+  shouldRetry(error, attempt) {
+    if (attempt >= this.maxRetries) return false;
+    
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      return true;
+    }
+    
+    if (error.name === 'NetworkError') {
+      return [408, 429, 500, 502, 503, 504].includes(error.statusCode);
+    }
+    
+    return false;
+  }
+
+  calculateBackoff(attempt) {
+    return Math.min(1000 * Math.pow(2, attempt - 1) + Math.random() * 100, 30000);
+  }
+
+  normalizeError(error) {
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      return new NetworkError(0, 'Network connection failed. Please check your internet connection and ensure the AI service is running.', 'NETWORK_ERROR');
+    }
+    return error;
+  }
+
+  abortRequest(requestId) {
+    const controller = this.abortControllers.get(requestId);
+    if (controller) {
+      controller.abort();
+      this.abortControllers.delete(requestId);
+    }
+  }
+
+  abortAllRequests() {
+    this.abortControllers.forEach(controller => controller.abort());
+    this.abortControllers.clear();
   }
 }
 
-// ---------------- SessionManager ----------------
+// ==================== STREAMING HANDLER ====================
+
+class StreamingHandler {
+  constructor() {
+    this.buffer = '';
+    this.chunkProcessors = new Map();
+    
+    this.registerChunkProcessor('openai', this.processOpenAIChunk.bind(this));
+    this.registerChunkProcessor('local', this.processLocalChunk.bind(this));
+    this.registerChunkProcessor('anthropic', this.processAnthropicChunk.bind(this));
+    this.registerChunkProcessor('gemini', this.processGeminiChunk.bind(this));
+    this.registerChunkProcessor('generic', this.processGenericChunk.bind(this));
+  }
+
+  registerChunkProcessor(provider, processor) {
+    this.chunkProcessors.set(provider, processor);
+  }
+
+  async handleStreamingResponse(response, onChunk, provider = 'local') {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    const processor = this.chunkProcessors.get(provider) || this.processGenericChunk;
+    
+    let accumulatedText = '';
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        buffer += chunk;
+
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.trim() === '') continue;
+          
+          const text = processor(line);
+          if (text) {
+            accumulatedText += text;
+            onChunk(text);
+          }
+        }
+      }
+
+      if (buffer.trim()) {
+        const text = processor(buffer);
+        if (text) {
+          accumulatedText += text;
+          onChunk(text);
+        }
+      }
+
+      return accumulatedText;
+    } catch (error) {
+      console.error('Streaming error:', error);
+      throw new StreamingError('Stream interrupted: ' + error.message);
+    }
+  }
+
+  processLocalChunk(line) {
+    if (line.startsWith('data: ')) {
+      const data = line.slice(6);
+      if (data === '[DONE]') return '';
+      
+      try {
+        const parsed = JSON.parse(data);
+        if (parsed.message?.content) {
+          return parsed.message.content;
+        }
+        if (parsed.choices?.[0]?.delta?.content) {
+          return parsed.choices[0].delta.content;
+        }
+        if (parsed.response) {
+          return parsed.response;
+        }
+        if (parsed.content) {
+          return parsed.content;
+        }
+      } catch (e) {
+        return data;
+      }
+    }
+    
+    try {
+      const parsed = JSON.parse(line);
+      if (parsed.message?.content) return parsed.message.content;
+      if (parsed.response) return parsed.response;
+      if (parsed.content) return parsed.content;
+    } catch {
+      if (!line.startsWith('{') && !line.startsWith('[') && line.length > 0) {
+        return line;
+      }
+    }
+    
+    return '';
+  }
+
+  processOpenAIChunk(line) {
+    if (!line.startsWith('data: ')) return '';
+    const data = line.slice(6);
+    if (data === '[DONE]') return '';
+    
+    try {
+      const parsed = JSON.parse(data);
+      return parsed.choices?.[0]?.delta?.content || '';
+    } catch {
+      return '';
+    }
+  }
+
+  processAnthropicChunk(line) {
+    try {
+      const parsed = JSON.parse(line);
+      if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
+        return parsed.delta.text;
+      }
+    } catch {
+      const match = line.match(/"text":"([^"]+)"/);
+      return match ? match[1] : '';
+    }
+    return '';
+  }
+
+  processGeminiChunk(line) {
+    try {
+      const parsed = JSON.parse(line);
+      return parsed.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    } catch {
+      return '';
+    }
+  }
+
+  processGenericChunk(line) {
+    try {
+      const parsed = JSON.parse(line);
+      return parsed.content || 
+             parsed.text || 
+             parsed.response || 
+             parsed.message?.content ||
+             parsed.choices?.[0]?.text ||
+             parsed.choices?.[0]?.delta?.content ||
+             parsed.candidates?.[0]?.content?.parts?.[0]?.text ||
+             '';
+    } catch {
+      return line.length > 0 && !line.startsWith('{') ? line : '';
+    }
+  }
+}
+
+// ==================== SESSION MANAGER ====================
+
 class SessionManager {
   constructor(saved = []) {
     this.sessions = (saved && saved.length) ? saved : [];
@@ -201,8 +375,8 @@ class SessionManager {
     const id = Date.now().toString();
     const session = { 
       id, 
-      name: name || `Session ${this.sessions.length+1}`, 
-      systemPrompt: sys||"", 
+      name: name || `Session ${this.sessions.length + 1}`, 
+      systemPrompt: sys || "", 
       messages: [] 
     };
     this.sessions.push(session);
@@ -218,7 +392,7 @@ class SessionManager {
   }
   
   switchTo(id) {
-    if (this.sessions.find(s=>s.id===id)) this.activeId = id;
+    if (this.sessions.find(s => s.id === id)) this.activeId = id;
   }
   
   getActive() { 
@@ -248,13 +422,11 @@ class SessionManager {
     }
     const recent = s.messages.slice(-maxMessages);
     
-    // تحويل الرسائل لتتضمن المحتوى الحقيقي (مع محتويات الملفات)
     return out.concat(recent.map(msg => {
-      // إذا كان هناك مرفقات، دمج محتوياتها مع النص
       let fullContent = msg.content;
       if (msg.attachments && msg.attachments.length > 0) {
         msg.attachments.forEach(attachment => {
-          fullContent += `\n\n[محتوى الملف: ${attachment.name}]\n${attachment.content}`;
+          fullContent += `\n\n[File content: ${attachment.name}]\n${attachment.content}`;
         });
       }
       return {
@@ -264,39 +436,596 @@ class SessionManager {
     }));
   }
 
-  // دالة لتصدير المحادثة كـ Markdown
   exportToMarkdown(session) {
     let content = `# ${session.name}\n\n`;
-    content += `**تاريخ الإنشاء:** ${new Date(parseInt(session.id)).toLocaleString('ar-SA')}\n\n`;
-    content += `**عدد الرسائل:** ${session.messages.length}\n\n`;
+    content += `**Created:** ${new Date(parseInt(session.id)).toLocaleString()}\n\n`;
+    content += `**Messages:** ${session.messages.length}\n\n`;
     
     if (session.systemPrompt) {
-      content += `## نظام البرومت\n${session.systemPrompt}\n\n---\n\n`;
+      content += `## System Prompt\n${session.systemPrompt}\n\n---\n\n`;
     }
     
     session.messages.forEach((msg, index) => {
-      const role = msg.role === 'user' ? ' المستخدم' : ' المساعد';
-      const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('ar-SA') : '';
-      content += `###### ${role} (رسالة ${index + 1}) \n`;
+      const role = msg.role === 'user' ? '👤 User' : '🤖 Assistant';
+      const time = msg.timestamp ? new Date(msg.timestamp).toLocaleString() : '';
+      content += `### ${role} (Message ${index + 1}) ${time ? '- ' + time : ''}\n\n`;
       
-      // عرض المرفقات بشكل منفصل
       if (msg.attachments && msg.attachments.length > 0) {
-        content += `**+ المرفقات:**\n`;
+        content += `**Attachments:**\n`;
         msg.attachments.forEach(attachment => {
-          content += `- **${attachment.name}**\n`;
+          content += `- 📄 **${attachment.name}**\n`;
         });
         content += `\n`;
       }
       
-      content += `${msg.content}\n\n`;
-      content += `---\n\n`;
+      content += `${msg.content}\n\n---\n\n`;
     });
     
     return content;
   }
 }
 
-// ========== APIManager - مدير APIs المركزي ==========
+// ==================== BASE AI PROVIDER ====================
+
+class BaseAIProvider {
+  constructor(plugin, providerName) {
+    this.plugin = plugin;
+    this.name = providerName;
+    this.networkManager = new NetworkManager(plugin);
+    this.streamingHandler = new StreamingHandler();
+  }
+
+  async send(payload, opts = {}) {
+    const requestId = this.generateRequestId();
+    
+    try {
+      const url = this.buildUrl(payload);
+      const headers = this.buildHeaders();
+      const body = this.buildBody(payload);
+      
+      if (payload.stream && this.supportsStreaming()) {
+        return await this.sendStreamingRequest(url, headers, body, opts, requestId);
+      } else {
+        return await this.sendNormalRequest(url, headers, body, opts, requestId);
+      }
+    } catch (error) {
+      return this.handleError(error);
+    } finally {
+      if (requestId) {
+        this.networkManager.abortRequest(requestId);
+      }
+    }
+  }
+
+  supportsStreaming() {
+    return true;
+  }
+
+  async sendStreamingRequest(url, headers, body, opts, requestId) {
+    const response = await this.networkManager.fetchWithRetry(url, {
+      method: 'POST',
+      headers,
+      body,
+      timeout: opts.timeoutMs
+    }, requestId);
+
+    const accumulatedText = await this.streamingHandler.handleStreamingResponse(
+      response,
+      opts.onChunk || (() => {}),
+      this.getStreamingFormat()
+    );
+
+    return { final: accumulatedText };
+  }
+
+  async sendNormalRequest(url, headers, body, opts, requestId) {
+    const response = await this.networkManager.fetchWithRetry(url, {
+      method: 'POST',
+      headers,
+      body,
+      timeout: opts.timeoutMs
+    }, requestId);
+
+    const data = await response.json();
+    return this.parseResponse(data);
+  }
+
+  generateRequestId() {
+    return `${this.name}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  handleError(error) {
+    console.error(`${this.name} error:`, error);
+    
+    if (error instanceof AuthenticationError) {
+      throw new Error(`🔐 ${this.name} authentication failed. Please check your API key in settings.`);
+    }
+    
+    if (error instanceof RateLimitError) {
+      throw new Error(`⏳ ${this.name} rate limit exceeded. Please wait ${error.retryAfter} seconds and try again.`);
+    }
+    
+    if (error instanceof NetworkError) {
+      if (error.statusCode === 0) {
+        throw new Error(`🌐 Cannot connect to ${this.name}. Please check if the service is running and accessible.`);
+      }
+      if (error.statusCode === 404) {
+        throw new Error(`🔍 ${this.name} endpoint not found. Please check your URL configuration.`);
+      }
+      throw new Error(`🌐 ${this.name} network error (${error.statusCode}): ${error.message}`);
+    }
+    
+    if (error instanceof TimeoutError) {
+      throw new Error(`⏱️ ${this.name} request timed out. The service might be slow or unresponsive.`);
+    }
+    
+    if (error instanceof StreamingError) {
+      throw new Error(`📡 Streaming error with ${this.name}: ${error.message}`);
+    }
+    
+    throw new Error(`${this.name} error: ${error.message}`);
+  }
+
+  buildUrl(payload) { throw new Error('Not implemented'); }
+  buildHeaders() { throw new Error('Not implemented'); }
+  buildBody(payload) { throw new Error('Not implemented'); }
+  parseResponse(data) { throw new Error('Not implemented'); }
+  getStreamingFormat() { return 'generic'; }
+}
+
+// ==================== LOCAL AI PROVIDER ====================
+
+class LocalAIProvider extends BaseAIProvider {
+  constructor(plugin) {
+    super(plugin, 'LocalAI');
+  }
+
+  buildUrl(payload) {
+    const base = this.plugin.settings.baseUrl.replace(/\/$/, "");
+    const endpoint = this.plugin.settings.localEndpoint || '/v1/chat/completions';
+    return base + endpoint;
+  }
+
+  buildHeaders() {
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json, text/plain, */*'
+    };
+  }
+
+  buildBody(payload) {
+    const body = {
+      model: this.plugin.settings.localModel,
+      messages: payload.messages,
+      temperature: payload.temperature || this.plugin.settings.temperature,
+      max_tokens: payload.max_tokens || this.plugin.settings.max_tokens
+    };
+
+    if (payload.stream) {
+      body.stream = true;
+    }
+
+    return JSON.stringify(body);
+  }
+
+  parseResponse(data) {
+    if (data.choices && data.choices[0]) {
+      if (data.choices[0].message) {
+        return { final: data.choices[0].message.content };
+      }
+      if (data.choices[0].text) {
+        return { final: data.choices[0].text };
+      }
+    }
+    
+    if (data.message) {
+      return { final: data.message.content };
+    }
+    
+    if (data.response) {
+      return { final: data.response };
+    }
+    
+    return { final: JSON.stringify(data) };
+  }
+
+  getStreamingFormat() {
+    return 'local';
+  }
+
+  async checkHealth() {
+    try {
+      const base = this.plugin.settings.baseUrl.replace(/\/$/, "");
+      
+      const endpoints = ['/health', '/api/health', '/v1/health', '/'];
+      
+      for (const endpoint of endpoints) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
+          
+          const response = await fetch(base + endpoint, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            signal: controller.signal
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (response.ok) {
+            try {
+              const data = await response.json();
+              if (data && (data.status === 'ok' || data.status === 'healthy' || data.ready === true)) {
+                return { ok: true, message: '✅ Service is healthy' };
+              }
+            } catch {
+              return { ok: true, message: '✅ Service is reachable' };
+            }
+          }
+        } catch {
+          continue;
+        }
+      }
+      
+      try {
+        const testResponse = await this.send({
+          messages: [{ role: 'user', content: 'test' }],
+          max_tokens: 5,
+          stream: false
+        }, { timeoutMs: 5000 });
+        
+        if (testResponse && testResponse.final) {
+          return { ok: true, message: '✅ Service is responding' };
+        }
+      } catch {
+        // Ignore
+      }
+      
+      return { ok: false, message: '❌ Local AI service is not reachable' };
+    } catch (error) {
+      return { ok: false, message: `❌ ${error.message}` };
+    }
+  }
+}
+
+// ==================== OPENAI PROVIDER ====================
+
+class OpenAIProvider extends BaseAIProvider {
+  constructor(plugin) {
+    super(plugin, 'OpenAI');
+  }
+
+  buildUrl(payload) {
+    return this.plugin.settings.openaiEndpoint || "https://api.openai.com/v1/chat/completions";
+  }
+
+  buildHeaders() {
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${this.plugin.settings.openaiApiKey}`
+    };
+  }
+
+  buildBody(payload) {
+    const body = {
+      model: this.plugin.settings.openaiModel || "gpt-3.5-turbo",
+      messages: payload.messages,
+      temperature: payload.temperature || this.plugin.settings.temperature,
+      max_tokens: payload.max_tokens || this.plugin.settings.max_tokens
+    };
+
+    if (payload.stream) {
+      body.stream = true;
+    }
+
+    return JSON.stringify(body);
+  }
+
+  parseResponse(data) {
+    if (data.choices && data.choices[0] && data.choices[0].message) {
+      return { final: data.choices[0].message.content };
+    }
+    return { final: JSON.stringify(data) };
+  }
+
+  getStreamingFormat() {
+    return 'openai';
+  }
+
+  async checkHealth() {
+    try {
+      const response = await fetch("https://api.openai.com/v1/models", {
+        headers: { 'Authorization': `Bearer ${this.plugin.settings.openaiApiKey}` },
+        signal: AbortSignal.timeout(10000)
+      });
+      
+      if (response.status === 401) {
+        return { ok: false, message: '❌ Invalid API key' };
+      }
+      
+      return { ok: response.ok, message: response.ok ? '✅ Connected to OpenAI' : `❌ Error ${response.status}` };
+    } catch (e) {
+      return { ok: false, message: `❌ ${e.message}` };
+    }
+  }
+}
+
+// ==================== GEMINI PROVIDER (NON-STREAMING) ====================
+
+class GeminiProvider extends BaseAIProvider {
+  constructor(plugin) {
+    super(plugin, 'Gemini');
+    this.lastRequestTime = 0;
+    this.minDelay = 2000;
+  }
+
+  supportsStreaming() {
+    return false;
+  }
+
+  async send(payload, opts) {
+    await this.throttleRequests();
+    return super.send(payload, opts);
+  }
+
+  buildUrl(payload) {
+    const modelName = this.plugin.settings.geminiModel || "gemini-1.5-flash";
+    return `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${this.plugin.settings.geminiApiKey}`;
+  }
+
+  buildHeaders() {
+    return {
+      'Content-Type': 'application/json'
+    };
+  }
+
+  buildBody(payload) {
+    const contents = this.convertToGeminiFormat(payload.messages);
+    
+    return JSON.stringify({
+      contents: contents,
+      generationConfig: {
+        temperature: payload.temperature || this.plugin.settings.temperature,
+        maxOutputTokens: payload.max_tokens || this.plugin.settings.max_tokens,
+        topP: 0.8,
+        topK: 40
+      }
+    });
+  }
+
+  parseResponse(data) {
+    if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+      return { final: data.candidates[0].content.parts[0].text };
+    }
+    return { final: JSON.stringify(data) };
+  }
+
+  async throttleRequests() {
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequestTime;
+    
+    if (timeSinceLastRequest < this.minDelay) {
+      const delay = this.minDelay - timeSinceLastRequest;
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    
+    this.lastRequestTime = Date.now();
+  }
+
+  convertToGeminiFormat(messages) {
+    const contents = [];
+    let systemPrompt = '';
+    
+    for (const msg of messages) {
+      if (msg.role === 'system') {
+        systemPrompt = msg.content;
+      } else if (msg.role === 'user') {
+        const content = systemPrompt ? `[System: ${systemPrompt}]\n\n${msg.content}` : msg.content;
+        contents.push({
+          role: 'user',
+          parts: [{ text: content }]
+        });
+        systemPrompt = '';
+      } else if (msg.role === 'assistant') {
+        contents.push({
+          role: 'model',
+          parts: [{ text: msg.content }]
+        });
+      }
+    }
+    
+    return contents;
+  }
+
+  async checkHealth() {
+    try {
+      const modelName = this.plugin.settings.geminiModel || "gemini-1.5-flash";
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}?key=${this.plugin.settings.geminiApiKey}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        signal: AbortSignal.timeout(10000)
+      });
+      
+      if (response.status === 403 || response.status === 401) {
+        return { ok: false, message: '❌ Invalid API key' };
+      }
+      
+      if (response.status === 429) {
+        return { ok: false, message: '⏳ Rate limit exceeded. Please wait.' };
+      }
+      
+      return { ok: response.ok, message: response.ok ? '✅ Connected to Gemini' : `❌ Error ${response.status}` };
+    } catch (e) {
+      return { ok: false, message: `❌ ${e.message}` };
+    }
+  }
+}
+
+// ==================== ANTHROPIC PROVIDER ====================
+
+class AnthropicProvider extends BaseAIProvider {
+  constructor(plugin) {
+    super(plugin, 'Anthropic');
+  }
+
+  buildUrl(payload) {
+    return this.plugin.settings.anthropicEndpoint || "https://api.anthropic.com/v1/messages";
+  }
+
+  buildHeaders() {
+    return {
+      'Content-Type': 'application/json',
+      'x-api-key': this.plugin.settings.anthropicApiKey,
+      'anthropic-version': '2023-06-01'
+    };
+  }
+
+  buildBody(payload) {
+    const body = {
+      model: this.plugin.settings.anthropicModel || "claude-3-haiku-20240307",
+      messages: payload.messages.filter(m => m.role !== 'system'),
+      temperature: payload.temperature || this.plugin.settings.temperature,
+      max_tokens: payload.max_tokens || this.plugin.settings.max_tokens
+    };
+
+    const systemMessage = payload.messages.find(m => m.role === 'system');
+    if (systemMessage) {
+      body.system = systemMessage.content;
+    }
+
+    if (payload.stream) {
+      body.stream = true;
+    }
+
+    return JSON.stringify(body);
+  }
+
+  parseResponse(data) {
+    if (data.content && data.content[0] && data.content[0].text) {
+      return { final: data.content[0].text };
+    }
+    return { final: JSON.stringify(data) };
+  }
+
+  getStreamingFormat() {
+    return 'anthropic';
+  }
+
+  async checkHealth() {
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/models", {
+        method: 'GET',
+        headers: { 'x-api-key': this.plugin.settings.anthropicApiKey },
+        signal: AbortSignal.timeout(10000)
+      });
+      
+      if (response.status === 401) {
+        return { ok: false, message: '❌ Invalid API key' };
+      }
+      
+      return { ok: response.ok, message: response.ok ? '✅ Connected to Anthropic' : `❌ Error ${response.status}` };
+    } catch (e) {
+      return { ok: false, message: `❌ ${e.message}` };
+    }
+  }
+}
+
+// ==================== CUSTOM PROVIDER ====================
+
+class CustomProvider extends BaseAIProvider {
+  constructor(plugin) {
+    super(plugin, 'Custom API');
+  }
+
+  buildUrl(payload) {
+    return this.plugin.settings.customEndpoint;
+  }
+
+  buildHeaders() {
+    let headers = { 'Content-Type': 'application/json' };
+    
+    try {
+      const customHeaders = JSON.parse(this.plugin.settings.customHeaders || '{}');
+      headers = { ...headers, ...customHeaders };
+    } catch (e) {
+      if (this.plugin.settings.customApiKey) {
+        headers['Authorization'] = `Bearer ${this.plugin.settings.customApiKey}`;
+      }
+    }
+    
+    return headers;
+  }
+
+  buildBody(payload) {
+    let bodyData = {
+      model: this.plugin.settings.customModel,
+      messages: payload.messages,
+      temperature: payload.temperature || this.plugin.settings.temperature || 0.7,
+      max_tokens: payload.max_tokens || this.plugin.settings.max_tokens || 2048
+    };
+
+    try {
+      if (this.plugin.settings.customBodyTemplate && this.plugin.settings.customBodyTemplate.includes('{{')) {
+        let bodyStr = this.plugin.settings.customBodyTemplate
+          .replace('{{model}}', JSON.stringify(this.plugin.settings.customModel))
+          .replace('{{messages}}', JSON.stringify(payload.messages))
+          .replace('{{temperature}}', (payload.temperature || this.plugin.settings.temperature || 0.7).toString())
+          .replace('{{max_tokens}}', (payload.max_tokens || this.plugin.settings.max_tokens || 2048).toString());
+        bodyData = JSON.parse(bodyStr);
+      }
+    } catch (e) {
+      console.log("Using default body template");
+    }
+
+    return JSON.stringify(bodyData);
+  }
+
+  parseResponse(data) {
+    if (data.choices && data.choices[0] && data.choices[0].message) {
+      return { final: data.choices[0].message.content };
+    } else if (data.choices && data.choices[0] && data.choices[0].text) {
+      return { final: data.choices[0].text };
+    } else if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+      return { final: data.candidates[0].content.parts[0].text };
+    } else if (data.message && data.message.content) {
+      return { final: data.message.content };
+    } else if (data.result) {
+      return { final: data.result };
+    } else if (data.content) {
+      return { final: data.content };
+    } else {
+      return { final: JSON.stringify(data) };
+    }
+  }
+
+  getStreamingFormat() {
+    return 'generic';
+  }
+
+  async checkHealth() {
+    try {
+      const testResponse = await this.send({
+        messages: [{ role: "user", content: "Say 'OK' in one word" }],
+        temperature: 0.7,
+        max_tokens: 10
+      }, { timeoutMs: 15000 });
+      
+      return { 
+        ok: true, 
+        message: `✅ Connection successful. Response: "${testResponse.final.substring(0, 50)}..."` 
+      };
+    } catch (error) {
+      return { 
+        ok: false, 
+        message: `❌ ${error.message}` 
+      };
+    }
+  }
+}
+
+// ==================== API MANAGER ====================
+
 class APIManager {
   constructor(plugin) {
     this.plugin = plugin;
@@ -315,40 +1044,10 @@ class APIManager {
     
     const provider = this.providers[apiType];
     if (!provider) {
-      throw new Error(`مزود API غير معروف: ${apiType}`);
+      throw new Error(`Unknown API provider: ${apiType}`);
     }
     
     return await provider.send(payload, opts);
-  }
-  
-  async sendWithRetry(payload, opts, maxRetries = 3) {
-    let lastError;
-    
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        return await this.send(payload, opts);
-      } catch (error) {
-        lastError = error;
-        
-        // إذا كان خطأ 429، انتظر ثم حاول مرة أخرى
-        if (error.message.includes('429') || error.message.includes('Too Many Requests')) {
-          const waitTime = Math.pow(2, attempt) * 1000;
-          console.log(`Attempt ${attempt}/${maxRetries}: Waiting ${waitTime}ms before retry`);
-          await new Promise(resolve => setTimeout(resolve, waitTime));
-          continue;
-        }
-        
-        // لأخطاء أخرى، أعد المحاولة مرة واحدة فقط
-        if (attempt === 1 && !error.message.includes('400')) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          continue;
-        }
-        
-        throw error;
-      }
-    }
-    
-    throw lastError;
   }
   
   async checkHealth() {
@@ -356,420 +1055,37 @@ class APIManager {
     const apiType = mode === 'cloud' ? this.plugin.settings.cloudApiType : 'local';
     
     const provider = this.providers[apiType];
-    return provider ? await provider.checkHealth() : false;
+    return provider ? await provider.checkHealth() : { ok: false, message: 'No provider selected' };
   }
-}
 
-// ========== OpenAI Provider ==========
-class OpenAIProvider {
-  constructor(plugin) {
-    this.plugin = plugin;
-    this.name = "OpenAI";
-    this.icon = "⭐";
-  }
-  
-  async send(payload, opts) {
-    const settings = this.plugin.settings;
+  getCurrentProviderName() {
+    const mode = this.plugin.settings.currentMode;
+    if (mode === 'local') return 'Local AI';
     
-    const url = settings.openaiEndpoint || "https://api.openai.com/v1/chat/completions";
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${settings.openaiApiKey}`
+    const names = {
+      openai: 'OpenAI',
+      gemini: 'Gemini',
+      anthropic: 'Claude',
+      custom: 'Custom API'
     };
-    
-    const body = JSON.stringify({
-      model: settings.openaiModel || "gpt-3.5-turbo",
-      messages: payload.messages,
-      temperature: payload.temperature || settings.temperature,
-      max_tokens: payload.max_tokens || settings.max_tokens,
-      stream: payload.stream || false
-    });
-    
-    return makeRequest(url, headers, body, payload.stream, opts);
+    return names[this.plugin.settings.cloudApiType] || 'Cloud AI';
   }
-  
-  async checkHealth() {
-    try {
-      const response = await fetch("https://api.openai.com/v1/models", {
-        headers: { 'Authorization': `Bearer ${this.plugin.settings.openaiApiKey}` }
-      });
-      return response.ok;
-    } catch (e) {
-      return false;
-    }
-  }
-}
 
-// ========== Gemini Provider ==========
-class GeminiProvider {
-  constructor(plugin) {
-    this.plugin = plugin;
-    this.name = "Gemini";
-    this.icon = "🟠";
-    this.lastRequestTime = 0;
-    this.requestQueue = [];
-  }
-  
-  async send(payload, opts) {
-    const settings = this.plugin.settings;
-    const modelName = settings.geminiModel || "gemini-2.0-flash";
+  getCurrentProviderIcon() {
+    if (this.plugin.settings.currentMode === 'local') return '🖥️';
     
-    // إضافة تأخير بين الطلبات لتجنب 429
-    await this.throttleRequests();
-    
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${settings.geminiApiKey}`;
-    
-    const headers = {
-      'Content-Type': 'application/json'
+    const icons = {
+      openai: '🎡',
+      gemini: '🌀',
+      anthropic: '☁️',
+      custom: '⚙️'
     };
-    
-    const contents = this.convertToGeminiFormat(payload.messages);
-    
-    if (contents.length === 0) {
-      throw new Error('لا توجد رسائل للإرسال');
-    }
-    
-    const body = JSON.stringify({
-      contents: contents,
-      generationConfig: {
-        temperature: payload.temperature || settings.temperature,
-        maxOutputTokens: payload.max_tokens || settings.max_tokens,
-        topP: 0.8,
-        topK: 40
-      },
-      safetySettings: [
-        {
-          category: "HARM_CATEGORY_HARASSMENT",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
-        },
-        {
-          category: "HARM_CATEGORY_HATE_SPEECH",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
-        },
-        {
-          category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
-        },
-        {
-          category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-          threshold: "BLOCK_MEDIUM_AND_ABOVE"
-        }
-      ]
-    });
-    
-    console.log("Gemini Request:", { url, headers, body });
-    
-    try {
-      const response = await makeRequest(url, headers, body, payload.stream, opts);
-      this.lastRequestTime = Date.now();
-      return response;
-    } catch (error) {
-      if (error.message.includes('429')) {
-        throw new Error('الحد الأقصى للطلبات تم تجاوزه. يرجى الانتظار قليلاً قبل إعادة المحاولة.');
-      }
-      throw error;
-    }
-  }
-  
-  async throttleRequests() {
-    const now = Date.now();
-    const timeSinceLastRequest = now - this.lastRequestTime;
-    const minDelay = 2000;
-    
-    if (timeSinceLastRequest < minDelay) {
-      const delay = minDelay - timeSinceLastRequest;
-      console.log(`Throttling Gemini request: waiting ${delay}ms`);
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-  }
-  
-  convertToGeminiFormat(messages) {
-    const contents = [];
-    let currentUserMessage = '';
-    
-    for (const msg of messages) {
-      if (msg.role === 'system') {
-        if (contents.length === 0) {
-          currentUserMessage = `[System: ${msg.content}]\n\n`;
-        }
-      } else if (msg.role === 'user') {
-        const fullMessage = currentUserMessage + msg.content;
-        contents.push({
-          role: 'user',
-          parts: [{ text: fullMessage }]
-        });
-        currentUserMessage = '';
-      } else if (msg.role === 'assistant') {
-        contents.push({
-          role: 'model',
-          parts: [{ text: msg.content }]
-        });
-      }
-    }
-    
-    if (contents.length > 0 && contents[contents.length - 1].role === 'user') {
-      contents.push({
-        role: 'model',
-        parts: [{ text: '...' }]
-      });
-    }
-    
-    return contents;
-  }
-  
-  async checkHealth() {
-    try {
-      const modelName = this.plugin.settings.geminiModel || "gemini-2.0-flash";
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}?key=${this.plugin.settings.geminiApiKey}`;
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (response.status === 429) {
-        return { ok: false, message: 'الحد الأقصى للطلبات تم تجاوزه. يرجى الانتظار.' };
-      }
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        return { ok: false, message: `خطأ ${response.status}: ${errorText}` };
-      }
-      
-      return { ok: true, message: 'الاتصال ناجح' };
-    } catch (e) {
-      console.error("Gemini Health Check Error:", e);
-      return { ok: false, message: e.message };
-    }
+    return icons[this.plugin.settings.cloudApiType] || '☁️';
   }
 }
 
-// ========== Anthropic Provider ==========
-class AnthropicProvider {
-  constructor(plugin) {
-    this.plugin = plugin;
-    this.name = "Anthropic";
-    this.icon = "☁";
-  }
-  
-  async send(payload, opts) {
-    const settings = this.plugin.settings;
-    
-    const url = settings.anthropicEndpoint || "https://api.anthropic.com/v1/messages";
-    const headers = {
-      'Content-Type': 'application/json',
-      'x-api-key': settings.anthropicApiKey,
-      'anthropic-version': '2023-06-01'
-    };
-    
-    const body = JSON.stringify({
-      model: settings.anthropicModel || "claude-3-haiku-20240307",
-      messages: payload.messages,
-      temperature: payload.temperature || settings.temperature,
-      max_tokens: payload.max_tokens || settings.max_tokens,
-      stream: payload.stream || false
-    });
-    
-    return makeRequest(url, headers, body, payload.stream, opts);
-  }
-  
-  async checkHealth() {
-    try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: 'HEAD',
-        headers: { 'x-api-key': this.plugin.settings.anthropicApiKey }
-      });
-      return response.ok;
-    } catch (e) {
-      return false;
-    }
-  }
-}
+// ==================== PROMPT MODAL ====================
 
-// ========== Custom Provider ==========
-class CustomProvider {
-  constructor(plugin) {
-    this.plugin = plugin;
-    this.name = "Custom API";
-    this.icon = "🔧";
-  }
-  
-  async send(payload, opts) {
-    const settings = this.plugin.settings;
-    
-    const url = settings.customEndpoint;
-    const apiKey = settings.customApiKey;
-    const model = settings.customModel;
-    
-    let headers = { 'Content-Type': 'application/json' };
-    
-    try {
-      const customHeaders = JSON.parse(settings.customHeaders || '{}');
-      headers = { ...headers, ...customHeaders };
-    } catch (e) {
-      if (apiKey) {
-        headers['Authorization'] = `Bearer ${apiKey}`;
-      }
-    }
-    
-    let bodyData = {
-      model: model,
-      messages: payload.messages,
-      temperature: payload.temperature || settings.temperature || 0.7,
-      max_tokens: payload.max_tokens || settings.max_tokens || 2048,
-      stream: false
-    };
-    
-    try {
-      if (settings.customBodyTemplate && settings.customBodyTemplate.includes('{{')) {
-        let bodyStr = settings.customBodyTemplate
-          .replace('{{model}}', JSON.stringify(model))
-          .replace('{{messages}}', JSON.stringify(payload.messages))
-          .replace('{{temperature}}', (payload.temperature || settings.temperature || 0.7).toString())
-          .replace('{{max_tokens}}', (payload.max_tokens || settings.max_tokens || 2048).toString());
-        bodyData = JSON.parse(bodyStr);
-      }
-    } catch (e) {
-      console.log("Using default body template:", e.message);
-    }
-    
-    const body = JSON.stringify(bodyData);
-    
-    console.log("API Request to:", url);
-    
-    try {
-      const response = await this.makeRequest(url, headers, body, false, opts);
-      return response;
-    } catch (error) {
-      console.error("API Error:", error);
-      throw error;
-    }
-  }
-  
-  async makeRequest(url, headers, body, streaming, opts) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), opts.timeoutMs || 30000);
-
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: headers,
-        body: body,
-        signal: controller.signal
-      });
-
-      clearTimeout(timeout);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        const status = response.status;
-        
-        if (status === 402) {
-          throw new Error(`رصيد الحساب غير كافي (402). يرجى شحن الرصيد أو استخدام مفتاح جديد.`);
-        } else if (status === 429) {
-          throw new Error(`تجاوز الحد المسموح (429). انتظر قليلاً وحاول مرة أخرى.`);
-        } else if (status === 403) {
-          throw new Error(`صلاحية المفتاح منتهية أو غير صحيح (403). تحقق من المفتاح.`);
-        } else if (status === 401) {
-          throw new Error(`مفتاح API غير صالح (401).`);
-        } else {
-          throw new Error(`HTTP ${status}: ${errorText.substring(0, 100)}`);
-        }
-      }
-
-      const data = await response.json();
-      
-      if (data.choices && data.choices[0] && data.choices[0].message) {
-        return { final: data.choices[0].message.content };
-      } else if (data.choices && data.choices[0] && data.choices[0].text) {
-        return { final: data.choices[0].text };
-      } else if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-        return { final: data.candidates[0].content.parts[0].text };
-      } else if (data.message && data.message.content) {
-        return { final: data.message.content };
-      } else if (data.result) {
-        return { final: data.result };
-      } else {
-        console.warn("Unexpected response format:", data);
-        return { final: JSON.stringify(data).substring(0, 500) };
-      }
-    } catch (error) {
-      clearTimeout(timeout);
-      throw error;
-    }
-  }
-  
-  async checkHealth() {
-    try {
-      const testResponse = await this.send({
-        messages: [{ role: "user", content: "اكتب كلمة 'نجاح'" }],
-        temperature: 0.7,
-        max_tokens: 10
-      }, { timeoutMs: 15000 });
-      
-      return { 
-        ok: true, 
-        message: `✅ اتصال ناجح. الرد: "${testResponse.final.substring(0, 50)}"` 
-      };
-    } catch (error) {
-      return { 
-        ok: false, 
-        message: `❌ ${error.message}` 
-      };
-    }
-  }
-}
-
-// ========== Local AI Provider ==========
-class LocalAIProvider {
-  constructor(plugin) {
-    this.plugin = plugin;
-    this.name = "Local AI";
-    this.icon = "🖥️";
-  }
-  
-  async send(payload, opts) {
-    const settings = this.plugin.settings;
-    const base = settings.baseUrl.replace(/\/$/, "");
-    const url = base + (settings.localEndpoint || '/v1/chat/completions');
-    
-    const headers = { 'Content-Type': 'application/json' };
-    const body = JSON.stringify({
-      model: settings.localModel,
-      messages: payload.messages,
-      temperature: payload.temperature || settings.temperature,
-      max_tokens: payload.max_tokens || settings.max_tokens,
-      stream: payload.stream || false
-    });
-    
-    return makeRequest(url, headers, body, payload.stream, opts);
-  }
-  
-  async checkHealth() {
-    try {
-      const base = this.plugin.settings.baseUrl.replace(/\/$/, "");
-      const response = await fetch(base + '/health', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      if (!response.ok) return false;
-      
-      try {
-        const data = await response.json();
-        return data && (data.status === 'ok' || data.status === 'healthy' || data.ready === true);
-      } catch {
-        return response.ok;
-      }
-    } catch (e) {
-      return false;
-    }
-  }
-}
-
-// ---------------- Prompt Modal ----------------
 class PromptModal extends Modal {
   constructor(app, title = "Prompt", initial = "", onSubmit) {
     super(app);
@@ -780,27 +1096,81 @@ class PromptModal extends Modal {
   
   onOpen() {
     const { contentEl } = this;
-    contentEl.createEl('h3', { text: this.title });
-    this.ta = contentEl.createEl('textarea');
+    contentEl.empty();
+    
+    contentEl.createEl('h3', { text: this.title, cls: 'ai-modal-title' });
+    
+    this.ta = contentEl.createEl('textarea', {
+      cls: 'ai-modal-textarea',
+      attr: {
+        placeholder: 'Type your prompt here...'
+      }
+    });
     this.ta.style.width = '100%';
     this.ta.style.height = '160px';
+    this.ta.style.padding = '12px';
+    this.ta.style.borderRadius = '8px';
+    this.ta.style.border = '1px solid var(--background-modifier-border)';
+    this.ta.style.backgroundColor = 'var(--background-primary)';
+    this.ta.style.color = 'var(--text-normal)';
+    this.ta.style.fontSize = '14px';
+    this.ta.style.fontFamily = 'inherit';
+    this.ta.style.resize = 'vertical';
     this.ta.value = this.initial;
-    const row = contentEl.createEl('div', { cls: 'ai-btn-row' });
-    const send = row.createEl('button', { text: 'Send' });
-    const cancel = row.createEl('button', { text: 'Cancel' });
-    send.addEventListener('click', ()=> {
+    
+    const row = contentEl.createEl('div', { cls: 'ai-modal-btn-row' });
+    row.style.display = 'flex';
+    row.style.justifyContent = 'flex-end';
+    row.style.gap = '10px';
+    row.style.marginTop = '16px';
+    
+    const send = row.createEl('button', { 
+      text: 'Send',
+      cls: 'ai-modal-send-btn'
+    });
+    send.style.padding = '8px 24px';
+    send.style.borderRadius = '6px';
+    send.style.border = 'none';
+    send.style.backgroundColor = 'var(--interactive-accent)';
+    send.style.color = 'var(--text-on-accent)';
+    send.style.cursor = 'pointer';
+    send.style.fontSize = '14px';
+    send.style.fontWeight = '600';
+    
+    const cancel = row.createEl('button', { 
+      text: 'Cancel',
+      cls: 'ai-modal-cancel-btn'
+    });
+    cancel.style.padding = '8px 24px';
+    cancel.style.borderRadius = '6px';
+    cancel.style.border = '1px solid var(--background-modifier-border)';
+    cancel.style.backgroundColor = 'transparent';
+    cancel.style.color = 'var(--text-normal)';
+    cancel.style.cursor = 'pointer';
+    cancel.style.fontSize = '14px';
+    
+    send.addEventListener('click', () => {
       const v = this.ta.value.trim();
-      if (!v) { new Notice("Prompt empty"); return; }
+      if (!v) { 
+        new Notice("Prompt cannot be empty"); 
+        return; 
+      }
       this.onSubmit(v);
       this.close();
     });
-    cancel.addEventListener('click', ()=> this.close());
+    
+    cancel.addEventListener('click', () => this.close());
+    
+    this.ta.focus();
   }
   
-  onClose() { this.contentEl.empty(); }
+  onClose() { 
+    this.contentEl.empty(); 
+  }
 }
 
-// ---------------- Attach Modal ----------------
+// ==================== ATTACH MODAL ====================
+
 class AttachModal extends Modal {
   constructor(app, onSubmit) {
     super(app);
@@ -815,37 +1185,75 @@ class AttachModal extends Modal {
     contentEl.empty();
     
     const title = contentEl.createEl('h2', { 
-      text: '+ إرفاق ملفات',
+      text: '📎 Attach Files',
       cls: 'ai-attach-title'
     });
+    title.style.textAlign = 'center';
+    title.style.margin = '0 0 20px 0';
+    title.style.fontSize = '18px';
+    title.style.fontWeight = '600';
     
     const searchRow = contentEl.createDiv({ cls: 'ai-search-row' });
     const searchInput = searchRow.createEl('input', {
       type: 'text',
-      placeholder: 'ابحث عن ملف...'
+      placeholder: '🔍 Search files...'
     });
     searchInput.style.width = '100%';
-    searchInput.style.padding = '8px 12px';
-    searchInput.style.borderRadius = '6px';
+    searchInput.style.padding = '10px 14px';
+    searchInput.style.borderRadius = '8px';
     searchInput.style.border = '1px solid var(--background-modifier-border)';
     searchInput.style.backgroundColor = 'var(--background-secondary)';
     searchInput.style.color = 'var(--text-normal)';
     searchInput.style.fontSize = '14px';
+    searchInput.style.marginBottom = '16px';
     
     const container = contentEl.createDiv({ cls: 'ai-file-list-container' });
+    container.style.maxHeight = '300px';
+    container.style.overflowY = 'auto';
+    container.style.border = '1px solid var(--background-modifier-border)';
+    container.style.borderRadius = '8px';
+    container.style.padding = '8px';
+    container.style.backgroundColor = 'var(--background-secondary)';
+    container.style.marginBottom = '16px';
     
     const buttonRow = contentEl.createDiv({ cls: 'ai-attach-btn-row' });
+    buttonRow.style.display = 'flex';
+    buttonRow.style.justifyContent = 'center';
+    buttonRow.style.gap = '12px';
+    buttonRow.style.marginTop = '20px';
     
     const sendSel = buttonRow.createEl('button', { 
-      text: '+ إرفاق المحدد',
+      text: '📎 Attach Selected',
       cls: 'ai-attach-send-btn'
     });
+    sendSel.style.padding = '10px 24px';
+    sendSel.style.borderRadius = '8px';
+    sendSel.style.border = 'none';
+    sendSel.style.backgroundColor = 'var(--interactive-accent)';
+    sendSel.style.color = 'var(--text-on-accent)';
+    sendSel.style.cursor = 'pointer';
+    sendSel.style.fontSize = '14px';
+    sendSel.style.fontWeight = '600';
+    sendSel.style.minWidth = '140px';
+    
+    const cancel = buttonRow.createEl('button', { 
+      text: 'Cancel',
+      cls: 'ai-attach-cancel-btn'
+    });
+    cancel.style.padding = '10px 24px';
+    cancel.style.borderRadius = '8px';
+    cancel.style.border = '1px solid var(--background-modifier-border)';
+    cancel.style.backgroundColor = 'transparent';
+    cancel.style.color = 'var(--text-normal)';
+    cancel.style.cursor = 'pointer';
+    cancel.style.fontSize = '14px';
+    cancel.style.minWidth = '140px';
     
     sendSel.addEventListener('click', async () => {
       const files = this.app.vault.getMarkdownFiles();
       const picked = files.filter(f => this.selected.has(f.path));
       if (picked.length === 0) {
-        new Notice('لم يتم اختيار أي ملفات');
+        new Notice('No files selected');
         return;
       }
       
@@ -854,10 +1262,6 @@ class AttachModal extends Modal {
       this.close();
     });
     
-    const cancel = buttonRow.createEl('button', { 
-      text: 'إلغاء',
-      cls: 'ai-attach-cancel-btn'
-    });
     cancel.addEventListener('click', () => this.close());
     
     const renderFiles = () => {
@@ -877,22 +1281,42 @@ class AttachModal extends Modal {
         const emptyMsg = container.createDiv({ 
           cls: 'ai-empty-files',
           text: this.searchTerm.trim() ? 
-            'لا توجد ملفات تطابق البحث' : 
-            'لا توجد ملفات markdown'
+            'No files match your search' : 
+            'No markdown files found'
         });
+        emptyMsg.style.textAlign = 'center';
+        emptyMsg.style.padding = '40px 20px';
+        emptyMsg.style.color = 'var(--text-muted)';
+        emptyMsg.style.fontSize = '14px';
         return;
       }
       
-      filteredFiles.forEach((f, i) => {
+      filteredFiles.forEach((f) => {
         const row = container.createDiv({ cls: 'ai-file-row' });
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.padding = '10px 12px';
+        row.style.borderRadius = '6px';
+        row.style.marginBottom = '6px';
+        row.style.backgroundColor = 'var(--background-primary)';
+        row.style.border = '1px solid var(--background-modifier-border)';
+        row.style.cursor = 'pointer';
         
         const checkboxContainer = row.createDiv({ cls: 'ai-checkbox-container' });
+        checkboxContainer.style.marginLeft = '12px';
+        checkboxContainer.style.flexShrink = '0';
+        
         const cb = checkboxContainer.createEl('input', { 
           type: 'checkbox',
           cls: 'ai-file-checkbox'
         });
+        cb.style.width = '18px';
+        cb.style.height = '18px';
+        cb.style.cursor = 'pointer';
         cb.checked = this.selected.has(f.path);
+        
         cb.addEventListener('change', (e) => {
+          e.stopPropagation();
           if (e.target.checked) {
             this.selected.add(f.path);
           } else {
@@ -901,19 +1325,38 @@ class AttachModal extends Modal {
         });
         
         const fileInfo = row.createDiv({ cls: 'ai-file-info' });
+        fileInfo.style.flex = '1';
+        fileInfo.style.minWidth = '0';
+        
         const fileName = fileInfo.createEl('div', { 
           text: f.basename,
           cls: 'ai-file-name'
         });
+        fileName.style.fontWeight = '600';
+        fileName.style.fontSize = '14px';
+        fileName.style.color = 'var(--text-normal)';
+        fileName.style.marginBottom = '2px';
+        fileName.style.whiteSpace = 'nowrap';
+        fileName.style.overflow = 'hidden';
+        fileName.style.textOverflow = 'ellipsis';
         
         const filePath = fileInfo.createEl('div', { 
           text: f.path,
           cls: 'ai-file-path'
         });
+        filePath.style.fontSize = '12px';
+        filePath.style.color = 'var(--text-muted)';
+        filePath.style.whiteSpace = 'nowrap';
+        filePath.style.overflow = 'hidden';
+        filePath.style.textOverflow = 'ellipsis';
         
-        if (this.searchTerm.trim() && f.basename.toLowerCase().includes(this.searchTerm.toLowerCase())) {
-          this.highlightText(fileName, f.basename, this.searchTerm);
-        }
+        row.addEventListener('click', (e) => {
+          if (e.target.type !== 'checkbox') {
+            cb.checked = !cb.checked;
+            const event = new Event('change', { bubbles: true });
+            cb.dispatchEvent(event);
+          }
+        });
       });
     };
     
@@ -925,38 +1368,512 @@ class AttachModal extends Modal {
     renderFiles();
   }
   
-  highlightText(element, fullText, searchTerm) {
-    const term = searchTerm.toLowerCase();
-    const text = fullText;
-    const index = text.toLowerCase().indexOf(term);
-    
-    if (index !== -1) {
-      element.empty();
-      
-      const before = text.substring(0, index);
-      if (before) {
-        element.createSpan({ text: before });
-      }
-      
-      const match = text.substring(index, index + term.length);
-      const highlight = element.createSpan({ 
-        text: match,
-        cls: 'ai-search-highlight'
-      });
-      
-      const after = text.substring(index + term.length);
-      if (after) {
-        element.createSpan({ text: after });
-      }
-    }
-  }
-  
   onClose() { 
     this.contentEl.empty(); 
   }
 }
 
-// ---------------- Chat Sidebar View ----------------
+// ==================== IN-NOTE AI INTERACTIONS ====================
+
+class InNoteAIInteractions {
+  constructor(plugin) {
+    this.plugin = plugin;
+    this.floatingMenu = null;
+    this.registerContextMenu();
+    this.registerFloatingMenu();
+    this.registerKeyboardShortcuts();
+  }
+
+  registerContextMenu() {
+    this.plugin.registerEvent(
+      this.plugin.app.workspace.on('editor-menu', (menu, editor, view) => {
+        const selection = editor.getSelection();
+        
+        if (selection && selection.trim().length > 0) {
+          menu.addSeparator();
+          
+          menu.addItem((item) => {
+            item.setTitle('🤖 AI: Ask about selection')
+                .setIcon('brain')
+                .onClick(() => this.askAboutSelection(editor, selection));
+          });
+
+          menu.addItem((item) => {
+            item.setTitle('✏️ AI: Edit/Improve selection')
+                .setIcon('pencil')
+                .onClick(() => this.editSelection(editor, selection));
+          });
+
+          menu.addItem((item) => {
+            item.setTitle('📝 AI: Continue writing')
+                .setIcon('quote')
+                .onClick(() => this.continueWriting(editor, selection));
+          });
+
+          menu.addItem((item) => {
+            item.setTitle('🌐 AI: Translate selection')
+                .setIcon('languages')
+                .onClick(() => this.translateSelection(editor, selection));
+          });
+
+          const submenu = menu.addItem((item) => {
+            item.setTitle('🤖 AI: More options...')
+                .setIcon('chevron-down');
+          });
+
+          submenu.setSubmenu((submenu) => {
+            this.addMoreAIOptions(submenu, editor, selection);
+          });
+        }
+      })
+    );
+  }
+
+  registerFloatingMenu() {
+    let timeoutId = null;
+    
+    this.plugin.registerEvent(
+      this.plugin.app.workspace.on('editor-change', (editor) => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        
+        timeoutId = setTimeout(() => {
+          const selection = editor.getSelection();
+          if (selection && selection.trim().length > 20) {
+            this.showFloatingMenu(editor);
+          } else {
+            this.hideFloatingMenu();
+          }
+        }, 500);
+      })
+    );
+
+    this.plugin.registerEvent(
+      this.plugin.app.workspace.on('click', () => {
+        this.hideFloatingMenu();
+      })
+    );
+  }
+
+  showFloatingMenu(editor) {
+    this.hideFloatingMenu();
+
+    const cursor = editor.getCursor('from');
+    const coords = editor.charCoords(cursor, 'screen');
+    
+    const menu = document.createElement('div');
+    menu.className = 'ai-floating-menu';
+    menu.style.position = 'fixed';
+    menu.style.top = (coords.top - 50) + 'px';
+    menu.style.left = coords.left + 'px';
+    menu.style.zIndex = '1000';
+    menu.style.display = 'flex';
+    menu.style.gap = '8px';
+    menu.style.padding = '8px';
+    menu.style.background = 'var(--background-primary)';
+    menu.style.border = '1px solid var(--background-modifier-border)';
+    menu.style.borderRadius = '30px';
+    menu.style.boxShadow = '0 4px 20px rgba(0,0,0,0.2)';
+    menu.style.backdropFilter = 'blur(10px)';
+    menu.style.animation = 'ai-float-in 0.2s ease';
+    
+    const buttons = [
+      { icon: '🤖', title: 'Ask AI', action: () => this.askAboutSelection(editor, editor.getSelection()) },
+      { icon: '✏️', title: 'Edit', action: () => this.editSelection(editor, editor.getSelection()) },
+      { icon: '📝', title: 'Continue', action: () => this.continueWriting(editor, editor.getSelection()) },
+      { icon: '🌐', title: 'Translate', action: () => this.translateSelection(editor, editor.getSelection()) }
+    ];
+
+    buttons.forEach(btn => {
+      const button = menu.createEl('button', {
+        text: btn.icon,
+        cls: 'ai-floating-btn',
+        attr: { title: btn.title }
+      });
+      button.style.width = '36px';
+      button.style.height = '36px';
+      button.style.borderRadius = '50%';
+      button.style.border = 'none';
+      button.style.background = 'var(--interactive-accent)';
+      button.style.color = 'var(--text-on-accent)';
+      button.style.fontSize = '18px';
+      button.style.cursor = 'pointer';
+      button.style.transition = 'all 0.2s ease';
+      button.style.display = 'flex';
+      button.style.alignItems = 'center';
+      button.style.justifyContent = 'center';
+      
+      button.addEventListener('mouseenter', () => {
+        button.style.transform = 'scale(1.1)';
+        button.style.background = 'var(--interactive-accent-hover)';
+      });
+      
+      button.addEventListener('mouseleave', () => {
+        button.style.transform = 'scale(1)';
+        button.style.background = 'var(--interactive-accent)';
+      });
+      
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        btn.action();
+        menu.remove();
+      });
+    });
+
+    document.body.appendChild(menu);
+    this.floatingMenu = menu;
+
+    setTimeout(() => {
+      const closeHandler = (e) => {
+        if (menu && !menu.contains(e.target)) {
+          menu.remove();
+          document.removeEventListener('click', closeHandler);
+        }
+      };
+      document.addEventListener('click', closeHandler);
+    }, 100);
+  }
+
+  hideFloatingMenu() {
+    if (this.floatingMenu) {
+      this.floatingMenu.remove();
+      this.floatingMenu = null;
+    }
+  }
+
+  registerKeyboardShortcuts() {
+    this.plugin.addCommand({
+      id: 'ai-ask-selection',
+      name: 'Ask AI about selected text',
+      hotkeys: [{ modifiers: ['Ctrl', 'Shift'], key: 'A' }],
+      editorCallback: (editor) => {
+        const selection = editor.getSelection();
+        if (selection && selection.trim().length > 0) {
+          this.askAboutSelection(editor, selection);
+        } else {
+          new Notice('Please select some text first');
+        }
+      }
+    });
+
+    this.plugin.addCommand({
+      id: 'ai-edit-selection',
+      name: 'Edit selected text with AI',
+      hotkeys: [{ modifiers: ['Ctrl', 'Shift'], key: 'E' }],
+      editorCallback: (editor) => {
+        const selection = editor.getSelection();
+        if (selection && selection.trim().length > 0) {
+          this.editSelection(editor, selection);
+        } else {
+          new Notice('Please select some text first');
+        }
+      }
+    });
+
+    this.plugin.addCommand({
+      id: 'ai-continue-writing',
+      name: 'Continue writing from cursor',
+      hotkeys: [{ modifiers: ['Ctrl', 'Shift'], key: 'C' }],
+      editorCallback: (editor) => {
+        const cursor = editor.getCursor();
+        const line = editor.getLine(cursor.line);
+        const textBeforeCursor = line.substring(0, cursor.ch);
+        const textAfterCursor = line.substring(cursor.ch);
+        const context = textBeforeCursor + (textAfterCursor ? ' ' + textAfterCursor : '');
+        
+        if (context.trim().length > 0) {
+          this.continueWriting(editor, context);
+        } else {
+          new Notice('No text context found at cursor');
+        }
+      }
+    });
+  }
+
+  async askAboutSelection(editor, selection) {
+    const prompt = await this.showPromptModal('What would you like to ask about this selection?');
+    if (!prompt) return;
+
+    const fullPrompt = `Context from my note:\n\n${selection}\n\nMy question: ${prompt}`;
+    
+    const cursor = editor.getCursor('to');
+    editor.replaceRange('\n\n--- 🤖 AI Response ---\n\n', cursor);
+    
+    try {
+      await this.streamAIResponse(fullPrompt, (chunk) => {
+        editor.replaceRange(chunk, editor.getCursor());
+      });
+      
+      editor.replaceRange('\n\n---\n\n', editor.getCursor());
+    } catch (error) {
+      editor.replaceRange(`\n\n❌ Error: ${error.message}\n\n`, editor.getCursor());
+      new Notice('AI Error: ' + error.message);
+    }
+  }
+
+  async editSelection(editor, selection) {
+    const prompt = await this.showPromptModal('How would you like to edit this text? (e.g., "make it formal", "summarize", "fix grammar")');
+    if (!prompt) return;
+
+    const fullPrompt = `Original text:\n\n${selection}\n\nInstructions: ${prompt}\n\nEdited version:`;
+    
+    const cursor = editor.getCursor('from');
+    const to = editor.getCursor('to');
+    const tempCursor = { line: cursor.line, ch: cursor.ch };
+    
+    editor.replaceRange('⏳ Editing...', cursor, to);
+    
+    try {
+      let fullResponse = '';
+      await this.streamAIResponse(fullPrompt, (chunk) => {
+        fullResponse += chunk;
+        editor.replaceRange(fullResponse, tempCursor, { 
+          line: tempCursor.line, 
+          ch: tempCursor.ch + 1000 
+        });
+      });
+      
+      editor.replaceRange(fullResponse, tempCursor, { 
+        line: tempCursor.line, 
+        ch: tempCursor.ch + 1000 
+      });
+    } catch (error) {
+      editor.replaceRange(selection, tempCursor, { 
+        line: tempCursor.line, 
+        ch: tempCursor.ch + 1000 
+      });
+      new Notice('AI Error: ' + error.message);
+    }
+  }
+
+  async continueWriting(editor, context) {
+    const fullPrompt = `Continue the following text naturally:\n\n${context}\n\n`;
+    
+    const cursor = editor.getCursor('to');
+    
+    try {
+      await this.streamAIResponse(fullPrompt, (chunk) => {
+        editor.replaceRange(chunk, editor.getCursor());
+      });
+    } catch (error) {
+      new Notice('AI Error: ' + error.message);
+    }
+  }
+
+  async translateSelection(editor, selection) {
+    const targetLanguage = await this.showPromptModal('Translate to which language?');
+    if (!targetLanguage) return;
+
+    const fullPrompt = `Translate the following text to ${targetLanguage}:\n\n${selection}\n\nTranslation:`;
+    
+    const cursor = editor.getCursor('from');
+    const to = editor.getCursor('to');
+    
+    editor.replaceRange(`\n\n[${targetLanguage} translation]:\n`, cursor, to);
+    
+    try {
+      await this.streamAIResponse(fullPrompt, (chunk) => {
+        editor.replaceRange(chunk, editor.getCursor());
+      });
+      
+      editor.replaceRange('\n\n', editor.getCursor());
+    } catch (error) {
+      new Notice('AI Error: ' + error.message);
+    }
+  }
+
+  async summarizeText(editor, selection) {
+    const fullPrompt = `Summarize the following text concisely:\n\n${selection}\n\nSummary:`;
+    
+    const cursor = editor.getCursor('to');
+    editor.replaceRange('\n\n📝 Summary:\n\n', cursor);
+    
+    try {
+      await this.streamAIResponse(fullPrompt, (chunk) => {
+        editor.replaceRange(chunk, editor.getCursor());
+      });
+    } catch (error) {
+      new Notice('AI Error: ' + error.message);
+    }
+  }
+
+  async expandText(editor, selection) {
+    const fullPrompt = `Expand and elaborate on the following text, adding more details and depth:\n\n${selection}\n\nExpanded version:`;
+    
+    const cursor = editor.getCursor('to');
+    editor.replaceRange('\n\n🔍 Expanded:\n\n', cursor);
+    
+    try {
+      await this.streamAIResponse(fullPrompt, (chunk) => {
+        editor.replaceRange(chunk, editor.getCursor());
+      });
+    } catch (error) {
+      new Notice('AI Error: ' + error.message);
+    }
+  }
+
+  async generateQuestions(editor, selection) {
+    const fullPrompt = `Generate 5 thoughtful questions based on this text:\n\n${selection}\n\nQuestions:`;
+    
+    const cursor = editor.getCursor('to');
+    editor.replaceRange('\n\n❓ Questions:\n\n', cursor);
+    
+    try {
+      await this.streamAIResponse(fullPrompt, (chunk) => {
+        editor.replaceRange(chunk, editor.getCursor());
+      });
+    } catch (error) {
+      new Notice('AI Error: ' + error.message);
+    }
+  }
+
+  async extractKeywords(editor, selection) {
+    const fullPrompt = `Extract the most important keywords and key phrases from this text:\n\n${selection}\n\nKeywords:`;
+    
+    const cursor = editor.getCursor('to');
+    editor.replaceRange('\n\n🔑 Keywords:\n\n', cursor);
+    
+    try {
+      await this.streamAIResponse(fullPrompt, (chunk) => {
+        editor.replaceRange(chunk, editor.getCursor());
+      });
+    } catch (error) {
+      new Notice('AI Error: ' + error.message);
+    }
+  }
+
+  async changeTone(editor, selection, tone) {
+    const toneMap = {
+      professional: 'professional and formal',
+      casual: 'casual and friendly',
+      academic: 'academic and scholarly',
+      poetic: 'poetic and literary',
+      technical: 'technical and precise',
+      simple: 'simple and easy to understand'
+    };
+    
+    const fullPrompt = `Rewrite the following text in a ${toneMap[tone] || tone} tone:\n\n${selection}\n\nRewritten version:`;
+    
+    const cursor = editor.getCursor('from');
+    const to = editor.getCursor('to');
+    
+    try {
+      let fullResponse = '';
+      await this.streamAIResponse(fullPrompt, (chunk) => {
+        fullResponse += chunk;
+        editor.replaceRange(fullResponse, cursor, to);
+      });
+    } catch (error) {
+      new Notice('AI Error: ' + error.message);
+    }
+  }
+
+  addMoreAIOptions(submenu, editor, selection) {
+    submenu.addItem((item) => {
+      item.setTitle('📊 Summarize')
+          .setIcon('file-text')
+          .onClick(() => this.summarizeText(editor, selection));
+    });
+    
+    submenu.addItem((item) => {
+      item.setTitle('🔍 Expand')
+          .setIcon('plus-circle')
+          .onClick(() => this.expandText(editor, selection));
+    });
+    
+    submenu.addItem((item) => {
+      item.setTitle('❓ Generate questions')
+          .setIcon('help-circle')
+          .onClick(() => this.generateQuestions(editor, selection));
+    });
+    
+    submenu.addItem((item) => {
+      item.setTitle('🔑 Extract keywords')
+          .setIcon('key')
+          .onClick(() => this.extractKeywords(editor, selection));
+    });
+    
+    submenu.addSeparator();
+    
+    submenu.addItem((item) => {
+      item.setTitle('💼 Professional tone')
+          .setIcon('briefcase')
+          .onClick(() => this.changeTone(editor, selection, 'professional'));
+    });
+    
+    submenu.addItem((item) => {
+      item.setTitle('😊 Casual tone')
+          .setIcon('smile')
+          .onClick(() => this.changeTone(editor, selection, 'casual'));
+    });
+    
+    submenu.addItem((item) => {
+      item.setTitle('🎓 Academic tone')
+          .setIcon('graduation-cap')
+          .onClick(() => this.changeTone(editor, selection, 'academic'));
+    });
+    
+    submenu.addItem((item) => {
+      item.setTitle('📐 Technical tone')
+          .setIcon('code')
+          .onClick(() => this.changeTone(editor, selection, 'technical'));
+    });
+    
+    submenu.addSeparator();
+    
+    submenu.addItem((item) => {
+      item.setTitle('📋 Copy to clipboard')
+          .setIcon('copy')
+          .onClick(() => {
+            navigator.clipboard.writeText(selection);
+            new Notice('Selection copied to clipboard');
+          });
+    });
+  }
+
+  async streamAIResponse(prompt, onChunk) {
+    const session = this.plugin._sessionManager.getActive();
+    
+    if (session) {
+      this.plugin._sessionManager.addMessage('user', prompt);
+    }
+
+    const result = await this.plugin.apiManager.sendMessage({
+      messages: session ? this.plugin._sessionManager.getMessagesForRequest() : [{ role: 'user', content: prompt }],
+      temperature: this.plugin.settings.temperature,
+      max_tokens: this.plugin.settings.max_tokens,
+      stream: true
+    }, {
+      onChunk: onChunk,
+      timeoutMs: this.plugin.settings.timeoutMs
+    });
+
+    if (session && result.final) {
+      this.plugin._sessionManager.addMessage('assistant', result.final);
+      this.plugin.saveState();
+    }
+
+    return result.final;
+  }
+
+  async showPromptModal(placeholder) {
+    return new Promise((resolve) => {
+      const modal = new PromptModal(
+        this.plugin.app,
+        'AI Assistant',
+        '',
+        (result) => resolve(result)
+      );
+      
+      modal.open();
+    });
+  }
+}
+
+// ==================== CHAT SIDEBAR VIEW ====================
+
 class ChatView extends ItemView {
   constructor(leaf, plugin) {
     super(leaf);
@@ -973,43 +1890,98 @@ class ChatView extends ItemView {
   async onOpen() {
     this.containerEl.empty();
     this.containerEl.addClass('ai-sidebar');
-    this.containerEl.style.direction = 'rtl';
-    this.containerEl.style.textAlign = 'right';
+    this.containerEl.style.direction = 'ltr';
+    this.containerEl.style.textAlign = 'left';
+    this.containerEl.style.display = 'flex';
+    this.containerEl.style.flexDirection = 'column';
+    this.containerEl.style.height = '100%';
+    this.containerEl.style.padding = '8px';
+    this.containerEl.style.gap = '8px';
+    this.containerEl.style.boxSizing = 'border-box';
 
-    // ---------- Top Bar ----------
     const topBar = this.containerEl.createDiv({ cls: 'ai-top-bar' });
+    topBar.style.display = 'flex';
+    topBar.style.justifyContent = 'flex-start';
+    topBar.style.alignItems = 'center';
+    topBar.style.height = '36px';
+    topBar.style.width = '100%';
+    topBar.style.gap = '8px';
 
-    // زر الاختصارات
     this.shortcutsBtn = topBar.createEl('button', {
       cls: 'ai-shortcuts-btn',
       text: '⚡'
     });
-    this.shortcutsBtn.title = 'اختصارات';
+    this.shortcutsBtn.style.background = 'transparent';
+    this.shortcutsBtn.style.border = 'none';
+    this.shortcutsBtn.style.cursor = 'pointer';
+    this.shortcutsBtn.style.fontSize = '20px';
+    this.shortcutsBtn.style.color = 'var(--text-normal)';
+    this.shortcutsBtn.style.padding = '4px 8px';
+    this.shortcutsBtn.style.borderRadius = '4px';
+    this.shortcutsBtn.style.width = '32px';
+    this.shortcutsBtn.style.height = '32px';
+    this.shortcutsBtn.style.display = 'flex';
+    this.shortcutsBtn.style.alignItems = 'center';
+    this.shortcutsBtn.style.justifyContent = 'center';
+    this.shortcutsBtn.title = 'Shortcuts';
 
     this.modeToggleBtn = topBar.createEl('button', {
       cls: 'ai-mode-toggle',
       text: this.getProviderIcon()
     });
+    this.modeToggleBtn.style.background = 'transparent';
+    this.modeToggleBtn.style.border = 'none';
+    this.modeToggleBtn.style.cursor = 'pointer';
+    this.modeToggleBtn.style.fontSize = '20px';
+    this.modeToggleBtn.style.color = 'var(--text-normal)';
+    this.modeToggleBtn.style.padding = '4px 8px';
+    this.modeToggleBtn.style.borderRadius = '4px';
+    this.modeToggleBtn.style.width = '32px';
+    this.modeToggleBtn.style.height = '32px';
+    this.modeToggleBtn.style.display = 'flex';
+    this.modeToggleBtn.style.alignItems = 'center';
+    this.modeToggleBtn.style.justifyContent = 'center';
     this.modeToggleBtn.title = this.getProviderInfo();
 
-    // إنشاء عداد التوكنات
     this.tokenCounter = topBar.createDiv({ 
       cls: 'ai-token-counter',
       text: '🔢 0/8192'
     });
+    this.tokenCounter.style.fontSize = '11px';
+    this.tokenCounter.style.padding = '4px 8px';
+    this.tokenCounter.style.borderRadius = '12px';
+    this.tokenCounter.style.background = 'transparent';
+    this.tokenCounter.style.color = 'var(--text-muted)';
+    this.tokenCounter.style.border = '1px solid var(--background-modifier-border)';
+    this.tokenCounter.style.display = 'flex';
+    this.tokenCounter.style.alignItems = 'center';
+    this.tokenCounter.style.justifyContent = 'center';
+    this.tokenCounter.style.minWidth = '70px';
+    this.tokenCounter.style.height = '24px';
     
-    // تحديث عرض عداد التوكنات بناءً على الإعداد
     this.updateTokenCounterVisibility();
 
     const spacer = topBar.createDiv({ cls: 'ai-top-spacer' });
+    spacer.style.flex = '1';
 
     this.settingsBtn = topBar.createEl('button', { 
       text: '⚙️', 
       cls: 'ai-settings-btn'
     });
-    this.settingsBtn.title = 'الإعدادات';
+    this.settingsBtn.style.background = 'transparent';
+    this.settingsBtn.style.border = 'none';
+    this.settingsBtn.style.cursor = 'pointer';
+    this.settingsBtn.style.fontSize = '20px';
+    this.settingsBtn.style.color = 'var(--text-normal)';
+    this.settingsBtn.style.padding = '4px 8px';
+    this.settingsBtn.style.borderRadius = '4px';
+    this.settingsBtn.style.width = '32px';
+    this.settingsBtn.style.height = '32px';
+    this.settingsBtn.style.display = 'flex';
+    this.settingsBtn.style.alignItems = 'center';
+    this.settingsBtn.style.justifyContent = 'center';
+    this.settingsBtn.title = 'Settings';
 
-    // إضافة مستمعي الأحداث
     this.modeToggleBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       this.toggleAIMode();
@@ -1028,33 +2000,88 @@ class ChatView extends ItemView {
       this.showShortcutsMenu();
     });
 
-    // ---------- Chat Area ----------
     this.chatEl = this.containerEl.createDiv({ cls: 'ai-chat' });
+    this.chatEl.style.flex = '1';
+    this.chatEl.style.overflowY = 'auto';
+    this.chatEl.style.padding = '16px';
+    this.chatEl.style.borderRadius = '8px';
+    this.chatEl.style.background = 'var(--background-primary)';
+    this.chatEl.style.border = '1px solid var(--background-modifier-border)';
+    this.chatEl.style.margin = '4px 0';
+    this.chatEl.style.display = 'flex';
+    this.chatEl.style.flexDirection = 'column';
 
-    // ---------- Input Area ----------
     const inputWrap = this.containerEl.createDiv({ cls: 'ai-input-wrap' });
+    inputWrap.style.position = 'relative';
+    inputWrap.style.width = '100%';
+    inputWrap.style.marginTop = 'auto';
+    inputWrap.style.paddingTop = '8px';
+    inputWrap.style.borderTop = '1px solid var(--background-modifier-border)';
     
     this.inputEl = inputWrap.createEl('textarea', { 
       cls: 'ai-input',
       attr: { 
-        placeholder: 'اكتب رسالة... (استخدم Shift+Enter للسطر الجديد)',
+        placeholder: 'Type a message... (Shift+Enter for new line)',
         rows: '2'
       }
     });
+    this.inputEl.style.width = '100%';
+    this.inputEl.style.resize = 'vertical';
+    this.inputEl.style.padding = '12px';
+    this.inputEl.style.paddingBottom = '60px';
+    this.inputEl.style.borderRadius = '8px';
+    this.inputEl.style.border = '1px solid var(--background-modifier-border)';
+    this.inputEl.style.background = 'var(--background-secondary)';
+    this.inputEl.style.color = 'var(--text-normal)';
+    this.inputEl.style.fontSize = '15px';
+    this.inputEl.style.minHeight = '120px';
+    this.inputEl.style.maxHeight = '300px';
+    this.inputEl.style.lineHeight = '1.5';
 
     this.attachBtn = inputWrap.createEl('button', { 
       text: '+', 
       cls: 'ai-attach-btn floating-btn'
     });
-    this.attachBtn.title = 'إرفاق ملفات';
+    this.attachBtn.style.position = 'absolute';
+    this.attachBtn.style.width = '36px';
+    this.attachBtn.style.height = '36px';
+    this.attachBtn.style.borderRadius = '50%';
+    this.attachBtn.style.border = 'none';
+    this.attachBtn.style.cursor = 'pointer';
+    this.attachBtn.style.display = 'flex';
+    this.attachBtn.style.alignItems = 'center';
+    this.attachBtn.style.justifyContent = 'center';
+    this.attachBtn.style.fontSize = '16px';
+    this.attachBtn.style.zIndex = '100';
+    this.attachBtn.style.boxShadow = '0 3px 10px rgba(0,0,0,0.2)';
+    this.attachBtn.style.bottom = '60px';
+    this.attachBtn.style.right = '15px';
+    this.attachBtn.style.background = 'var(--interactive-accent)';
+    this.attachBtn.style.color = 'var(--text-on-accent)';
+    this.attachBtn.title = 'Attach files';
 
     this.sendBtn = inputWrap.createEl('button', { 
       text: '➤', 
       cls: 'ai-send-btn floating-btn' 
     });
-    this.sendBtn.title = 'إرسال';
+    this.sendBtn.style.position = 'absolute';
+    this.sendBtn.style.width = '36px';
+    this.sendBtn.style.height = '36px';
+    this.sendBtn.style.borderRadius = '50%';
+    this.sendBtn.style.border = 'none';
+    this.sendBtn.style.cursor = 'pointer';
+    this.sendBtn.style.display = 'flex';
+    this.sendBtn.style.alignItems = 'center';
+    this.sendBtn.style.justifyContent = 'center';
+    this.sendBtn.style.fontSize = '16px';
+    this.sendBtn.style.zIndex = '100';
+    this.sendBtn.style.boxShadow = '0 3px 10px rgba(0,0,0,0.2)';
+    this.sendBtn.style.bottom = '15px';
+    this.sendBtn.style.right = '15px';
+    this.sendBtn.style.background = 'var(--interactive-accent)';
+    this.sendBtn.style.color = 'var(--text-on-accent)';
+    this.sendBtn.title = 'Send';
 
-    // ---------- Event Listeners ----------
     this.sendBtn.addEventListener('click', (e) => {
       e.preventDefault();
       this._onSend();
@@ -1065,15 +2092,13 @@ class ChatView extends ItemView {
       this._onAttach();
     });
     
-    // تعديل سلوك Enter ليكون لسطر جديد فقط
     this.inputEl.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         if (e.shiftKey) {
-          // Shift+Enter لإدخال سطر جديد
           return;
         } else {
-          // Enter عادي يمنع السلوك الافتراضي ولا يرسل
           e.preventDefault();
+          this._onSend();
         }
       }
     });
@@ -1081,7 +2106,6 @@ class ChatView extends ItemView {
     this._renderMessages();
     this._streaming = true;
     
-    // تحديث عداد التوكنات فقط إذا كان ممكناً
     if (this.plugin.settings.showTokenCounter) {
       this.inputEl.addEventListener('input', () => this._updateTokenCounter());   
       setTimeout(() => this._updateTokenCounter(), 100);
@@ -1104,26 +2128,57 @@ class ChatView extends ItemView {
     
     const menu = document.createElement('div');
     menu.className = 'ai-shortcuts-menu';
+    menu.style.position = 'fixed';
+    menu.style.background = 'var(--background-primary)';
+    menu.style.border = '1px solid var(--background-modifier-border)';
+    menu.style.borderRadius = '8px';
+    menu.style.padding = '10px';
+    menu.style.minWidth = '200px';
+    menu.style.boxShadow = '0 8px 24px rgba(0,0,0,0.2)';
+    menu.style.zIndex = '9999';
+    menu.style.backdropFilter = 'blur(10px)';
     
     const shortcuts = [
-      { key: 'محادثة جديدة', shortcut: this.plugin.settings.shortcuts.newConversation, action: () => this.createNewConversation() },
-      { key: 'حفظ المحادثة', shortcut: this.plugin.settings.shortcuts.saveConversation, action: () => this.saveCurrentConversation() },
-      { key: 'الإعدادات', shortcut: this.plugin.settings.shortcuts.settings, action: () => {
+      { key: 'New Conversation', shortcut: this.plugin.settings.shortcuts.newConversation, action: () => this.createNewConversation() },
+      { key: 'Save Conversation', shortcut: this.plugin.settings.shortcuts.saveConversation, action: () => this.saveCurrentConversation() },
+      { key: 'Settings', shortcut: this.plugin.settings.shortcuts.settings, action: () => {
         const settingsModal = new SettingsModal(this.app, this.plugin);
         settingsModal.open();
+      }},
+      { key: 'Ask Selection', shortcut: this.plugin.settings.shortcuts.askSelection || 'Ctrl+Shift+A', action: () => {
+        new Notice('Use this shortcut in the editor with text selected');
+      }},
+      { key: 'Edit Selection', shortcut: this.plugin.settings.shortcuts.editSelection || 'Ctrl+Shift+E', action: () => {
+        new Notice('Use this shortcut in the editor with text selected');
       }}
     ];
     
     shortcuts.forEach(item => {
       const menuItem = document.createElement('div');
       menuItem.className = 'shortcut-item';
+      menuItem.style.padding = '8px 12px';
+      menuItem.style.cursor = 'pointer';
+      menuItem.style.fontSize = '13px';
+      menuItem.style.color = 'var(--text-normal)';
+      menuItem.style.borderBottom = '1px solid var(--background-modifier-border)';
+      menuItem.style.display = 'flex';
+      menuItem.style.justifyContent = 'space-between';
+      menuItem.style.alignItems = 'center';
       
       const keySpan = document.createElement('span');
       keySpan.className = 'shortcut-key';
+      keySpan.style.fontWeight = '600';
       keySpan.textContent = item.key;
       
       const shortcutSpan = document.createElement('span');
       shortcutSpan.className = 'shortcut-value';
+      shortcutSpan.style.fontFamily = 'monospace';
+      shortcutSpan.style.fontSize = '12px';
+      shortcutSpan.style.color = 'var(--text-muted)';
+      shortcutSpan.style.background = 'var(--background-secondary)';
+      shortcutSpan.style.padding = '2px 6px';
+      shortcutSpan.style.borderRadius = '4px';
+      shortcutSpan.style.border = '1px solid var(--background-modifier-border)';
       shortcutSpan.textContent = item.shortcut;
       
       menuItem.appendChild(keySpan);
@@ -1153,10 +2208,8 @@ class ChatView extends ItemView {
       left = btnRect.right - menuRect.width;
     }
     
-    menu.style.position = 'fixed';
     menu.style.top = `${top}px`;
     menu.style.left = `${left}px`;
-    menu.style.zIndex = '9999';
     
     const closeMenu = (e) => {
       if (!menu.contains(e.target) && e.target !== this.shortcutsBtn) {
@@ -1171,19 +2224,19 @@ class ChatView extends ItemView {
   }
 
   createNewConversation() {
-    const name = prompt('اسم المحادثة الجديدة:');
-    if (name) {
-      this.plugin._sessionManager.create(name);
+    const name = prompt('New conversation name:', `Conversation ${this.plugin._sessionManager.sessions.length + 1}`);
+    if (name && name.trim()) {
+      this.plugin._sessionManager.create(name.trim());
       this._renderMessages();
       this.plugin.saveState();
-      new Notice(`تم إنشاء محادثة: ${name}`);
+      new Notice(`✅ Created conversation: ${name}`);
     }
   }
 
   async saveCurrentConversation() {
     const session = this.plugin._sessionManager.getActive();
     if (!session) {
-      new Notice('لا توجد محادثة نشطة للحفظ');
+      new Notice('No active conversation to save');
       return;
     }
     
@@ -1193,50 +2246,32 @@ class ChatView extends ItemView {
       const fileName = `${session.name.replace(/[\\/:*?"<>|]/g, '_')}.md`;
       const fullPath = folderPath ? `${folderPath}/${fileName}` : fileName;
       
-      // إنشاء المجلد إذا لم يكن موجوداً
       const folderExists = await this.app.vault.adapter.exists(folderPath);
       if (!folderExists) {
         await this.app.vault.createFolder(folderPath);
       }
       
-      // حفظ الملف
       await this.app.vault.create(fullPath, content);
-      new Notice(`✅ تم حفظ المحادثة في: ${fullPath}`);
+      new Notice(`✅ Conversation saved to: ${fullPath}`);
     } catch (error) {
       console.error('Error saving conversation:', error);
-      new Notice(`❌ خطأ في حفظ المحادثة: ${error.message}`);
+      new Notice(`❌ Error saving conversation: ${error.message}`);
     }
   }
 
   getProviderIcon() {
-    if (this.plugin.settings.currentMode === 'local') return '🖥️';
-    
-    const icons = {
-      openai: '🎡',
-      gemini: '🌀',
-      anthropic: '☁️',
-      custom: '⚙️'
-    };
-    return icons[this.plugin.settings.cloudApiType] || '☁️';
+    return this.plugin.apiManager.getCurrentProviderIcon();
   }
 
   getProviderName() {
-    if (this.plugin.settings.currentMode === 'local') return 'النموذج المحلي';
-    
-    const names = {
-      openai: 'OpenAI',
-      gemini: 'Google Gemini',
-      anthropic: 'Anthropic Claude',
-      custom: 'API مخصص'
-    };
-    return names[this.plugin.settings.cloudApiType] || 'السحابي';
+    return this.plugin.apiManager.getCurrentProviderName();
   }
 
   getProviderInfo() {
     if (this.plugin.settings.currentMode === 'local') {
-      return `${this.plugin.settings.localModel} - انقر للتبديل إلى السحابي`;
+      return `${this.plugin.settings.localModel} - Click to switch to cloud`;
     } else {
-      return `${this.getProviderName()} - انقر للتبديل إلى المحلي`;
+      return `${this.getProviderName()} - Click to switch to local`;
     }
   }
 
@@ -1248,7 +2283,7 @@ class ChatView extends ItemView {
     this.modeToggleBtn.title = this.getProviderInfo();
     
     this.plugin.saveSettings();
-    new Notice(`تم التبديل إلى ${this.getProviderName()}`);
+    new Notice(`Switched to ${this.getProviderName()}`);
     this._updateTokenCounter();
   }
 
@@ -1268,23 +2303,11 @@ class ChatView extends ItemView {
     const totalTokens = estimatedTokens + contextTokens;
     const maxTokens = 8192;
     
-    let providerName = '';
-    if (this.plugin.settings.currentMode === 'local') {
-      providerName = '🖥️ محلي';
-    } else {
-      const apiType = this.plugin.settings.cloudApiType;
-      const names = {
-        openai: 'OpenAI',
-        gemini: 'Gemini',
-        anthropic: 'Claude',
-        custom: '⚙️ custom'
-      };
-      providerName = names[apiType] || '☁️ سحابي';
-    }
+    const providerName = this.getProviderName();
     
     if (this.tokenCounter) {
-      this.tokenCounter.textContent = `${providerName} | 🔢 ${totalTokens}/${maxTokens}`;
-      this.tokenCounter.title = `${providerName}\nالسياق: ${contextTokens} | الإدخال: ${estimatedTokens}`;
+      this.tokenCounter.textContent = `${this.getProviderIcon()} ${totalTokens}/${maxTokens}`;
+      this.tokenCounter.title = `${providerName}\nContext: ${contextTokens} | Input: ${estimatedTokens}`;
       
       if (totalTokens > maxTokens) {
         this.tokenCounter.style.color = 'var(--text-error)';
@@ -1292,7 +2315,6 @@ class ChatView extends ItemView {
       } else if (totalTokens > maxTokens * 0.8) {
         this.tokenCounter.style.color = 'var(--text-warning)';
         this.tokenCounter.style.backgroundColor = 'rgba(var(--background-modifier-warning-rgb), 0.2)';
-        this._playWarningSound();
       } else {
         this.tokenCounter.style.color = 'var(--text-muted)';
         this.tokenCounter.style.backgroundColor = 'transparent';
@@ -1300,62 +2322,67 @@ class ChatView extends ItemView {
     }
   }
 
-  _playWarningSound() {
-    try {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.frequency.value = 800;
-      oscillator.type = 'sine';
-      
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.5);
-    } catch (e) {
-      console.error('Cannot play warning sound:', e);
-    }
-  }
-
   _renderMessages() {
     this.chatEl.empty();
     const s = this.plugin._sessionManager.getActive();
     if (!s) return;
+    
     s.messages.forEach(m => this._appendBubble(m.role, m.content, m.attachments));
     this.chatEl.scrollTop = this.chatEl.scrollHeight;
   }
 
   _appendBubble(role, text, attachments = []) {
     const msgContainer = this.chatEl.createDiv({ cls: `ai-msg-container ${role}` });
+    msgContainer.style.marginBottom = '16px';
+    msgContainer.style.maxWidth = '88%';
+    msgContainer.style.alignSelf = role === 'user' ? 'flex-start' : 'flex-end';
     
     const bubble = msgContainer.createDiv({ cls: `ai-msg ${role}` });
+    bubble.style.padding = '12px 16px';
+    bubble.style.borderRadius = role === 'user' ? '12px 12px 4px 12px' : '12px 12px 12px 4px';
+    bubble.style.lineHeight = '1.5';
+    bubble.style.whiteSpace = 'pre-wrap';
+    bubble.style.wordBreak = 'break-word';
+    bubble.style.fontSize = '14px';
     
-    if (role === 'assistant') {
-      MarkdownRenderer.render(this.app, text, bubble, '', this.plugin);
-    } else {
+    if (role === 'user') {
+      bubble.style.background = 'var(--interactive-accent)';
+      bubble.style.color = 'var(--text-on-accent)';
       bubble.textContent = text;
+    } else {
+      bubble.style.background = 'var(--background-secondary)';
+      bubble.style.color = 'var(--text-normal)';
+      MarkdownRenderer.render(this.app, text, bubble, '', this.plugin);
+    }
+    
+    if (attachments && attachments.length > 0) {
+      const attachmentsContainer = msgContainer.createDiv({ cls: 'ai-attachments-container' });
+      attachmentsContainer.style.marginTop = '8px';
+      attachmentsContainer.style.padding = '10px';
+      attachmentsContainer.style.background = 'rgba(var(--interactive-accent-rgb), 0.1)';
+      attachmentsContainer.style.borderRadius = '8px';
+      attachmentsContainer.style.border = '1px dashed var(--background-modifier-border)';
       
-      // عرض المرفقات بشكل جميل
-      if (attachments && attachments.length > 0) {
-        const attachmentsContainer = msgContainer.createDiv({ cls: 'ai-attachments-container' });
-        attachmentsContainer.createEl('div', { 
-          text: '+ المرفقات:', 
-          cls: 'ai-attachments-title' 
-        });
+      attachmentsContainer.createEl('div', { 
+        text: '📎 Attachments:', 
+        cls: 'ai-attachments-title' 
+      }).style.fontSize = '12px';
+      
+      attachments.forEach(attachment => {
+        const attachmentEl = attachmentsContainer.createDiv({ cls: 'ai-attachment' });
+        attachmentEl.style.display = 'flex';
+        attachmentEl.style.alignItems = 'center';
+        attachmentEl.style.padding = '6px 8px';
+        attachmentEl.style.background = 'var(--background-primary)';
+        attachmentEl.style.borderRadius = '6px';
+        attachmentEl.style.marginBottom = '4px';
+        attachmentEl.style.border = '1px solid var(--background-modifier-border)';
         
-        attachments.forEach(attachment => {
-          const attachmentEl = attachmentsContainer.createDiv({ cls: 'ai-attachment' });
-          attachmentEl.createEl('div', { 
-            text: `📄 ${attachment.name}`, 
-            cls: 'ai-attachment-name' 
-          });
-        });
-      }
+        attachmentEl.createEl('div', { 
+          text: `📄 ${attachment.name}`, 
+          cls: 'ai-attachment-name' 
+        }).style.fontSize = '13px';
+      });
     }
     
     this.chatEl.scrollTop = this.chatEl.scrollHeight;
@@ -1365,11 +2392,10 @@ class ChatView extends ItemView {
   async _onAttach() {
     const modal = new AttachModal(this.app, async (choice, files) => {
       if (!files || !files.length) { 
-        new Notice('لم يتم اختيار أي ملفات'); 
+        new Notice('No files selected'); 
         return; 
       }
       
-      // حفظ الملفات المختارة في pendingAttachments
       this.pendingAttachments = [];
       
       for (const f of files) {
@@ -1383,15 +2409,14 @@ class ChatView extends ItemView {
           });
         } catch (e) { 
           console.error(e); 
-          new Notice(`خطأ في قراءة الملف: ${f.path}`);
+          new Notice(`Error reading file: ${f.path}`);
         }
       }
       
-      // إضافة مؤشر في حقل الإدخال عن الملفات المرفقة
       const attachmentCount = this.pendingAttachments.length;
       if (attachmentCount > 0) {
-        this.inputEl.value += `\n[مرفق ${attachmentCount} ملف${attachmentCount > 1 ? 'ات' : ''}]`;
-        new Notice(`تم إعداد ${attachmentCount} ملف${attachmentCount > 1 ? 'ات' : ''} للإرفاق`);
+        this.inputEl.value += `\n[📎 ${attachmentCount} file${attachmentCount > 1 ? 's' : ''} attached]`;
+        new Notice(`✅ ${attachmentCount} file${attachmentCount > 1 ? 's' : ''} ready to attach`);
       }
     });
     modal.open();
@@ -1400,37 +2425,34 @@ class ChatView extends ItemView {
   async _onSend() {
     const txt = this.inputEl.value.trim();
     if (!txt && this.pendingAttachments.length === 0) { 
-      new Notice('الرسالة فارغة'); 
+      new Notice('Message is empty'); 
       return; 
     }
     
     let s = this.plugin._sessionManager.getActive();
     if (!s) { 
-      this.plugin._sessionManager.create('محادثة جديدة');
+      this.plugin._sessionManager.create('New Conversation');
       s = this.plugin._sessionManager.getActive();
     }
     
-    // إضافة رسالة المستخدم مع المرفقات
     this.plugin._sessionManager.addMessage('user', txt, this.pendingAttachments);
     this.plugin.saveState();
     
-    // عرض الرسالة مع المرفقات
     this._appendBubble('user', txt, this.pendingAttachments);
     
-    // تنظيف
     this.inputEl.value = '';
     this.pendingAttachments = [];
 
     const messages = this.plugin._sessionManager.getMessagesForRequest();
 
     let acc = '';
-    const loadingMsg = this._appendBubble('assistant', '⏳ جاري المعالجة...');
+    const loadingMsg = this._appendBubble('assistant', '⏳ Processing...');
     
     try {
       let dots = 0;
       const loadingInterval = setInterval(() => {
         dots = (dots + 1) % 4;
-        loadingMsg.textContent = '⏳ جاري المعالجة' + '.'.repeat(dots);
+        loadingMsg.textContent = '⏳ Processing' + '.'.repeat(dots);
       }, 500);
       
       const result = await this.plugin.apiManager.sendMessage({
@@ -1439,15 +2461,13 @@ class ChatView extends ItemView {
         max_tokens: this.plugin.settings.max_tokens,
         stream: false
       }, {
-        timeoutMs: this.plugin.settings.timeoutMs,
-        retry: true
+        timeoutMs: this.plugin.settings.timeoutMs
       });
       
       clearInterval(loadingInterval);
       
       const finalText = (result && result.final) ? result.final : acc;
       
-      // تحديث الرسالة مع Markdown
       loadingMsg.empty();
       MarkdownRenderer.render(this.app, finalText, loadingMsg, '', this.plugin);
       this.plugin._sessionManager.addMessage('assistant', finalText);
@@ -1456,17 +2476,17 @@ class ChatView extends ItemView {
     } catch (e) {
       console.error("Chat Error:", e);
       
-      let errorMessage = 'حدث خطأ';
+      let errorMessage = '❌ Error occurred';
       if (e.message.includes('429')) {
-        errorMessage = '🔴 تجاوز الحد الأقصى للطلبات. يرجى الانتظار دقيقة ثم المحاولة مرة أخرى.';
-      } else if (e.message.includes('400')) {
-        errorMessage = '🔴 طلب غير صالح. تحقق من مفتاح API وال.';
-      } else if (e.message.includes('401')) {
-        errorMessage = '🔴 مفتاح API غير صالح أو منتهي الصلاحية.';
+        errorMessage = '⏳ Rate limit exceeded. Please wait a moment and try again.';
+      } else if (e.message.includes('401') || e.message.includes('403')) {
+        errorMessage = '🔐 Authentication failed. Please check your API key.';
       } else if (e.message.includes('timeout')) {
-        errorMessage = '⏱️ تجاوز الوقت المحدد. تحقق من اتصال الإنترنت.';
+        errorMessage = '⏱️ Request timed out. Check your internet connection.';
+      } else if (e.message.includes('fetch')) {
+        errorMessage = '🌐 Network error. Please check if the service is running.';
       } else {
-        errorMessage = `🔴 خطأ: ${e.message}`;
+        errorMessage = `❌ Error: ${e.message}`;
       }
       
       loadingMsg.textContent = errorMessage;
@@ -1475,7 +2495,8 @@ class ChatView extends ItemView {
   }
 }
 
-// ---------------- Settings Modal ----------------
+// ==================== SETTINGS MODAL ====================
+
 class SettingsModal extends Modal {
   constructor(app, plugin) {
     super(app);
@@ -1485,37 +2506,66 @@ class SettingsModal extends Modal {
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
+    contentEl.style.minWidth = '500px';
+    contentEl.style.maxWidth = '800px';
     
-    contentEl.createEl('h2', { text: '⚙️  Local AI' });
+    contentEl.createEl('h2', { text: '⚙️ AI Assistant Settings' });
     
     const tabsContainer = contentEl.createDiv({ cls: 'ai-settings-tabs' });
+    tabsContainer.style.display = 'flex';
+    tabsContainer.style.gap = '8px';
+    tabsContainer.style.marginBottom = '20px';
+    tabsContainer.style.borderBottom = '1px solid var(--background-modifier-border)';
+    tabsContainer.style.paddingBottom = '10px';
+    tabsContainer.style.flexWrap = 'wrap';
     
     const localTab = tabsContainer.createEl('button', { 
-      text: '🖥️ النموذج المحلي',
+      text: '🖥️ Local Model',
       cls: 'ai-tab-btn active'
     });
+    localTab.style.padding = '10px 16px';
+    localTab.style.border = 'none';
+    localTab.style.background = 'transparent';
+    localTab.style.color = 'var(--text-muted)';
+    localTab.style.cursor = 'pointer';
+    localTab.style.borderRadius = '6px';
+    localTab.style.fontSize = '14px';
     
     const cloudTab = tabsContainer.createEl('button', { 
-      text: '☁️ النموذج السحابي',
+      text: '☁️ Cloud Model',
       cls: 'ai-tab-btn'
     });
     
     const generalTab = tabsContainer.createEl('button', { 
-      text: '⚙️  عامة',
+      text: '⚙️ General',
       cls: 'ai-tab-btn'
     });
     
     const shortcutsTab = tabsContainer.createEl('button', { 
-      text: '⚡ اختصارات',
+      text: '⚡ Shortcuts',
       cls: 'ai-tab-btn'
     });
     
     const conversationsTab = tabsContainer.createEl('button', { 
-      text: '💬 المحادثات',
+      text: '💬 Conversations',
       cls: 'ai-tab-btn'
     });
     
+    [cloudTab, generalTab, shortcutsTab, conversationsTab].forEach(tab => {
+      tab.style.padding = '10px 16px';
+      tab.style.border = 'none';
+      tab.style.background = 'transparent';
+      tab.style.color = 'var(--text-muted)';
+      tab.style.cursor = 'pointer';
+      tab.style.borderRadius = '6px';
+      tab.style.fontSize = '14px';
+    });
+    
     const contentContainer = contentEl.createDiv({ cls: 'ai-settings-content' });
+    contentContainer.style.maxHeight = '400px';
+    contentContainer.style.overflowY = 'auto';
+    contentContainer.style.paddingRight = '10px';
+    contentContainer.style.marginBottom = '20px';
     
     this.showLocalSettings(contentContainer);
     
@@ -1545,20 +2595,40 @@ class SettingsModal extends Modal {
     });
     
     const buttonRow = contentEl.createDiv({ cls: 'ai-settings-btn-row' });
+    buttonRow.style.display = 'flex';
+    buttonRow.style.justifyContent = 'flex-end';
+    buttonRow.style.gap = '10px';
+    buttonRow.style.paddingTop = '20px';
+    buttonRow.style.borderTop = '1px solid var(--background-modifier-border)';
     
     const saveBtn = buttonRow.createEl('button', { 
-      text: '💾 حفظ',
+      text: '💾 Save',
       cls: 'ai-settings-save-btn'
     });
+    saveBtn.style.padding = '10px 24px';
+    saveBtn.style.borderRadius = '8px';
+    saveBtn.style.border = 'none';
+    saveBtn.style.background = 'var(--interactive-accent)';
+    saveBtn.style.color = 'var(--text-on-accent)';
+    saveBtn.style.cursor = 'pointer';
+    saveBtn.style.fontSize = '14px';
+    saveBtn.style.fontWeight = '600';
     
     const cancelBtn = buttonRow.createEl('button', { 
-      text: '❌ إلغاء',
+      text: '❌ Cancel',
       cls: 'ai-settings-cancel-btn'
     });
+    cancelBtn.style.padding = '10px 24px';
+    cancelBtn.style.borderRadius = '8px';
+    cancelBtn.style.border = '1px solid var(--background-modifier-border)';
+    cancelBtn.style.background = 'transparent';
+    cancelBtn.style.color = 'var(--text-normal)';
+    cancelBtn.style.cursor = 'pointer';
+    cancelBtn.style.fontSize = '14px';
     
     saveBtn.addEventListener('click', async () => {
       await this.plugin.saveSettings();
-      new Notice('تم حفظ الإعدادات بنجاح!');
+      new Notice('✅ Settings saved successfully!');
       this.close();
     });
     
@@ -1567,40 +2637,65 @@ class SettingsModal extends Modal {
 
   setActiveTab(activeTab, otherTabs) {
     activeTab.classList.add('active');
-    otherTabs.forEach(tab => tab.classList.remove('active'));
+    activeTab.style.background = 'var(--interactive-accent)';
+    activeTab.style.color = 'var(--text-on-accent)';
+    activeTab.style.fontWeight = '600';
+    
+    otherTabs.forEach(tab => {
+      tab.classList.remove('active');
+      tab.style.background = 'transparent';
+      tab.style.color = 'var(--text-muted)';
+      tab.style.fontWeight = 'normal';
+    });
   }
   
   showLocalSettings(container) {
     container.empty();
     
     const section = container.createDiv({ cls: 'ai-settings-section' });
-    section.createEl('h3', { text: ' النموذج المحلي' });
+    section.style.background = 'var(--background-secondary)';
+    section.style.borderRadius = '8px';
+    section.style.padding = '20px';
+    section.style.marginBottom = '20px';
+    section.style.border = '1px solid var(--background-modifier-border)';
     
-    this.createInputField(section, 'عنوان الخادم المحلي (Base URL):', 'baseUrl', this.plugin.settings.baseUrl);
-    this.createInputField(section, 'Endpoint:', 'localEndpoint', this.plugin.settings.localEndpoint || '/v1/chat/completions');
-    this.createInputField(section, 'اسم النموذج المحلي:', 'localModel', this.plugin.settings.localModel);
+    section.createEl('h3', { text: '🖥️ Local Model Configuration' });
+    
+    this.createInputField(section, 'Base URL:', 'baseUrl', this.plugin.settings.baseUrl, 'text', 'http://127.0.0.1:11434');
+    this.createInputField(section, 'Endpoint:', 'localEndpoint', this.plugin.settings.localEndpoint, 'text', '/v1/chat/completions');
+    this.createInputField(section, 'Model Name:', 'localModel', this.plugin.settings.localModel, 'text', 'llama2');
     
     const testBtn = section.createEl('button', {
-      text: '🔄 اختبار الاتصال بالخادم المحلي',
+      text: '🔄 Test Connection',
       cls: 'ai-test-btn'
     });
+    testBtn.style.width = '100%';
+    testBtn.style.padding = '12px';
+    testBtn.style.borderRadius = '8px';
+    testBtn.style.border = '1px solid var(--background-modifier-border)';
+    testBtn.style.background = 'var(--background-secondary)';
+    testBtn.style.color = 'var(--text-normal)';
+    testBtn.style.cursor = 'pointer';
+    testBtn.style.fontSize = '14px';
+    testBtn.style.marginTop = '10px';
     
     testBtn.addEventListener('click', async () => {
       testBtn.disabled = true;
-      testBtn.textContent = 'جاري الاختبار...';
+      testBtn.textContent = 'Testing...';
       
       try {
-        const health = await this.plugin.apiManager.checkHealth();
-        if (health) {
-          new Notice('✅ الاتصال بالخادم المحلي ناجح!');
+        const provider = new LocalAIProvider(this.plugin);
+        const health = await provider.checkHealth();
+        if (health.ok) {
+          new Notice('✅ ' + health.message);
         } else {
-          new Notice('❌ فشل الاتصال بالخادم المحلي');
+          new Notice('❌ ' + health.message);
         }
       } catch (e) {
-        new Notice('❌ خطأ في الاتصال: ' + e.message);
+        new Notice('❌ Error: ' + e.message);
       } finally {
         testBtn.disabled = false;
-        testBtn.textContent = '🔄 اختبار الاتصال بالخادم المحلي';
+        testBtn.textContent = '🔄 Test Connection';
       }
     });
   }
@@ -1609,7 +2704,13 @@ class SettingsModal extends Modal {
     container.empty();
     
     const apiTypeSection = container.createDiv({ cls: 'ai-settings-section' });
-    apiTypeSection.createEl('h3', { text: 'اختر نوع API السحابي' });
+    apiTypeSection.style.background = 'var(--background-secondary)';
+    apiTypeSection.style.borderRadius = '8px';
+    apiTypeSection.style.padding = '20px';
+    apiTypeSection.style.marginBottom = '20px';
+    apiTypeSection.style.border = '1px solid var(--background-modifier-border)';
+    
+    apiTypeSection.createEl('h3', { text: '☁️ Cloud Provider Selection' });
 
     this.createAPITypeSelector(apiTypeSection);
 
@@ -1619,12 +2720,16 @@ class SettingsModal extends Modal {
 
   createAPITypeSelector(container) {
     const row = container.createDiv({ cls: 'ai-api-type-selector' });
+    row.style.display = 'flex';
+    row.style.gap = '10px';
+    row.style.marginBottom = '20px';
+    row.style.flexWrap = 'wrap';
 
     const providers = [
-      { id: 'openai', name: 'OpenAI', icon: '🎡', color: 'blue' },
-      { id: 'gemini', name: 'Gemini', icon: '🌀', color: 'orange' },
-      { id: 'anthropic', name: 'Claude', icon: '☁️', color: 'purple' },
-      { id: 'custom', name: 'مخصص', icon: '⚙️', color: 'gray' }
+      { id: 'openai', name: 'OpenAI', icon: '🎡' },
+      { id: 'gemini', name: 'Gemini', icon: '🌀' },
+      { id: 'anthropic', name: 'Claude', icon: '☁️' },
+      { id: 'custom', name: 'Custom', icon: '⚙️' }
     ];
 
     providers.forEach(provider => {
@@ -1632,22 +2737,40 @@ class SettingsModal extends Modal {
         cls: `ai-provider-btn ${this.plugin.settings.cloudApiType === provider.id ? 'active' : ''}`,
         text: `${provider.icon} ${provider.name}`
       });
+      btn.style.flex = '1';
+      btn.style.minWidth = '120px';
+      btn.style.padding = '12px';
+      btn.style.borderRadius = '8px';
+      btn.style.border = '2px solid';
+      btn.style.background = 'var(--background-secondary)';
+      btn.style.color = 'var(--text-normal)';
+      btn.style.cursor = 'pointer';
+      btn.style.fontSize = '14px';
+      btn.style.fontWeight = '600';
+      
+      if (this.plugin.settings.cloudApiType === provider.id) {
+        btn.style.background = 'var(--background-primary)';
+        btn.style.borderWidth = '3px';
+      }
 
       btn.dataset.provider = provider.id;
-      btn.style.borderColor = `var(--${provider.color})`;
 
       btn.addEventListener('click', () => {
         this.plugin.settings.cloudApiType = provider.id;
+        
+        document.querySelectorAll('.ai-provider-btn').forEach(b => {
+          b.classList.remove('active');
+          b.style.background = 'var(--background-secondary)';
+          b.style.borderWidth = '2px';
+        });
+        
+        btn.classList.add('active');
+        btn.style.background = 'var(--background-primary)';
+        btn.style.borderWidth = '3px';
+        
         this.showSpecificAPISettings(document.querySelector('.ai-api-settings-container'));
-        this.setActiveProvider(btn);
       });
     });
-  }
-
-  setActiveProvider(activeBtn) {
-    const allBtns = activeBtn.parentElement.querySelectorAll('.ai-provider-btn');
-    allBtns.forEach(btn => btn.classList.remove('active'));
-    activeBtn.classList.add('active');
   }
 
   showSpecificAPISettings(container) {
@@ -1671,99 +2794,145 @@ class SettingsModal extends Modal {
 
   showOpenAISettings(container) {
     const section = container.createDiv({ cls: 'ai-settings-section' });
-    section.createEl('h3', { text: 'OpenAI' });
+    section.style.background = 'var(--background-secondary)';
+    section.style.borderRadius = '8px';
+    section.style.padding = '20px';
+    section.style.marginBottom = '20px';
+    section.style.border = '1px solid var(--background-modifier-border)';
+    
+    section.createEl('h3', { text: '🎡 OpenAI Configuration' });
 
-    this.createInputField(section, 'مفتاح OpenAI API:', 'openaiApiKey', 
+    this.createInputField(section, 'API Key:', 'openaiApiKey', 
       this.plugin.settings.openaiApiKey, 'password');
     
-    this.createInputField(section, 'اسم النموذج:', 'openaiModel', 
-      this.plugin.settings.openaiModel || 'gpt-3.5-turbo');
+    this.createInputField(section, 'Model:', 'openaiModel', 
+      this.plugin.settings.openaiModel, 'text', 'gpt-3.5-turbo');
     
-    const testBtn = section.createEl('button', { text: '🔄 اختبار اتصال OpenAI', cls: 'ai-test-btn' });
+    this.createInputField(section, 'Custom Endpoint (optional):', 'openaiEndpoint', 
+      this.plugin.settings.openaiEndpoint, 'text', 'https://api.openai.com/v1/chat/completions');
+    
+    const testBtn = section.createEl('button', { text: '🔄 Test Connection', cls: 'ai-test-btn' });
+    testBtn.style.width = '100%';
+    testBtn.style.padding = '12px';
+    testBtn.style.borderRadius = '8px';
+    testBtn.style.border = '1px solid var(--background-modifier-border)';
+    testBtn.style.background = 'var(--background-secondary)';
+    testBtn.style.color = 'var(--text-normal)';
+    testBtn.style.cursor = 'pointer';
+    testBtn.style.fontSize = '14px';
+    testBtn.style.marginTop = '10px';
+    
     testBtn.addEventListener('click', async () => {
       testBtn.disabled = true;
-      testBtn.textContent = 'جاري الاختبار...';
+      testBtn.textContent = 'Testing...';
       const provider = new OpenAIProvider(this.plugin);
       const health = await provider.checkHealth();
-      if (health) {
-        new Notice('✅ اتصال OpenAI ناجح!');
-      } else {
-        new Notice('❌ فشل الاتصال بـ OpenAI');
-      }
+      new Notice(health.message);
       testBtn.disabled = false;
-      testBtn.textContent = '🔄 اختبار اتصال OpenAI';
+      testBtn.textContent = '🔄 Test Connection';
     });
   }
   
   showGeminiSettings(container) {
     const section = container.createDiv({ cls: 'ai-settings-section' });
-    section.createEl('h3', { text: 'Google Gemini ' });
+    section.style.background = 'var(--background-secondary)';
+    section.style.borderRadius = '8px';
+    section.style.padding = '20px';
+    section.style.marginBottom = '20px';
+    section.style.border = '1px solid var(--background-modifier-border)';
     
-    this.createInputField(section, 'مفتاح Gemini API:', 'geminiApiKey', 
+    section.createEl('h3', { text: '🌀 Google Gemini Configuration (Non-Streaming)' });
+    
+    this.createInputField(section, 'API Key:', 'geminiApiKey', 
       this.plugin.settings.geminiApiKey, 'password');
     
-    this.createInputField(section, 'اسم النموذج:', 'geminiModel', 
-      this.plugin.settings.geminiModel || 'gemini-2.0-flash');
+    this.createInputField(section, 'Model:', 'geminiModel', 
+      this.plugin.settings.geminiModel, 'text', 'gemini-1.5-flash');
     
     const testBtn = section.createEl('button', {
-      text: '🔄 اختبار اتصال Gemini',
+      text: '🔄 Test Connection',
       cls: 'ai-test-btn'
     });
+    testBtn.style.width = '100%';
+    testBtn.style.padding = '12px';
+    testBtn.style.borderRadius = '8px';
+    testBtn.style.border = '1px solid var(--background-modifier-border)';
+    testBtn.style.background = 'var(--background-secondary)';
+    testBtn.style.color = 'var(--text-normal)';
+    testBtn.style.cursor = 'pointer';
+    testBtn.style.fontSize = '14px';
+    testBtn.style.marginTop = '10px';
     
     testBtn.addEventListener('click', async () => {
       testBtn.disabled = true;
-      testBtn.textContent = 'جاري الاختبار...';
+      testBtn.textContent = 'Testing...';
       
       const provider = new GeminiProvider(this.plugin);
       const health = await provider.checkHealth();
-      
-      if (health.ok) {
-        new Notice('✅ اتصال Gemini ناجح!');
-      } else {
-        new Notice(`❌ ${health.message || 'فشل الاتصال بـ Gemini'}`);
-      }
+      new Notice(health.message);
       
       testBtn.disabled = false;
-      testBtn.textContent = '🔄 اختبار اتصال Gemini';
+      testBtn.textContent = '🔄 Test Connection';
     });
   }
 
   showAnthropicSettings(container) {
     const section = container.createDiv({ cls: 'ai-settings-section' });
-    section.createEl('h3', { text: 'Anthropic Claude' });
+    section.style.background = 'var(--background-secondary)';
+    section.style.borderRadius = '8px';
+    section.style.padding = '20px';
+    section.style.marginBottom = '20px';
+    section.style.border = '1px solid var(--background-modifier-border)';
+    
+    section.createEl('h3', { text: '☁️ Anthropic Claude Configuration' });
 
-    this.createInputField(section, 'مفتاح Anthropic API:', 'anthropicApiKey', 
+    this.createInputField(section, 'API Key:', 'anthropicApiKey', 
       this.plugin.settings.anthropicApiKey, 'password');
     
-    this.createInputField(section, 'اسم النموذج:', 'anthropicModel', 
-      this.plugin.settings.anthropicModel || 'claude-3-haiku-20240307');
+    this.createInputField(section, 'Model:', 'anthropicModel', 
+      this.plugin.settings.anthropicModel, 'text', 'claude-3-haiku-20240307');
     
-    const testBtn = section.createEl('button', { text: '🔄 اختبار اتصال Claude', cls: 'ai-test-btn' });
+    const testBtn = section.createEl('button', { text: '🔄 Test Connection', cls: 'ai-test-btn' });
+    testBtn.style.width = '100%';
+    testBtn.style.padding = '12px';
+    testBtn.style.borderRadius = '8px';
+    testBtn.style.border = '1px solid var(--background-modifier-border)';
+    testBtn.style.background = 'var(--background-secondary)';
+    testBtn.style.color = 'var(--text-normal)';
+    testBtn.style.cursor = 'pointer';
+    testBtn.style.fontSize = '14px';
+    testBtn.style.marginTop = '10px';
+    
     testBtn.addEventListener('click', async () => {
       testBtn.disabled = true;
-      testBtn.textContent = 'جاري الاختبار...';
+      testBtn.textContent = 'Testing...';
       const provider = new AnthropicProvider(this.plugin);
       const health = await provider.checkHealth();
-      if (health) {
-        new Notice('✅ اتصال Claude ناجح!');
-      } else {
-        new Notice('❌ فشل الاتصال بـ Claude');
-      }
+      new Notice(health.message);
       testBtn.disabled = false;
-      testBtn.textContent = '🔄 اختبار اتصال Claude';
+      testBtn.textContent = '🔄 Test Connection';
     });
   }
 
   showCustomSettings(container) {
     const section = container.createDiv({ cls: 'ai-settings-section' });
-    section.createEl('h3', { text: '⚙️  API مخصص' });
+    section.style.background = 'var(--background-secondary)';
+    section.style.borderRadius = '8px';
+    section.style.padding = '20px';
+    section.style.marginBottom = '20px';
+    section.style.border = '1px solid var(--background-modifier-border)';
+    
+    section.createEl('h3', { text: '⚙️ Custom API Configuration' });
 
-    this.createInputField(section, 'مفتاح API:', 'customApiKey', this.plugin.settings.customApiKey, 'password');
-    this.createInputField(section, 'اسم النموذج:', 'customModel', this.plugin.settings.customModel);
-    this.createInputField(section, 'Endpoint:', 'customEndpoint', this.plugin.settings.customEndpoint);
+    this.createInputField(section, 'API Key:', 'customApiKey', this.plugin.settings.customApiKey, 'password');
+    this.createInputField(section, 'Model Name:', 'customModel', this.plugin.settings.customModel, 'text');
+    this.createInputField(section, 'Endpoint URL:', 'customEndpoint', this.plugin.settings.customEndpoint, 'text');
     
     const row = section.createDiv({ cls: 'ai-settings-row' });
-    row.createEl('label', { text: 'رؤوس HTTP (JSON):' });
+    row.style.marginBottom = '16px';
+    
+    row.createEl('label', { text: 'HTTP Headers (JSON):' }).style.display = 'block';
+    
     const headersText = row.createEl('textarea', {
       text: this.plugin.settings.customHeaders || '{}',
       rows: 3
@@ -1781,7 +2950,10 @@ class SettingsModal extends Modal {
     });
 
     const row2 = section.createDiv({ cls: 'ai-settings-row' });
-    row2.createEl('label', { text: 'قالب الجسم (JSON):' });
+    row2.style.marginBottom = '16px';
+    
+    row2.createEl('label', { text: 'Body Template (JSON):' }).style.display = 'block';
+    
     const templateText = row2.createEl('textarea', {
       text: this.plugin.settings.customBodyTemplate || '{"messages": {{messages}}, "model": "{{model}}"}',
       rows: 4
@@ -1798,19 +2970,25 @@ class SettingsModal extends Modal {
       this.plugin.settings.customBodyTemplate = e.target.value;
     });
 
-    const testBtn = section.createEl('button', { text: '🔄 اختبار اتصال API المخصص', cls: 'ai-test-btn' });
+    const testBtn = section.createEl('button', { text: '🔄 Test Connection', cls: 'ai-test-btn' });
+    testBtn.style.width = '100%';
+    testBtn.style.padding = '12px';
+    testBtn.style.borderRadius = '8px';
+    testBtn.style.border = '1px solid var(--background-modifier-border)';
+    testBtn.style.background = 'var(--background-secondary)';
+    testBtn.style.color = 'var(--text-normal)';
+    testBtn.style.cursor = 'pointer';
+    testBtn.style.fontSize = '14px';
+    testBtn.style.marginTop = '10px';
+    
     testBtn.addEventListener('click', async () => {
       testBtn.disabled = true;
-      testBtn.textContent = 'جاري الاختبار...';
+      testBtn.textContent = 'Testing...';
       const provider = new CustomProvider(this.plugin);
       const health = await provider.checkHealth();
-      if (health.ok) {
-        new Notice('✅ اتصال API المخصص ناجح!');
-      } else {
-        new Notice(`❌ ${health.message || 'فشل الاتصال بـ API المخصص'}`);
-      }
+      new Notice(health.message);
       testBtn.disabled = false;
-      testBtn.textContent = '🔄 اختبار اتصال API المخصص';
+      testBtn.textContent = '🔄 Test Connection';
     });
   }
 
@@ -1818,167 +2996,283 @@ class SettingsModal extends Modal {
     container.empty();
     
     const section = container.createDiv({ cls: 'ai-settings-section' });
-    section.createEl('h3', { text: ' عامة' });
+    section.style.background = 'var(--background-secondary)';
+    section.style.borderRadius = '8px';
+    section.style.padding = '20px';
+    section.style.marginBottom = '20px';
+    section.style.border = '1px solid var(--background-modifier-border)';
     
-    this.createSliderField(section, 'درجة الحرارة (Temperature):', 'temperature', this.plugin.settings.temperature, 0, 2, 0.1);
-    this.createInputField(section, 'الحد الأقصى للتوكنات:', 'max_tokens', this.plugin.settings.max_tokens, 'number');
-    this.createInputField(section, 'مجلد المحادثات المحفوظة:', 'conversationsFolder', this.plugin.settings.conversationsFolder || 'AI Conversations');
-    this.createCheckboxField(section, 'فحص الاتصال تلقائيًا عند التشغيل:', 'autoCheckHealth', this.plugin.settings.autoCheckHealth);
-    this.createCheckboxField(section, 'عرض عداد التوكنات:', 'showTokenCounter', this.plugin.settings.showTokenCounter);
-    this.createInputField(section, 'مهلة الطلب (بالمللي ثانية):', 'timeoutMs', this.plugin.settings.timeoutMs, 'number');
+    section.createEl('h3', { text: '⚙️ General Settings' });
+    
+    this.createSliderField(section, 'Temperature:', 'temperature', this.plugin.settings.temperature, 0, 2, 0.1);
+    this.createInputField(section, 'Max Tokens:', 'max_tokens', this.plugin.settings.max_tokens, 'number', '2048');
+    this.createInputField(section, 'Conversations Folder:', 'conversationsFolder', this.plugin.settings.conversationsFolder, 'text', 'AI Conversations');
+    this.createInputField(section, 'Timeout (ms):', 'timeoutMs', this.plugin.settings.timeoutMs, 'number', '120000');
+    this.createCheckboxField(section, 'Auto-check health on startup:', 'autoCheckHealth', this.plugin.settings.autoCheckHealth);
+    this.createCheckboxField(section, 'Show token counter:', 'showTokenCounter', this.plugin.settings.showTokenCounter);
   }
 
   showShortcutsSettings(container) {
     container.empty();
     
     const section = container.createDiv({ cls: 'ai-settings-section' });
-    section.createEl('h3', { text: '⚡ اختصارات لوحة المفاتيح' });
+    section.style.background = 'var(--background-secondary)';
+    section.style.borderRadius = '8px';
+    section.style.padding = '20px';
+    section.style.marginBottom = '20px';
+    section.style.border = '1px solid var(--background-modifier-border)';
     
-    this.createShortcutField(section, 'محادثة جديدة:', 'shortcuts', 'newConversation', this.plugin.settings.shortcuts.newConversation);
-    this.createShortcutField(section, 'حفظ المحادثة:', 'shortcuts', 'saveConversation', this.plugin.settings.shortcuts.saveConversation);
-    this.createShortcutField(section, 'فتح الإعدادات:', 'shortcuts', 'settings', this.plugin.settings.shortcuts.settings);
+    section.createEl('h3', { text: '⚡ Keyboard Shortcuts' });
+    
+    this.createShortcutField(section, 'New Conversation:', 'shortcuts', 'newConversation', this.plugin.settings.shortcuts.newConversation);
+    this.createShortcutField(section, 'Save Conversation:', 'shortcuts', 'saveConversation', this.plugin.settings.shortcuts.saveConversation);
+    this.createShortcutField(section, 'Open Settings:', 'shortcuts', 'settings', this.plugin.settings.shortcuts.settings);
+    this.createShortcutField(section, 'Ask Selection:', 'shortcuts', 'askSelection', this.plugin.settings.shortcuts.askSelection || 'Ctrl+Shift+A');
+    this.createShortcutField(section, 'Edit Selection:', 'shortcuts', 'editSelection', this.plugin.settings.shortcuts.editSelection || 'Ctrl+Shift+E');
     
     const info = section.createDiv({ cls: 'ai-shortcuts-info' });
-    info.innerHTML = '<p><strong>ملاحظة:</strong> استخدم Ctrl للويندوز/Linux، Cmd للماك. مثال: Ctrl+Shift+N</p>';
+    info.style.background = 'var(--background-primary)';
+    info.style.borderRadius = '8px';
+    info.style.padding = '12px';
+    info.style.marginTop = '16px';
+    info.style.border = '1px solid var(--background-modifier-border)';
+    info.style.fontSize = '12px';
+    info.style.color = 'var(--text-muted)';
+    
+    info.innerHTML = '<p><strong>Note:</strong> Use Ctrl for Windows/Linux, Cmd for Mac. Examples: Ctrl+Shift+N, Cmd+Shift+N</p>';
   }
 
   showConversationsSettings(container) {
     container.empty();
     
     const section = container.createDiv({ cls: 'ai-settings-section' });
-    section.createEl('h3', { text: 'إدارة المحادثات' });
+    section.style.background = 'var(--background-secondary)';
+    section.style.borderRadius = '8px';
+    section.style.padding = '20px';
+    section.style.marginBottom = '20px';
+    section.style.border = '1px solid var(--background-modifier-border)';
+    
+    section.createEl('h3', { text: '💬 Conversation Management' });
     
     const sessionList = section.createDiv({ cls: 'ai-session-list' });
+    sessionList.style.maxHeight = '300px';
+    sessionList.style.overflowY = 'auto';
+    sessionList.style.border = '1px solid var(--background-modifier-border)';
+    sessionList.style.borderRadius = '8px';
+    sessionList.style.padding = '8px';
+    sessionList.style.marginBottom = '16px';
+    sessionList.style.backgroundColor = 'var(--background-primary)';
+    
     const sessions = this.plugin._sessionManager.sessions;
     
     if (sessions.length === 0) {
       const emptyMsg = sessionList.createDiv({ 
         cls: 'ai-empty-sessions',
-        text: 'لا توجد محادثات'
+        text: 'No conversations yet'
       });
+      emptyMsg.style.textAlign = 'center';
+      emptyMsg.style.padding = '40px 20px';
+      emptyMsg.style.color = 'var(--text-muted)';
+      emptyMsg.style.fontSize = '14px';
     } else {
       sessions.forEach(session => {
         const sessionRow = sessionList.createDiv({ 
           cls: `ai-session-row ${this.plugin._sessionManager.activeId === session.id ? 'active' : ''}` 
         });
+        sessionRow.style.display = 'flex';
+        sessionRow.style.justifyContent = 'space-between';
+        sessionRow.style.alignItems = 'center';
+        sessionRow.style.padding = '10px 12px';
+        sessionRow.style.borderRadius = '6px';
+        sessionRow.style.marginBottom = '6px';
+        sessionRow.style.backgroundColor = 'var(--background-secondary)';
+        sessionRow.style.border = '1px solid var(--background-modifier-border)';
+        
+        if (this.plugin._sessionManager.activeId === session.id) {
+          sessionRow.style.backgroundColor = 'rgba(var(--interactive-accent-rgb), 0.1)';
+          sessionRow.style.borderColor = 'var(--interactive-accent)';
+        }
         
         const sessionInfo = sessionRow.createDiv({ cls: 'ai-session-info' });
+        sessionInfo.style.flex = '1';
+        sessionInfo.style.minWidth = '0';
         
         const nameSpan = sessionInfo.createEl('div', { 
           cls: 'ai-session-name',
           text: session.name 
         });
+        nameSpan.style.fontWeight = '600';
+        nameSpan.style.fontSize = '14px';
+        nameSpan.style.color = 'var(--text-normal)';
+        nameSpan.style.marginBottom = '2px';
+        nameSpan.style.whiteSpace = 'nowrap';
+        nameSpan.style.overflow = 'hidden';
+        nameSpan.style.textOverflow = 'ellipsis';
         
         const messageCount = sessionInfo.createEl('div', { 
           cls: 'ai-session-count',
-          text: `(${session.messages.length} رسالة)` 
+          text: `${session.messages.length} message${session.messages.length !== 1 ? 's' : ''}` 
         });
+        messageCount.style.fontSize = '12px';
+        messageCount.style.color = 'var(--text-muted)';
         
-        // أزرار الإدارة
         const sessionActions = sessionRow.createDiv({ cls: 'ai-session-actions' });
+        sessionActions.style.display = 'flex';
+        sessionActions.style.gap = '6px';
+        sessionActions.style.flexShrink = '0';
         
         const switchBtn = sessionActions.createEl('button', {
-          text: 'تفعيل',
+          text: 'Activate',
           cls: 'ai-session-action-btn'
         });
+        switchBtn.style.padding = '4px 8px';
+        switchBtn.style.borderRadius = '4px';
+        switchBtn.style.border = '1px solid var(--background-modifier-border)';
+        switchBtn.style.backgroundColor = 'var(--background-secondary)';
+        switchBtn.style.color = 'var(--text-normal)';
+        switchBtn.style.cursor = 'pointer';
+        switchBtn.style.fontSize = '11px';
+        
         switchBtn.addEventListener('click', () => {
           this.plugin._sessionManager.switchTo(session.id);
           this.plugin.saveState();
           this.showConversationsSettings(container);
-          new Notice(`تم التبديل إلى محادثة: ${session.name}`);
-          
-          // تحديث العرض في الـ ChatView
+          new Notice(`Switched to conversation: ${session.name}`);
           this.refreshChatViews();
         });
         
         const renameBtn = sessionActions.createEl('button', {
-          text: 'تعديل',
+          text: 'Rename',
           cls: 'ai-session-action-btn'
         });
+        renameBtn.style.padding = '4px 8px';
+        renameBtn.style.borderRadius = '4px';
+        renameBtn.style.border = '1px solid var(--background-modifier-border)';
+        renameBtn.style.backgroundColor = 'var(--background-secondary)';
+        renameBtn.style.color = 'var(--text-normal)';
+        renameBtn.style.cursor = 'pointer';
+        renameBtn.style.fontSize = '11px';
+        
         renameBtn.addEventListener('click', () => {
-          const newName = prompt('الاسم الجديد:', session.name);
+          const newName = prompt('New name:', session.name);
           if (newName && newName.trim()) {
             session.name = newName.trim();
             this.plugin.saveState();
             this.showConversationsSettings(container);
-            new Notice('تم تحديث اسم المحادثة');
+            new Notice('Conversation renamed');
           }
         });
         
         const saveBtn = sessionActions.createEl('button', {
-          text: '💾 حفظ',
+          text: '💾 Save',
           cls: 'ai-session-action-btn save'
         });
+        saveBtn.style.padding = '4px 8px';
+        saveBtn.style.borderRadius = '4px';
+        saveBtn.style.border = '1px solid #2e7d32';
+        saveBtn.style.backgroundColor = 'rgba(46, 125, 50, 0.1)';
+        saveBtn.style.color = '#2e7d32';
+        saveBtn.style.cursor = 'pointer';
+        saveBtn.style.fontSize = '11px';
+        
         saveBtn.addEventListener('click', async () => {
           await this.saveConversationToFile(session);
         });
         
         const deleteBtn = sessionActions.createEl('button', {
-          text: 'حذف',
+          text: 'Delete',
           cls: 'ai-session-action-btn delete'
         });
+        deleteBtn.style.padding = '4px 8px';
+        deleteBtn.style.borderRadius = '4px';
+        deleteBtn.style.border = '1px solid var(--text-error)';
+        deleteBtn.style.backgroundColor = 'rgba(var(--background-modifier-error-rgb), 0.1)';
+        deleteBtn.style.color = 'var(--text-error)';
+        deleteBtn.style.cursor = 'pointer';
+        deleteBtn.style.fontSize = '11px';
+        
         deleteBtn.addEventListener('click', () => {
-          if (confirm(`هل تريد حذف المحادثة "${session.name}"؟`)) {
+          if (confirm(`Delete conversation "${session.name}"?`)) {
             this.plugin._sessionManager.delete(session.id);
             this.plugin.saveState();
             this.showConversationsSettings(container);
-            new Notice('تم حذف المحادثة');
-            
-            // تحديث العرض في الـ ChatView
+            new Notice('Conversation deleted');
             this.refreshChatViews();
           }
         });
       });
     }
     
-    // زر إنشاء محادثة جديدة
     const newSessionSection = section.createDiv({ cls: 'ai-new-session-section' });
+    newSessionSection.style.display = 'flex';
+    newSessionSection.style.gap = '10px';
+    newSessionSection.style.marginBottom = '16px';
     
     const newSessionInput = newSessionSection.createEl('input', {
       type: 'text',
-      placeholder: 'اسم المحادثة الجديدة',
+      placeholder: 'New conversation name',
       cls: 'ai-new-session-input'
     });
+    newSessionInput.style.flex = '1';
+    newSessionInput.style.padding = '10px 14px';
+    newSessionInput.style.borderRadius = '8px';
+    newSessionInput.style.border = '1px solid var(--background-modifier-border)';
+    newSessionInput.style.backgroundColor = 'var(--background-primary)';
+    newSessionInput.style.color = 'var(--text-normal)';
+    newSessionInput.style.fontSize = '14px';
     
     const newSessionBtn = newSessionSection.createEl('button', {
-      text: 'إنشاء محادثة جديدة',
+      text: '➕ New Conversation',
       cls: 'ai-new-session-btn'
     });
+    newSessionBtn.style.padding = '10px 16px';
+    newSessionBtn.style.borderRadius = '8px';
+    newSessionBtn.style.border = '1px solid var(--background-modifier-border)';
+    newSessionBtn.style.backgroundColor = 'var(--interactive-accent)';
+    newSessionBtn.style.color = 'var(--text-on-accent)';
+    newSessionBtn.style.cursor = 'pointer';
+    newSessionBtn.style.fontSize = '14px';
     
     newSessionBtn.addEventListener('click', () => {
       const name = newSessionInput.value.trim();
       if (!name) {
-        new Notice('يرجى إدخال اسم للمحادثة');
+        new Notice('Please enter a conversation name');
         return;
       }
       
-      const newSession = this.plugin._sessionManager.create(name);
+      this.plugin._sessionManager.create(name);
       this.plugin.saveState();
       this.showConversationsSettings(container);
-      new Notice(`تم إنشاء محادثة: ${name}`);
+      new Notice(`✅ Created conversation: ${name}`);
       newSessionInput.value = '';
-      
-      // تحديث العرض في الـ ChatView
       this.refreshChatViews();
     });
     
-    // زر حذف جميع المحادثات
     const clearAllSection = section.createDiv({ cls: 'ai-clear-all-section' });
+    clearAllSection.style.marginTop = '16px';
+    clearAllSection.style.paddingTop = '16px';
+    clearAllSection.style.borderTop = '1px solid var(--background-modifier-border)';
     
     const clearAllBtn = clearAllSection.createEl('button', {
-      text: '🗑️ حذف جميع المحادثات',
+      text: '🗑️ Delete All Conversations',
       cls: 'ai-clear-all-btn'
     });
+    clearAllBtn.style.width = '100%';
+    clearAllBtn.style.padding = '12px';
+    clearAllBtn.style.borderRadius = '8px';
+    clearAllBtn.style.border = '1px solid var(--text-error)';
+    clearAllBtn.style.backgroundColor = 'rgba(var(--background-modifier-error-rgb), 0.1)';
+    clearAllBtn.style.color = 'var(--text-error)';
+    clearAllBtn.style.cursor = 'pointer';
+    clearAllBtn.style.fontSize = '14px';
     
     clearAllBtn.addEventListener('click', () => {
-      if (confirm('هل تريد حذف جميع المحادثات؟ لا يمكن التراجع عن هذا الإجراء.')) {
+      if (confirm('Delete ALL conversations? This cannot be undone.')) {
         this.plugin._sessionManager.sessions = [];
-        this.plugin._sessionManager.create('محادثة افتراضية');
+        this.plugin._sessionManager.create('Default Conversation');
         this.plugin.saveState();
         this.showConversationsSettings(container);
-        new Notice('تم حذف جميع المحادثات');
-        
-        // تحديث العرض في الـ ChatView
+        new Notice('All conversations deleted');
         this.refreshChatViews();
       }
     });
@@ -1997,10 +3291,10 @@ class SettingsModal extends Modal {
       }
       
       await this.app.vault.create(fullPath, content);
-      new Notice(`✅ تم حفظ المحادثة في: ${fullPath}`);
+      new Notice(`✅ Conversation saved to: ${fullPath}`);
     } catch (error) {
       console.error('Error saving conversation:', error);
-      new Notice(`❌ خطأ في حفظ المحادثة: ${error.message}`);
+      new Notice(`❌ Error saving conversation: ${error.message}`);
     }
   }
 
@@ -2013,25 +3307,28 @@ class SettingsModal extends Modal {
     });
   }
   
-  createInputField(container, label, key, value, type = 'text') {
+  createInputField(container, label, key, value, type = 'text', placeholder = '') {
     const row = container.createDiv({ cls: 'ai-settings-row' });
-    row.createEl('label', { text: label });
+    row.style.marginBottom = '16px';
+    
+    row.createEl('label', { text: label }).style.display = 'block';
     
     const input = row.createEl('input', {
       type: type,
       value: value,
-      placeholder: label
+      placeholder: placeholder
     });
+    input.style.width = '100%';
+    input.style.padding = '10px 14px';
+    input.style.borderRadius = '8px';
+    input.style.border = '1px solid var(--background-modifier-border)';
+    input.style.backgroundColor = 'var(--background-primary)';
+    input.style.color = 'var(--text-normal)';
+    input.style.fontSize = '14px';
+    input.style.boxSizing = 'border-box';
     
     input.addEventListener('change', (e) => {
-      if (key === 'shortcuts') {
-        const shortcutKey = this.currentShortcutKey;
-        if (shortcutKey) {
-          this.plugin.settings[key][shortcutKey] = e.target.value;
-        }
-      } else {
-        this.plugin.settings[key] = type === 'number' ? parseInt(e.target.value) : e.target.value;
-      }
+      this.plugin.settings[key] = type === 'number' ? parseInt(e.target.value) : e.target.value;
     });
     
     return input;
@@ -2039,15 +3336,23 @@ class SettingsModal extends Modal {
 
   createShortcutField(container, label, parentKey, shortcutKey, value) {
     const row = container.createDiv({ cls: 'ai-settings-row' });
-    row.createEl('label', { text: label });
+    row.style.marginBottom = '16px';
+    
+    row.createEl('label', { text: label }).style.display = 'block';
     
     const input = row.createEl('input', {
       type: 'text',
       value: value,
-      placeholder: 'مثال: Ctrl+Shift+N'
+      placeholder: 'Example: Ctrl+Shift+N'
     });
-    
-    this.currentShortcutKey = shortcutKey;
+    input.style.width = '100%';
+    input.style.padding = '10px 14px';
+    input.style.borderRadius = '8px';
+    input.style.border = '1px solid var(--background-modifier-border)';
+    input.style.backgroundColor = 'var(--background-primary)';
+    input.style.color = 'var(--text-normal)';
+    input.style.fontSize = '14px';
+    input.style.boxSizing = 'border-box';
     
     input.addEventListener('change', (e) => {
       this.plugin.settings[parentKey][shortcutKey] = e.target.value;
@@ -2058,7 +3363,13 @@ class SettingsModal extends Modal {
   
   createSliderField(container, label, key, value, min, max, step) {
     const row = container.createDiv({ cls: 'ai-settings-row' });
-    row.createEl('label', { text: `${label} ${value}` });
+    row.style.marginBottom = '16px';
+    
+    const labelRow = row.createDiv({ style: 'display: flex; justify-content: space-between;' });
+    labelRow.createEl('label', { text: label });
+    const valueSpan = labelRow.createEl('span', { text: value, cls: 'ai-slider-value' });
+    valueSpan.style.fontWeight = '600';
+    valueSpan.style.color = 'var(--interactive-accent)';
     
     const slider = row.createEl('input', {
       type: 'range',
@@ -2067,16 +3378,15 @@ class SettingsModal extends Modal {
       max: max,
       step: step
     });
-    
-    const valueDisplay = row.createEl('span', { 
-      text: value,
-      cls: 'ai-slider-value'
-    });
+    slider.style.width = '100%';
+    slider.style.height = '6px';
+    slider.style.borderRadius = '3px';
+    slider.style.background = 'var(--background-modifier-border)';
     
     slider.addEventListener('input', (e) => {
       const val = parseFloat(e.target.value);
       this.plugin.settings[key] = val;
-      valueDisplay.textContent = val;
+      valueSpan.textContent = val.toFixed(1);
     });
     
     return slider;
@@ -2084,17 +3394,24 @@ class SettingsModal extends Modal {
   
   createCheckboxField(container, label, key, checked) {
     const row = container.createDiv({ cls: 'ai-settings-row checkbox' });
+    row.style.display = 'flex';
+    row.style.alignItems = 'center';
+    row.style.gap = '10px';
+    row.style.marginBottom = '16px';
     
     const checkbox = row.createEl('input', {
       type: 'checkbox',
       checked: checked
     });
+    checkbox.style.width = '18px';
+    checkbox.style.height = '18px';
+    checkbox.style.accentColor = 'var(--interactive-accent)';
     
     checkbox.addEventListener('change', (e) => {
       this.plugin.settings[key] = e.target.checked;
     });
     
-    row.createEl('label', { text: label });
+    row.createEl('label', { text: label }).style.cursor = 'pointer';
     row.prepend(checkbox);
     
     return checkbox;
@@ -2105,7 +3422,8 @@ class SettingsModal extends Modal {
   }
 }
 
-// ---------------- Main plugin ----------------
+// ==================== MAIN PLUGIN ====================
+
 module.exports = class AIPlugin extends Plugin {
   async onload() {
     this.loadCSS();
@@ -2113,47 +3431,30 @@ module.exports = class AIPlugin extends Plugin {
     
     const saved = await this.loadData();
     this._sessionManager = saved && saved.sessions ? new SessionManager(saved.sessions) : new SessionManager();
-    if (!this._sessionManager.sessions.length) this._sessionManager.create('محادثة افتراضية', '');
+    if (!this._sessionManager.sessions.length) this._sessionManager.create('Default Conversation', '');
 
     this.apiManager = new APIManager(this);
+    this.inNoteAI = new InNoteAIInteractions(this);
+    this.networkManager = new NetworkManager(this);
 
     this.registerView(VIEW_TYPE, (leaf) => new ChatView(leaf, this));
 
-    this.addRibbonIcon('brain', 'Ask Ai', () => {
-      const mdv = this.app.workspace.getActiveViewOfType(MarkdownView);
-      const initial = mdv ? mdv.editor.getSelection() : '';
-      const pm = new PromptModal(this.app, 'Send prompt to Local AI', initial, async (val) => {
-        if (!val) return;
-        const s = this._sessionManager.getActive();
-        if (s) s.messages.push({ role: 'user', content: val });
-        try {
-          const res = await this.apiManager.sendMessage({
-            messages: (this._sessionManager.getMessagesForRequest().concat([{ role: 'user', content: val }])),
-            temperature: this.settings.temperature,
-            max_tokens: this.settings.max_tokens,
-            stream: false
-          }, { timeoutMs: this.settings.timeoutMs });
-          new Notice('Response: ' + (res.final ? res.final.slice(0,200) : '(no text)'));
-        } catch (e) {
-          new Notice('Local AI Error: ' + (e.message || String(e)));
-        }
-      });
-      pm.open();
+    this.addRibbonIcon('brain', 'AI Assistant', () => {
+      this.openSidebar();
     });
 
     this.addCommand({
       id: 'ai-open-sidebar',
       name: 'Open AI Assistant Sidebar',
-      callback: async ()=> this.openSidebar()
+      callback: async () => this.openSidebar()
     });
     
     this.addCommand({
-      id: 'ai-reply-note',
-      name: 'Reply in current note (stream)',
-      callback: async ()=> this.replyInNote()
+      id: 'ai-reply-in-note',
+      name: 'Stream AI response in current note',
+      editorCallback: (editor) => this.replyInNote(editor)
     });
 
-    // إضافة اختصارات لوحة المفاتيح
     this.addCommand({
       id: 'ai-new-conversation',
       name: 'New Conversation',
@@ -2162,6 +3463,13 @@ module.exports = class AIPlugin extends Plugin {
         const activeView = this.app.workspace.getActiveViewOfType(ChatView);
         if (activeView) {
           activeView.createNewConversation();
+        } else {
+          const name = prompt('New conversation name:', `Conversation ${this._sessionManager.sessions.length + 1}`);
+          if (name && name.trim()) {
+            this._sessionManager.create(name.trim());
+            this.saveState();
+            new Notice(`✅ Created conversation: ${name}`);
+          }
         }
       }
     });
@@ -2174,1051 +3482,110 @@ module.exports = class AIPlugin extends Plugin {
         const activeView = this.app.workspace.getActiveViewOfType(ChatView);
         if (activeView) {
           activeView.saveCurrentConversation();
+        } else {
+          this.saveCurrentConversationFromAnywhere();
         }
       }
     });
 
     if (this.settings.autoCheckHealth) {
-      const ok = await this.apiManager.checkHealth();
-      if (!ok) new Notice('Local AI unreachable at ' + this.settings.baseUrl);
+      setTimeout(() => this.checkHealthAndNotify(), 3000);
     }
   }
 
   loadCSS() {
-  const css = `
-/* =============================================
-   Local AI Sidebar - RTL Version
-   ============================================= */
-
-.ai-sidebar {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 8px;
-  gap: 8px;
-  box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  direction: rtl;
-  text-align: right;
-}
-
-/* أزرار اختيار المزود */
-.ai-api-type-selector {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-
-.ai-provider-btn {
-  flex: 1;
-  min-width: 120px;
-  padding: 12px;
-  border-radius: 8px;
-  border: 2px solid;
-  background: var(--background-secondary);
-  color: var(--text-normal);
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.ai-provider-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.ai-provider-btn.active {
-  background: var(--background-primary);
-  border-width: 3px;
-  font-weight: bold;
-}
-
-/*  API محددة */
-.ai-api-settings-container {
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ---------- Top Bar ---------- */
-.ai-sidebar .ai-top-bar {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  height: 32px;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  gap: 8px;
-}
-
-.ai-sidebar .ai-top-spacer {
-  flex: 1;
-}
-
-.ai-sidebar .ai-shortcuts-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 20px;
-  color: var(--text-normal);
-  padding: 4px 8px;
-  border-radius: 4px;
-  margin: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.ai-sidebar .ai-shortcuts-btn:hover {
-  background-color: var(--background-modifier-hover);
-  transform: scale(1.1);
-}
-
-.ai-sidebar .ai-settings-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 20px;
-  color: var(--text-normal);
-  padding: 4px 8px;
-  border-radius: 4px;
-  margin: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.ai-sidebar .ai-settings-btn:hover {
-  background-color: var(--background-modifier-hover);
-  transform: scale(1.1);
-}
-
-/* زر تبديل النموذج */
-.ai-sidebar .ai-mode-toggle {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 20px;
-  color: var(--text-normal);
-  padding: 4px 8px;
-  border-radius: 4px;
-  margin: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.ai-sidebar .ai-mode-toggle:hover {
-  background-color: var(--background-modifier-hover);
-  transform: scale(1.1);
-}
-
-/* ---------- Chat Area ---------- */
-.ai-sidebar .ai-chat {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
-  border-radius: 8px;
-  background: var(--background-primary);
-  border: 1px solid var(--background-modifier-border);
-  margin: 4px 0;
-  display: flex;
-  flex-direction: column;
-  min-height: 200px;
-}
-
-.ai-sidebar .ai-chat::-webkit-scrollbar {
-  width: 8px;
-}
-
-.ai-sidebar .ai-chat::-webkit-scrollbar-thumb {
-  background: var(--background-modifier-border);
-  border-radius: 4px;
-}
-
-/* حاوية الرسائل */
-.ai-msg-container {
-  margin-bottom: 16px;
-  max-width: 88%;
-}
-
-.ai-msg-container.user {
-  align-self: flex-start;
-}
-
-.ai-msg-container.assistant {
-  align-self: flex-end;
-}
-
-/* ---------- Messages ---------- */
-.ai-sidebar .ai-msg {
-  padding: 12px 16px;
-  border-radius: 12px;
-  line-height: 1.5;
-  white-space: pre-wrap;
-  word-break: break-word;
-  font-size: 14px;
-  position: relative;
-}
-
-.ai-sidebar .ai-msg.user {
-  background: var(--interactive-accent);
-  color: var(--text-on-accent);
-  border-bottom-right-radius: 4px;
-  border-bottom-left-radius: 12px;
-}
-
-.ai-sidebar .ai-msg.assistant {
-  background: var(--background-secondary);
-  color: var(--text-normal);
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 12px;
-}
-
-/* حاوية المرفقات */
-.ai-attachments-container {
-  margin-top: 8px;
-  padding: 10px;
-  background: rgba(var(--interactive-accent-rgb), 0.1);
-  border-radius: 8px;
-  border: 1px dashed var(--background-modifier-border);
-}
-
-.ai-attachments-title {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-  font-weight: 600;
-}
-
-.ai-attachment {
-  display: flex;
-  align-items: center;
-  padding: 6px 8px;
-  background: var(--background-primary);
-  border-radius: 6px;
-  margin-bottom: 4px;
-  border: 1px solid var(--background-modifier-border);
-}
-
-.ai-attachment:last-child {
-  margin-bottom: 0;
-}
-
-.ai-attachment-name {
-  font-size: 13px;
-  color: var(--text-normal);
-  margin-right: 8px;
-}
-
-/* دعم Markdown في الرسائل */
-.ai-sidebar .ai-msg.assistant p {
-  margin: 0.5em 0;
-}
-
-.ai-sidebar .ai-msg.assistant h1,
-.ai-sidebar .ai-msg.assistant h2,
-.ai-sidebar .ai-msg.assistant h3,
-.ai-sidebar .ai-msg.assistant h4,
-.ai-sidebar .ai-msg.assistant h5,
-.ai-sidebar .ai-msg.assistant h6 {
-  margin-top: 1em;
-  margin-bottom: 0.5em;
-}
-
-.ai-sidebar .ai-msg.assistant code {
-  background-color: var(--background-primary);
-  padding: 2px 4px;
-  border-radius: 3px;
-  font-family: monospace;
-}
-
-.ai-sidebar .ai-msg.assistant pre {
-  background-color: var(--background-primary);
-  padding: 10px;
-  border-radius: 5px;
-  overflow-x: auto;
-}
-
-.ai-sidebar .ai-msg.assistant ul,
-.ai-sidebar .ai-msg.assistant ol {
-  padding-right: 20px;
-}
-
-/* ---------- Input Area with Floating Buttons ---------- */
-.ai-sidebar .ai-input-wrap {
-  position: relative;
-  width: 100%;
-  margin-top: auto;
-  padding-top: 8px;
-  border-top: 1px solid var(--background-modifier-border);
-}
-
-.ai-sidebar .ai-input {
-  width: 100%;
-  resize: vertical;
-  padding: 12px;
-  padding-bottom: 60px;
-  border-radius: 8px;
-  border: 1px solid var(--background-modifier-border);
-  background: var(--background-secondary);
-  color: var(--text-normal);
-  font-size: 15px;
-  font-family: inherit;
-  min-height: 120px;
-  max-height: 300px;
-  line-height: 1.5;
-  text-align: right;
-  direction: rtl;
-  box-sizing: border-box;
-}
-
-.ai-sidebar .ai-input:focus {
-  outline: none;
-  border-color: var(--interactive-accent);
-  box-shadow: 0 0 0 2px var(--interactive-accent-hover);
-}
-
-/* ---------- Floating Buttons ---------- */
-.ai-sidebar .floating-btn {
-  position: absolute;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  z-index: 100;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s ease;
-}
-
-/* زر الإرسال - دائري في الأسفل على اليسار */
-.ai-sidebar .ai-send-btn {
-  bottom: 15px;
-  left: 15px;
-  background: var(--interactive-accent);
-  color: var(--text-on-accent);
-}
-
-.ai-sidebar .ai-send-btn:hover {
-  background: var(--interactive-accent-hover);
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-/* زر الإرفاق - دائري فوق زر الإرسال */
-.ai-sidebar .ai-attach-btn {
-  bottom: 60px;
-  left: 15px;
-  background: var(--interactive-accent);
-  color: var(--text-normal);
-  border: 1px solid var(--background-modifier-border);
-}
-
-.ai-sidebar .ai-attach-btn:hover {
-  background: var(--background-modifier-hover);
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-/* ===== قائمة الاختصارات ===== */
-.ai-shortcuts-menu {
-  position: fixed !important;
-  background: var(--background-primary) !important;
-  border: 1px solid var(--background-modifier-border) !important;
-  border-radius: 8px !important;
-  padding: 10px !important;
-  min-width: 200px !important;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2) !important;
-  z-index: 9999 !important;
-  backdrop-filter: blur(10px) !important;
-  font-family: inherit !important;
-}
-
-.shortcut-item {
-  padding: 8px 12px !important;
-  cursor: pointer !important;
-  font-size: 13px !important;
-  color: var(--text-normal) !important;
-  border-bottom: 1px solid var(--background-modifier-border) !important;
-  transition: all 0.2s ease !important;
-  text-align: right !important;
-  direction: rtl !important;
-  display: flex !important;
-  justify-content: space-between !important;
-  align-items: center !important;
-}
-
-.shortcut-item:last-child {
-  border-bottom: none !important;
-}
-
-.shortcut-item:hover {
-  background: var(--background-modifier-hover) !important;
-  color: var(--text-accent) !important;
-}
-
-.shortcut-key {
-  font-weight: 600 !important;
-}
-
-.shortcut-value {
-  font-family: monospace !important;
-  font-size: 12px !important;
-  color: var(--text-muted) !important;
-  background: var(--background-secondary) !important;
-  padding: 2px 6px !important;
-  border-radius: 4px !important;
-  border: 1px solid var(--background-modifier-border) !important;
-}
-
-/* ===== Attach Modal Styles ===== */
-
-/* العنوان في الوسط */
-.ai-attach-title {
-  text-align: center !important;
-  margin: 0 0 20px 0 !important;
-  padding: 0 !important;
-  font-size: 18px !important;
-  font-weight: 600 !important;
-  color: var(--text-normal) !important;
-}
-
-/* صف البحث */
-.ai-search-row {
-  margin-bottom: 16px !important;
-}
-
-.ai-search-row input {
-  width: 100% !important;
-  padding: 10px 14px !important;
-  border-radius: 8px !important;
-  border: 1px solid var(--background-modifier-border) !important;
-  background-color: var(--background-secondary) !important;
-  color: var(--text-normal) !important;
-  font-size: 14px !important;
-  transition: all 0.2s ease !important;
-}
-
-.ai-search-row input:focus {
-  outline: none !important;
-  border-color: var(--interactive-accent) !important;
-  box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2) !important;
-}
-
-/* حاوية قائمة الملفات */
-.ai-file-list-container {
-  max-height: 300px !important;
-  overflow-y: auto !important;
-  border: 1px solid var(--background-modifier-border) !important;
-  border-radius: 8px !important;
-  padding: 8px !important;
-  background-color: var(--background-secondary) !important;
-  margin-bottom: 16px !important;
-}
-
-.ai-file-list-container::-webkit-scrollbar {
-  width: 6px !important;
-}
-
-.ai-file-list-container::-webkit-scrollbar-thumb {
-  background-color: var(--background-modifier-border) !important;
-  border-radius: 3px !important;
-}
-
-/* صف الملف */
-.ai-file-row {
-  display: flex !important;
-  align-items: center !important;
-  padding: 10px 12px !important;
-  border-radius: 6px !important;
-  margin-bottom: 6px !important;
-  background-color: var(--background-primary) !important;
-  border: 1px solid var(--background-modifier-border) !important;
-  transition: all 0.2s ease !important;
-  cursor: pointer !important;
-}
-
-.ai-file-row:hover {
-  background-color: var(--background-modifier-hover) !important;
-  border-color: var(--interactive-accent) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-}
-
-.ai-file-row:last-child {
-  margin-bottom: 0 !important;
-}
-
-/* حاوية الـ checkbox */
-.ai-checkbox-container {
-  margin-left: 12px !important;
-  flex-shrink: 0 !important;
-}
-
-.ai-file-checkbox {
-  width: 18px !important;
-  height: 18px !important;
-  cursor: pointer !important;
-  accent-color: var(--interactive-accent) !important;
-}
-
-/* معلومات الملف */
-.ai-file-info {
-  flex: 1 !important;
-  min-width: 0 !important;
-}
-
-.ai-file-name {
-  font-weight: 600 !important;
-  font-size: 14px !important;
-  color: var(--text-normal) !important;
-  margin-bottom: 2px !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-}
-
-.ai-file-path {
-  font-size: 12px !important;
-  color: var(--text-muted) !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-}
-
-/* رسالة عندما لا توجد ملفات */
-.ai-empty-files {
-  text-align: center !important;
-  padding: 40px 20px !important;
-  color: var(--text-muted) !important;
-  font-size: 14px !important;
-}
-
-/* تظليل النص المطابق في البحث */
-.ai-search-highlight {
-  background-color: var(--text-highlight-bg) !important;
-  color: var(--text-normal) !important;
-  padding: 1px 3px !important;
-  border-radius: 3px !important;
-  font-weight: bold !important;
-}
-
-/* صف أزرار الإرسال والإلغاء */
-.ai-attach-btn-row {
-  display: flex !important;
-  justify-content: center !important;
-  gap: 12px !important;
-  margin-top: 20px !important;
-}
-
-.ai-attach-send-btn {
-  padding: 10px 24px !important;
-  border-radius: 8px !important;
-  border: 1px solid var(--background-modifier-border) !important;
-  background-color: var(--interactive-accent) !important;
-  color: var(--text-on-accent) !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  cursor: pointer !important;
-  transition: all 0.2s ease !important;
-  min-width: 120px !important;
-}
-
-.ai-attach-send-btn:hover {
-  background-color: var(--interactive-accent-hover) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(var(--interactive-accent-rgb), 0.3) !important;
-}
-
-.ai-attach-cancel-btn {
-  padding: 10px 24px !important;
-  border-radius: 8px !important;
-  border: 1px solid var(--background-modifier-border) !important;
-  background-color: var(--background-secondary) !important;
-  color: var(--text-normal) !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  cursor: pointer !important;
-  transition: all 0.2s ease !important;
-  min-width: 120px !important;
-}
-
-.ai-attach-cancel-btn:hover {
-  background-color: var(--background-modifier-hover) !important;
-  border-color: var(--text-muted) !important;
-}
-
-/* token counter */
-.ai-token-counter {
-  font-size: 11px !important;
-  font-weight: normal !important;
-  padding: 4px 8px !important;
-  border-radius: 12px !important;
-  background: transparent !important;
-  color: var(--text-muted) !important;
-  border: 1px solid var(--background-modifier-border) !important;
-  cursor: default !important;
-  user-select: none !important;
-  transition: all 0.3s ease !important;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  min-width: 70px !important;
-  height: 24px !important;
-  direction: ltr !important;
-}
-
-.ai-token-counter:hover {
-    transform: scale(1.05) !important;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1) !important;
-}
-
-/* عداد التوكنات في الهيد بار */
-.ai-sidebar .ai-top-bar {
-    display: flex !important;
-    justify-content: flex-start !important;
-    align-items: center !important;
-    height: 36px !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    gap: 8px !important;
-}
-
-.ai-sidebar .ai-top-spacer {
-    flex: 1 !important;
-}
-
-/* علامات تبويب ال */
-.ai-settings-tabs {
-  display: flex !important;
-  gap: 8px !important;
-  margin-bottom: 20px !important;
-  border-bottom: 1px solid var(--background-modifier-border) !important;
-  padding-bottom: 10px !important;
-  flex-wrap: wrap;
-}
-
-.ai-tab-btn {
-  padding: 10px 16px !important;
-  border: none !important;
-  background: transparent !important;
-  color: var(--text-muted) !important;
-  cursor: pointer !important;
-  border-radius: 6px !important;
-  font-size: 14px !important;
-  transition: all 0.2s ease !important;
-  white-space: nowrap;
-}
-
-.ai-tab-btn:hover {
-  background: var(--background-modifier-hover) !important;
-  color: var(--text-normal) !important;
-}
-
-.ai-tab-btn.active {
-  background: var(--interactive-accent) !important;
-  color: var(--text-on-accent) !important;
-  font-weight: 600 !important;
-}
-
-/* محتوى ال */
-.ai-settings-content {
-  max-height: 400px !important;
-  overflow-y: auto !important;
-  padding-right: 10px !important;
-  margin-bottom: 20px !important;
-}
-
-.ai-settings-section {
-  background: var(--background-secondary) !important;
-  border-radius: 8px !important;
-  padding: 20px !important;
-  margin-bottom: 20px !important;
-  border: 1px solid var(--background-modifier-border) !important;
-}
-
-.ai-settings-section h3 {
-  margin-top: 0 !important;
-  margin-bottom: 20px !important;
-  color: var(--text-normal) !important;
-  font-size: 16px !important;
-}
-
-/* صفوف ال */
-.ai-settings-row {
-  margin-bottom: 16px !important;
-}
-
-.ai-settings-row label {
-  display: block !important;
-  margin-bottom: 6px !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
-  color: var(--text-normal) !important;
-}
-
-.ai-settings-row input[type="text"],
-.ai-settings-row input[type="password"],
-.ai-settings-row input[type="number"] {
-  width: 100% !important;
-  padding: 10px 14px !important;
-  border-radius: 8px !important;
-  border: 1px solid var(--background-modifier-border) !important;
-  background: var(--background-primary) !important;
-  color: var(--text-normal) !important;
-  font-size: 14px !important;
-  box-sizing: border-box !important;
-}
-
-.ai-settings-row input:focus {
-  outline: none !important;
-  border-color: var(--interactive-accent) !important;
-  box-shadow: 0 0 0 2px var(--interactive-accent-hover) !important;
-}
-
-/* Slider */
-.ai-settings-row input[type="range"] {
-  width: 100% !important;
-  height: 6px !important;
-  border-radius: 3px !important;
-  background: var(--background-modifier-border) !important;
-  outline: none !important;
-  -webkit-appearance: none !important;
-}
-
-.ai-settings-row input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none !important;
-  width: 20px !important;
-  height: 20px !important;
-  border-radius: 50% !important;
-  background: var(--interactive-accent) !important;
-  cursor: pointer !important;
-}
-
-.ai-slider-value {
-  display: inline-block !important;
-  margin-left: 10px !important;
-  font-weight: 600 !important;
-  color: var(--interactive-accent) !important;
-  min-width: 40px !important;
-}
-
-/* Checkbox */
-.ai-settings-row.checkbox {
-  display: flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-}
-
-.ai-settings-row.checkbox input[type="checkbox"] {
-  width: 18px !important;
-  height: 18px !important;
-  accent-color: var(--interactive-accent) !important;
-}
-
-.ai-settings-row.checkbox label {
-  margin-bottom: 0 !important;
-  cursor: pointer !important;
-}
-
-/* زر الاختبار */
-.ai-test-btn {
-  width: 100% !important;
-  padding: 12px !important;
-  border-radius: 8px !important;
-  border: 1px solid var(--background-modifier-border) !important;
-  background: var(--background-secondary) !important;
-  color: var(--text-normal) !important;
-  cursor: pointer !important;
-  font-size: 14px !important;
-  margin-top: 10px !important;
-  transition: all 0.2s ease !important;
-}
-
-.ai-test-btn:hover {
-  background: var(--background-modifier-hover) !important;
-  border-color: var(--interactive-accent) !important;
-}
-
-.ai-test-btn:disabled {
-  opacity: 0.6 !important;
-  cursor: not-allowed !important;
-}
-
-/* معلومات الاختصارات */
-.ai-shortcuts-info {
-  background: var(--background-primary) !important;
-  border-radius: 8px !important;
-  padding: 12px !important;
-  margin-top: 16px !important;
-  border: 1px solid var(--background-modifier-border) !important;
-  font-size: 12px !important;
-  color: var(--text-muted) !important;
-}
-
-/* أزرار ال */
-.ai-settings-btn-row {
-  display: flex !important;
-  justify-content: flex-end !important;
-  gap: 10px !important;
-  padding-top: 20px !important;
-  border-top: 1px solid var(--background-modifier-border) !important;
-}
-
-.ai-settings-save-btn {
-  padding: 10px 24px !important;
-  border-radius: 8px !important;
-  border: none !important;
-  background: var(--interactive-accent) !important;
-  color: var(--text-on-accent) !important;
-  cursor: pointer !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  transition: all 0.2s ease !important;
-}
-
-.ai-settings-save-btn:hover {
-  background: var(--interactive-accent-hover) !important;
-  transform: translateY(-1px) !important;
-}
-
-.ai-settings-cancel-btn {
-  padding: 10px 24px !important;
-  border-radius: 8px !important;
-  border: 1px solid var(--background-modifier-border) !important;
-  background: var(--background-secondary) !important;
-  color: var(--text-normal) !important;
-  cursor: pointer !important;
-  font-size: 14px !important;
-  transition: all 0.2s ease !important;
-}
-
-.ai-settings-cancel-btn:hover {
-  background: var(--background-modifier-hover) !important;
-}
-
-/* ===== إدارة المحادثات في الإعدادات ===== */
-
-.ai-session-list {
-  max-height: 300px;
-  overflow-y: auto;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 8px;
-  padding: 8px;
-  margin-bottom: 16px;
-  background-color: var(--background-secondary);
-}
-
-.ai-session-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.ai-session-list::-webkit-scrollbar-thumb {
-  background-color: var(--background-modifier-border);
-  border-radius: 3px;
-}
-
-.ai-session-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 12px;
-  border-radius: 6px;
-  margin-bottom: 6px;
-  background-color: var(--background-primary);
-  border: 1px solid var(--background-modifier-border);
-  transition: all 0.2s ease;
-}
-
-.ai-session-row:hover {
-  background-color: var(--background-modifier-hover);
-  border-color: var(--interactive-accent);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.ai-session-row.active {
-  background-color: rgba(var(--interactive-accent-rgb), 0.1);
-  border-color: var(--interactive-accent);
-}
-
-.ai-session-row:last-child {
-  margin-bottom: 0;
-}
-
-.ai-session-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.ai-session-name {
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--text-normal);
-  margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.ai-session-count {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.ai-session-actions {
-  display: flex;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.ai-session-action-btn {
-  padding: 6px 12px;
-  border-radius: 4px;
-  border: 1px solid var(--background-modifier-border);
-  background-color: var(--background-secondary);
-  color: var(--text-normal);
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.ai-session-action-btn:hover {
-  background-color: var(--background-modifier-hover);
-  border-color: var(--text-muted);
-}
-
-.ai-session-action-btn.save {
-  background-color: rgba(46, 125, 50, 0.1);
-  color: #2e7d32;
-  border-color: #2e7d32;
-}
-
-.ai-session-action-btn.save:hover {
-  background-color: rgba(46, 125, 50, 0.2);
-}
-
-.ai-session-action-btn.delete {
-  background-color: rgba(var(--background-modifier-error-rgb), 0.1);
-  color: var(--text-error);
-  border-color: var(--text-error);
-}
-
-.ai-session-action-btn.delete:hover {
-  background-color: rgba(var(--background-modifier-error-rgb), 0.2);
-}
-
-.ai-new-session-section {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.ai-new-session-input {
-  flex: 1;
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: 1px solid var(--background-modifier-border);
-  background-color: var(--background-primary);
-  color: var(--text-normal);
-  font-size: 14px;
-}
-
-.ai-new-session-btn {
-  padding: 10px 16px;
-  border-radius: 8px;
-  border: 1px solid var(--background-modifier-border);
-  background-color: var(--interactive-accent);
-  color: var(--text-on-accent);
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.ai-new-session-btn:hover {
-  background-color: var(--interactive-accent-hover);
-  transform: translateY(-1px);
-}
-
-.ai-clear-all-section {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--background-modifier-border);
-}
-
-.ai-clear-all-btn {
-  width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid var(--text-error);
-  background-color: rgba(var(--background-modifier-error-rgb), 0.1);
-  color: var(--text-error);
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.ai-clear-all-btn:hover {
-  background-color: rgba(var(--background-modifier-error-rgb), 0.2);
-  transform: translateY(-1px);
-}
-
-.ai-empty-sessions {
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--text-muted);
-  font-size: 14px;
-}
-
-/* إخفاء عداد التوكنات إذا كان معطلاً */
-.ai-token-counter[style*="display: none"] {
-  display: none !important;
-}
-
-.ai-token-counter[style*="display: flex"] {
-  display: flex !important;
-}
-  `;
-  
-  const styleEl = document.createElement('style');
-  styleEl.id = 'ai-css';
-  styleEl.textContent = css;
-  document.head.appendChild(styleEl);
- }
-
-  onunload() {
-    const styleEl = document.getElementById('ai-css');
-    if (styleEl) {
-      styleEl.remove();
+    const styleEl = document.createElement('style');
+    styleEl.id = 'ai-plugin-css';
+    styleEl.textContent = `
+      @keyframes ai-float-in {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      .ai-floating-menu {
+        animation: ai-float-in 0.2s ease;
+      }
+      
+      .ai-floating-btn:hover {
+        transform: scale(1.1) !important;
+        background: var(--interactive-accent-hover) !important;
+      }
+      
+      .ai-token-counter {
+        transition: all 0.3s ease;
+      }
+      
+      .ai-token-counter:hover {
+        transform: scale(1.05);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      }
+    `;
+    document.head.appendChild(styleEl);
+  }
+
+  async checkHealthAndNotify() {
+    const health = await this.apiManager.checkHealth();
+    if (!health.ok) {
+      new Notice(`⚠️ ${health.message}`);
     }
-    this.app.workspace.detachLeavesOfType(VIEW_TYPE);
+  }
+
+  async saveCurrentConversationFromAnywhere() {
+    const session = this._sessionManager.getActive();
+    if (!session) {
+      new Notice('No active conversation to save');
+      return;
+    }
+    
+    try {
+      const content = this._sessionManager.exportToMarkdown(session);
+      const folderPath = this.settings.conversationsFolder || 'AI Conversations';
+      const fileName = `${session.name.replace(/[\\/:*?"<>|]/g, '_')}.md`;
+      const fullPath = folderPath ? `${folderPath}/${fileName}` : fileName;
+      
+      const folderExists = await this.app.vault.adapter.exists(folderPath);
+      if (!folderExists) {
+        await this.app.vault.createFolder(folderPath);
+      }
+      
+      await this.app.vault.create(fullPath, content);
+      new Notice(`✅ Conversation saved to: ${fullPath}`);
+    } catch (error) {
+      console.error('Error saving conversation:', error);
+      new Notice(`❌ Error saving conversation: ${error.message}`);
+    }
+  }
+
+  async replyInNote(editor) {
+    const selection = editor.getSelection().trim();
+    const prompt = selection.length ? selection : editor.getValue();
+    
+    const s = this._sessionManager.getActive();
+    if (s) {
+      this._sessionManager.addMessage('user', prompt);
+    }
+    
+    editor.replaceSelection("\n\n--- 🤖 AI Response ---\n\n");
+    
+    try {
+      await this.apiManager.sendMessage({
+        messages: s ? this._sessionManager.getMessagesForRequest() : [{ role: 'user', content: prompt }],
+        temperature: this.settings.temperature,
+        max_tokens: this.settings.max_tokens,
+        stream: true
+      }, {
+        onChunk: (chunk) => {
+          editor.replaceSelection(chunk);
+        },
+        timeoutMs: this.settings.timeoutMs
+      });
+      
+      editor.replaceSelection("\n\n---\n\n");
+      new Notice('✅ Response completed');
+    } catch (e) {
+      editor.replaceSelection(`\n\n❌ Error: ${e.message}\n\n`);
+      new Notice('AI Error: ' + e.message);
+    }
   }
 
   async openSidebar() {
@@ -3226,37 +3593,6 @@ module.exports = class AIPlugin extends Plugin {
     if (!leaf) leaf = this.app.workspace.getRightLeaf(true);
     await leaf.setViewState({ type: VIEW_TYPE, active: true });
     this.app.workspace.revealLeaf(leaf);
-  }
-
-  async replyInNote() {
-    const mdv = this.app.workspace.getActiveViewOfType(MarkdownView);
-    if (!mdv) { new Notice('Open a markdown file'); return; }
-    const editor = mdv.editor;
-    const selection = editor.getSelection().trim();
-    const prompt = selection.length ? selection : editor.getValue();
-    const s = this._sessionManager.getActive();
-    if (s) s.messages.push({ role:'user', content: prompt });
-    
-    editor.replaceSelection("\n\n**AI response:**\n\n");
-    try {
-      await this.apiManager.sendMessage({
-        messages: this._sessionManager.getMessagesForRequest().concat([{ role:'user', content: prompt }]),
-        temperature: this.settings.temperature,
-        max_tokens: this.settings.max_tokens,
-        stream: true
-      }, {
-        onChunk: (chunk) => {
-          editor.replaceSelection(chunk);
-        }, timeoutMs: this.settings.timeoutMs
-      });
-      new Notice('Finished streaming into note');
-    } catch (e) {
-      new Notice('Local AI Error: ' + (e.message || String(e)));
-    }
-  }
-
-  async checkHealth() {
-    return await this.apiManager.checkHealth();
   }
 
   async saveState() {
@@ -3275,5 +3611,16 @@ module.exports = class AIPlugin extends Plugin {
         leaf.view._renderMessages();
       }
     });
+  }
+
+  onunload() {
+    const styleEl = document.getElementById('ai-plugin-css');
+    if (styleEl) {
+      styleEl.remove();
+    }
+    this.app.workspace.detachLeavesOfType(VIEW_TYPE);
+    if (this.networkManager) {
+      this.networkManager.abortAllRequests();
+    }
   }
 };

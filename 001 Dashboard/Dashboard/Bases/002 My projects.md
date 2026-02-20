@@ -30,5 +30,6 @@ views:
       file.links: 140
       file.tags: 210
     rowHeight: medium
+    markers: bullet
 
 ```
