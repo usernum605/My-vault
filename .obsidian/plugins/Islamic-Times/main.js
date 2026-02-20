@@ -183,6 +183,8 @@ const TRANSLATIONS = {
 		noteTemplateDesc: "Customize the content of Islamic notes.",
 		NoteTemplate: "Note Template (english)",
 		templateResetNotice: "Template reset to default",
+		autoOpenIslamicName: "Auto-open Islamic note on startup",
+		autoOpenIslamicDesc: "Automatically create/open the daily Islamic note when Obsidian starts.",
 
 		// Islamic Note Content
 		note_prayer_times: "Prayer times",
@@ -388,6 +390,8 @@ const TRANSLATIONS = {
 		noteTemplateDesc: "تخصيص محتوى الملاحظات الإسلامية.",
 		NoteTemplate: "قالب الملاحظة (عربية)",
 		templateResetNotice: "تم إعادة القالب الافتراضي",
+		autoOpenIslamicName: "فتح الملاحظة فور فتح تشغيل التطبيق",
+		autoOpenIslamicDesc: "إنشاء/فتح الملاحظة الإسلامية اليومية تلقائيًا عند  تشغيل اوبسيديان.",
 
 		// Islamic Note Content
 		note_prayer_times: "مواقيت الصلاة",
@@ -3137,8 +3141,8 @@ MarkdownRenderer.renderMarkdown(markdownContent, placeholderInfo, '', null);
 		}
 		// After the dateformat dropdown
     new Setting(containerEl)
-    .setName("Auto-open Islamic note on startup")
-    .setDesc("Automatically create/open the daily Islamic note when Obsidian starts.")
+    .setName(this.plugin.t("autoOpenIslamicName"))
+    .setDesc(this.plugin.t("autoOpenIslamicDesc"))
     .addToggle(t => t
         .setValue(this.plugin.settings.autoOpenIslamicNoteOnStartup)
         .onChange(async (val) => {

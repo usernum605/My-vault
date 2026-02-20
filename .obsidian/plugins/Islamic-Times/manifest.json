@@ -3,7 +3,7 @@
   "name": "Islamic times",
   "version": "1.1.1",
   "minAppVersion": "1.1.1",
-  "description": "Advanced prayer times, Athan, Hijri calendar, fasting alerts, and Islamic reminders for Obsidian. Includes status bar widget, mobile-friendly prayer panel, offline caching, pre-Athan notifications, and customizable audio alerts.",
+  "description": "The Islamic assistant for acts of worship: prayer times, Hijri calendar, and spiritual reminders within Obsidian.",
   "author": "Islam",
   "authorUrl": "https://github.com/usernum79/Islamic-Times-obsidian-plugin",
   "isDesktopOnly": false

@@ -1,0 +1,10 @@
+{
+	"id": "Node-Custom",
+	"name": "Node Sizesec",
+	"version": "1.0.0",
+	"minAppVersion": "1.1.7",
+	"description": "Advanced node size control in Graph View with custom folder-based link creation.",
+	"author": "userwls",
+	"authorUrl": "https://github.com/jackvonhouse",
+	"isDesktopOnly": false
+}
