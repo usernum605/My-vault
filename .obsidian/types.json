@@ -9,6 +9,7 @@
     "The number of pages you finished reading from the Quran": "number",
     "Read Quran": "checkbox",
     "node_size": "number",
-    "links pages": "multitext"
+    "links pages": "multitext",
+    "The Topic": "multitext"
   }
 }

@@ -1,4 +1,4 @@
-/* Updated 2023-11-02 */
+/* Updated 2025-03-31 - Deep nested embeds support */
 
 .dashboard {
     font-family: inherit;
@@ -26,136 +26,101 @@
     padding-bottom: 3px !important;
 }
 
+/* إخفاء النقاط للقوائم */
+.dashboard .markdown-preview-section ul {
+    list-style: none !important;
+}
 
-/* Get rid of the parent bullet */
-.dashboard div.markdown-preview-section > div > ul > li > div.list-bullet {
+.dashboard .markdown-preview-section li {
+    list-style: none !important;
+}
+
+.dashboard .markdown-preview-section .list-bullet {
     display: none !important;
 }
 
-/* Remove the indentation guide lines */
+/* إخفاء خطوط الإرشاد */
 .dashboard.markdown-rendered.show-indentation-guide li > ul::before,
 .dashboard.markdown-rendered.show-indentation-guide li > ol::before {
-  display: none;
+    display: none !important;
 }
 
-div.markdown-preview-section > div > ul.has-list-bullet > li {
-    padding-left: 0p !important;
-}
-
-.dashboard div > ul {
-    list-style: none;
-    display: flex;
-    column-gap: 50px;
-    flex-flow: row wrap;
-}
-
-.dashboard div > ul > li {
-    min-width: 250px;
-    width: 15%;
-}
-
-/* Dataview support */
-.dashboard ul.dataview {
-    row-gap: 0px !important;
-    list-style-type: disc !important;
-}
-
-.dashboard {
-    font-family: inherit;
-    padding-left: 25px !important;
-    padding-right: 25px !important;
-    padding-top: 20px !important;
-}
-
-.dashboard .markdown-preview-section {
-    max-width: 100%;
-}
-
-/* Title at top of the document */
-.dashboard .markdown-preview-section .title {
-    top: 60px;
-    position: absolute;
-    font-size: 26pt !important;
-    font-weight: bolder;
-    letter-spacing: 8px;
-}
-
-.dashboard h1 {
-    border-bottom-style: dotted !important;
-    border-width: 1px !important;
-    padding-bottom: 3px !important;
-}
-
-/* إخفاء النقاط من القوائم العادية */
-.dashboard ul,
-.dashboard ol {
-    list-style: none !important;
+/* إلغاء المسافات البادئة */
+.dashboard .markdown-preview-section ul,
+.dashboard .markdown-preview-section ol {
     padding-left: 0 !important;
-}
-
-/* استهداف خاص لعناصر الـ tracker في القوائم */
-.dashboard li div.internal-embed,
-.dashboard li .block-language-tracker,
-.dashboard li .tracker-settings,
-.dashboard li .tracker-container {
-    list-style: none !important;
     margin-left: 0 !important;
-    padding-left: 0 !important;
 }
 
-/* إخفاء النقاط من عناصر القائمة التي تحتوي على tracker */
-.dashboard li:has(.internal-embed),
-.dashboard li:has(.block-language-tracker) {
-    list-style: none !important;
-}
-
-.dashboard li:has(.internal-embed)::before,
-.dashboard li:has(.block-language-tracker)::before {
-    content: none !important;
-    display: none !important;
-}
-
-/* إذا كان الـ tracker يولد عناصر span أو div تحت li */
-.dashboard li > .internal-embed,
-.dashboard li > div[class*="tracker"] {
-    margin-left: -20px !important;
-}
-
-/* إزالة أي مسافات أو علامات قبل الـ tracker */
-.dashboard .cm-formatting-list,
-.dashboard .list-bullet,
-.dashboard .list-item-bullet {
-    display: none !important;
-}
-
-/* التعديل على عرض الـ tracker */
-.dashboard div > ul {
-    list-style: none;
-    display: flex;
-    column-gap: 50px;
-    flex-flow: row wrap;
-}
-
-.dashboard div > ul > li {
-    min-width: 250px;
-    width: 15%;
-}
-
-/* إذا كانت المشكلة في المسافات البادئة */
 .dashboard .markdown-preview-section li {
     padding-left: 0 !important;
     margin-left: 0 !important;
 }
 
-/* استهداف مباشر للعناصر التي تسبق الـ tracker */
-.dashboard li > p,
-.dashboard li > div {
-    padding-left: 0 !important;
-    margin-left: 0 !important;
+/* ===== الحل الرئيسي للـ flex layout في جميع المستويات ===== */
+/* استهداف جميع القوائم في جميع مستويات التداخل */
+.dashboard .markdown-preview-section ul:not(.dataview),
+.dashboard .markdown-preview-section .internal-embed .markdown-preview-section ul:not(.dataview),
+.dashboard .markdown-preview-section .internal-embed .internal-embed .markdown-preview-section ul:not(.dataview) {
+    display: flex !important;
+    flex-flow: row wrap !important;
+    column-gap: 20px !important;
+    row-gap: 8px !important;
 }
 
-/* Dataview support */
-.dashboard ul.dataview {
-    row-gap: 0px !important;
-    list-style-type: none !important;
+/* استهداف عناصر القائمة في جميع المستويات */
+.dashboard .markdown-preview-section ul:not(.dataview) > li,
+.dashboard .markdown-preview-section .internal-embed .markdown-preview-section ul:not(.dataview) > li,
+.dashboard .markdown-preview-section .internal-embed .internal-embed .markdown-preview-section ul:not(.dataview) > li {
+    min-width: 250px !important;
+    width: 15% !important;
+    flex: 1 1 auto !important;
+}
+
+/* Dataview support - استثناء dataview من الـ flex */
+.dashboard ul.dataview,
+.dashboard .internal-embed .markdown-preview-section ul.dataview {
+    display: block !important;
+    list-style-type: disc !important;
+    padding-left: 40px !important;
+}
+
+/* ===== معالجة خاصة للملفات المتداخلة ===== */
+/* ملف تذكر.md يحتوي على تضمينين */
+.dashboard .internal-embed:has(.markdown-preview-section) {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* ضبط عرض المحتوى المضمن ليكون مثل الأصلي */
+.dashboard .internal-embed .markdown-preview-section {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* ===== معالجة عناصر القائمة التي تحتوي على روابط YouTube ===== */
+/* إزالة المسافات حول روابط الفيديو */
+.dashboard .internal-embed .markdown-preview-section li:has(a[href*="youtube"]),
+.dashboard li:has(a[href*="youtube"]) {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* ===== معالجة الـ Headers داخل الملفات المضمنة ===== */
+.dashboard .internal-embed .markdown-preview-section h3 {
+    margin-top: 0 !important;
+    margin-bottom: 10px !important;
+    font-size: 1.2em !important;
+    color: var(--text-accent) !important;
+}
+
+/* ===== معالجة الفواصل بين الأقسام ===== */
+.dashboard .internal-embed .markdown-preview-section hr {
+    margin: 20px 0 !important;
+    opacity: 0.3 !important;
 }
