@@ -8,9 +8,26 @@ cssclasses:
   - page-black
   - dashboard
   - center-title
+ui: preview
 ---
 ![](https://youtu.be/J-Hs6Btgdtk?si=Gjv4d8COZ2M0V4sE)
 - [YouTube](https://www.youtube.com/) 
+
+###### قنوات دينية
+- https://m.youtube.com/@tabseira
+
+- https://m.youtube.com/@MyChannel-c3d
+
+- https://m.youtube.com/@AlaaAlrohy
+
+- https://m.youtube.com/@hossamabomaryem
+
+- https://m.youtube.com/@Ibrahememam
+
+- https://m.youtube.com/@abdennourog13
+
+- https://m.youtube.com/@عابر-999
+
 ###### قنوات الأمن السبراني
 
 - https://m.youtube.com/@MohamadAJ-b9r
@@ -44,17 +61,3 @@ cssclasses:
 
 - https://youtube.com/@introvert_programmer
 
-###### قنوات دينية
-- https://m.youtube.com/@tabseira
-
-- https://m.youtube.com/@MyChannel-c3d
-
-- https://m.youtube.com/@AlaaAlrohy
-
-- https://m.youtube.com/@hossamabomaryem
-
-- https://m.youtube.com/@Ibrahememam
-
-- https://m.youtube.com/@abdennourog13
-
-- https://m.youtube.com/@عابر-999

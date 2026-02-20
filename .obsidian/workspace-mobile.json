@@ -4,22 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "4af7a9cf02d1c356",
+        "id": "72f016c8385536b8",
         "type": "tabs",
         "children": [
           {
-            "id": "a6f13652f3ba816d",
+            "id": "12ca739f652d778c",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "004 Files/002 Archive/Olds/Old codes/Stylesh Vault.md",
-                "mode": "preview",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "Stylesh Vault"
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
             }
           }
         ]
@@ -50,7 +45,7 @@
         "state": {
           "type": "search",
           "state": {
-            "query": "tag:#self↑up",
+            "query": "",
             "matchingCase": false,
             "explainSearch": false,
             "collapseAll": false,
@@ -113,6 +108,7 @@
         "state": {
           "type": "outline",
           "state": {
+            "file": "004 Files/002 Archive/Olds/Old codes/Appear graph.md",
             "followCursor": false,
             "showSearch": false,
             "searchQuery": ""
@@ -147,7 +143,7 @@
         "state": {
           "type": "localgraph",
           "state": {
-            "file": "001 Dashboard/Dashboard/Dashboard.md",
+            "file": "004 Files/002 Archive/Olds/Old codes/Appear graph.md",
             "options": {
               "collapse-filter": true,
               "search": "",
@@ -200,44 +196,45 @@
       "command-palette:Open command palette": true,
       "bases:Create new base": true,
       "graph:Open graph view": false,
-      "Ai-Assistant:Ask Ai": false,
       "daily-notes:Open today's daily note": false,
-      "browse-internet:Internet": true,
-      "zk-prefixer:Create new unique note": false
+      "zk-prefixer:Create new unique note": false,
+      "Ai-Assistant:Ask Ai": false,
+      "browse-internet:Internet": false
     }
   },
-  "active": "a6f13652f3ba816d",
+  "active": "12ca739f652d778c",
   "lastOpenFiles": [
-    "004 Files/002 Archive/Olds/Old codes/Minimal theme with plugin.md",
+    "004 Files/002 Archive/كيف نستثمر اوقاتنا.md",
+    "004 Files/002 Archive/Olds/Old codes/Appear graph.md",
+    "001 Dashboard/Dashboard/Bases/000 Ultimate Base.md",
+    "001 Dashboard/Dashboard/Bases/004 My notes.md",
+    "002 Notes/001 Notes/Ai Assistant.md",
+    "002 Notes/003 Saved Notes/Prompt.md",
     "002 Notes/001 Notes/Issue.md",
+    "003 Daily/001 Active Diaries/2026-02-19.md",
+    "002 Notes/001 Notes/Untitled.md",
+    "002 Notes/003 Saved Notes/My YouTube Channels.md",
+    "003 Daily/001 Active Diaries/2026-02-20.md",
+    "001 Dashboard/Dashboard/Bases/005 Diaries.md",
+    "002 Notes/003 Saved Notes/Mawaidh.md",
+    "002 Notes/003 Saved Notes/Interesting topic.md",
+    "001 Dashboard/Self Education.md",
+    "001 Dashboard/My tools.md",
+    "001 Dashboard/Dashboard/Dashboard.md",
+    "002 Notes/Untitled.canvas",
+    "001 Dashboard/Dashboard/Trackers/Tracker B.md",
+    "001 Dashboard/points of my knowledge.md",
+    "001 Dashboard/Azkaru.md",
+    "001 Dashboard/learn English.md",
+    "001 Dashboard/Dashboard/Trackers/Tracker A.md",
+    "004 Files/002 Archive/Olds/Old codes/Stylesh Vault.md",
+    "004 Files/002 Archive/Olds/Old codes/Minimal theme with plugin.md",
     "002 Notes/001 Notes/Obsidian Ai Assistant.md",
     "002 Notes/001 Notes/Noise in the games.md",
-    "002 Notes/001 Notes/Ai Assistant.md",
-    "001 Dashboard/Azkaru.md",
-    "001 Dashboard/Dashboard/Dashboard.md",
-    "002 Notes/001 Notes/Rebuild icons.md",
-    "004 Files/002 Archive/كيف نستثمر اوقاتنا.md",
-    "002 Notes/001 Notes/Compiler.md",
-    "003 Daily/001 Active Diaries/2026-02-19.md",
     "004 Files/001 Attach/warsh.pdf",
-    "003 Daily/001 Active Diaries/2026-02-20.md",
-    "004 Files/002 Archive/Olds/Old Topics/Sync.md",
     "004 Files/002 Archive/001 Attach Embedded",
     "004 Files/002 Archive/Olds",
     "004 Files/002 Archive/Olds/Old codes",
-    "004 Files/002 Archive/Olds/Page Coller.md",
-    "004 Files/002 Archive/Olds/Old codes/Pomo.md",
-    "004 Files/002 Archive/Olds/Old codes/Stylesh Vault.md",
-    "004 Files/002 Archive/001 Attach Embedded/أذكار الصباح.md",
-    "001 Dashboard/Dashboard/Bases/005 Diaries.md",
-    "001 Dashboard/Self Education.md",
-    "004 Files/002 Archive/001 Attach Embedded/أذكار المساء.md",
-    "001 Dashboard/points of my knowledge.md",
-    "001 Dashboard/Athkar & Adia.md",
-    "001 Dashboard/My tools.md",
-    "001 Dashboard/Dashboard/Trackers/Tracker B.md",
-    "001 Dashboard/Diny.md",
-    "001 Dashboard/learn English.md",
     "004 Files/005 Canva/Tajwid.canvas",
     "004 Files/001 Attach/Recording 20260219224457.m4a",
     "004 Files/001 Attach/Sounds/Recorders/Recording 20260218200519.m4a",

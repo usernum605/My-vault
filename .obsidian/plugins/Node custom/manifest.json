@@ -1,0 +1,10 @@
+{
+	"id": "Node-Custom",
+	"name": "Node Size",
+	"version": "1.0.0",
+	"minAppVersion": "1.6.7",
+	"description": "improved graph view for nodes.",
+	"author": "userwilsob",
+	"authorUrl": "https://github.com/jackvonhouse",
+	"isDesktopOnly": false
+}
