@@ -8,10 +8,6 @@ cssclasses:
   - invert-banner
   - recolor-images
 ---
-### obsidian uses
-https://youtu.be/hSTy_BInQs8?si=O7oCgg3ZjlEHJZim
-https://youtu.be/rAkerV8rlow?si=fcCjqUVarRUqGTyP
+##### تذكر
 
-### khaibar
-
-<iframe src="http://www.youtube.com/embed/w6UDUzXAQaQ?rel=0" width="100%" height="315" title="اشرس معركة خاضها النبي في حياته كاملة - غزوة خيبر كاملة بالتفاصيل - أنس آكشن" frameborder="0" allowfullscreen></iframe>
+![[تذكر]]

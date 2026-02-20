@@ -38,7 +38,7 @@
     "node_size"
   ],
   "temporaryViewTimeout": 30,
-  "defaultNotePath": "001 Dashboard/Dashboard/Dashboard.md",
+  "defaultNotePath": "",
   "uiProperty": "ui",
   "enableCache": true,
   "cacheExpiryDays": 1000000,

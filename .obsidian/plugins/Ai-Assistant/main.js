@@ -99,7 +99,6 @@ class NetworkManager {
     this.abortControllers = new Map();
     this.maxRetries = 3;
     this.retryDelay = 1000;
-    this.connectionPool = new Map();
   }
 
   async fetchWithRetry(url, options, requestId = null) {
@@ -229,91 +228,186 @@ class StreamingHandler {
   }
 
   async handleStreamingResponse(response, onChunk, provider = 'local') {
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    const processor = this.chunkProcessors.get(provider) || this.processGenericChunk;
-    
-    let accumulatedText = '';
-    let buffer = '';
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  const processor = this.chunkProcessors.get(provider) || this.processGenericChunk;
+  
+  let accumulatedText = '';
+  let buffer = '';
 
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        buffer += chunk;
+      const chunk = decoder.decode(value, { stream: true });
+      buffer += chunk;
 
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
+      // Process complete lines
+      const lines = buffer.split(/\r?\n/);
+      buffer = lines.pop() || '';
 
-        for (const line of lines) {
-          if (line.trim() === '') continue;
-          
-          const text = processor(line);
-          if (text) {
-            accumulatedText += text;
-            onChunk(text);
-          }
-        }
-      }
-
-      if (buffer.trim()) {
-        const text = processor(buffer);
-        if (text) {
+      for (const line of lines) {
+        if (line.trim() === '') continue;
+        
+        const text = processor(line);
+        if (text && text.trim().length > 0) {
           accumulatedText += text;
+          // Call onChunk immediately for each piece of actual content
           onChunk(text);
         }
       }
-
-      return accumulatedText;
-    } catch (error) {
-      console.error('Streaming error:', error);
-      throw new StreamingError('Stream interrupted: ' + error.message);
     }
+
+    // Process any remaining data in buffer
+    if (buffer.trim()) {
+      const text = processor(buffer);
+      if (text && text.trim().length > 0) {
+        accumulatedText += text;
+        onChunk(text);
+      }
+    }
+
+    return accumulatedText;
+  } catch (error) {
+    console.error('Streaming error:', error);
+    throw new StreamingError('Stream interrupted: ' + error.message);
   }
+}
 
   processLocalChunk(line) {
-    if (line.startsWith('data: ')) {
-      const data = line.slice(6);
-      if (data === '[DONE]') return '';
+  // Handle SSE format: data: {...}
+  if (line.startsWith('data: ')) {
+    const data = line.slice(6).trim();
+    if (data === '[DONE]') return '';
+    
+    try {
+      const parsed = JSON.parse(data);
       
-      try {
-        const parsed = JSON.parse(data);
-        if (parsed.message?.content) {
-          return parsed.message.content;
+      // Skip chunks with null content or empty content
+      if (parsed.finish_reason === 'stop') return '';
+      
+      // Ollama format
+      if (parsed.message?.content) {
+        const content = parsed.message.content;
+        // Only return if there's actual content
+        if (content && content.trim().length > 0) {
+          return content;
         }
-        if (parsed.choices?.[0]?.delta?.content) {
-          return parsed.choices[0].delta.content;
+        return '';
+      }
+      
+      // OpenAI-compatible format with delta
+      if (parsed.choices?.[0]?.delta?.content) {
+        const content = parsed.choices[0].delta.content;
+        // Only return if there's actual content
+        if (content && content.trim().length > 0) {
+          return content;
         }
-        if (parsed.response) {
-          return parsed.response;
+        return '';
+      }
+      
+      // Standard message format
+      if (parsed.choices?.[0]?.message?.content) {
+        const content = parsed.choices[0].message.content;
+        if (content && content.trim().length > 0) {
+          return content;
         }
-        if (parsed.content) {
-          return parsed.content;
+        return '';
+      }
+      
+      // Text format
+      if (parsed.choices?.[0]?.text) {
+        const content = parsed.choices[0].text;
+        if (content && content.trim().length > 0) {
+          return content;
         }
-      } catch (e) {
+        return '';
+      }
+      
+      // Simple response format
+      if (parsed.response) {
+        const content = parsed.response;
+        if (content && content.trim().length > 0) {
+          return content;
+        }
+        return '';
+      }
+      
+      if (parsed.content) {
+        const content = parsed.content;
+        if (content && content.trim().length > 0) {
+          return content;
+        }
+        return '';
+      }
+      
+      // If we can't find content but have choices with delta, check if it has content
+      if (parsed.choices?.[0]?.delta) {
+        const delta = parsed.choices[0].delta;
+        if (delta.content && delta.content.trim().length > 0) {
+          return delta.content;
+        }
+        return '';
+      }
+      
+    } catch (e) {
+      // If parsing fails, return the raw data if it looks like actual text
+      if (data.length > 0 && !data.startsWith('{') && !data.startsWith('[') && 
+          data !== 'null' && data !== 'undefined') {
         return data;
       }
     }
-    
-    try {
-      const parsed = JSON.parse(line);
-      if (parsed.message?.content) return parsed.message.content;
-      if (parsed.response) return parsed.response;
-      if (parsed.content) return parsed.content;
-    } catch {
-      if (!line.startsWith('{') && !line.startsWith('[') && line.length > 0) {
-        return line;
-      }
-    }
-    
     return '';
   }
+  
+  // Handle plain text streaming (some local servers)
+  if (!line.startsWith('{') && !line.startsWith('[') && line.length > 0 &&
+      line !== 'null' && line !== 'undefined') {
+    return line;
+  }
+  
+  // Try to parse as JSON even without data: prefix
+  try {
+    const parsed = JSON.parse(line);
+    
+    // Skip if it's just metadata
+    if (parsed.finish_reason === 'stop') return '';
+    
+    if (parsed.message?.content) {
+      const content = parsed.message.content;
+      if (content && content.trim().length > 0) return content;
+    }
+    if (parsed.response) {
+      const content = parsed.response;
+      if (content && content.trim().length > 0) return content;
+    }
+    if (parsed.content) {
+      const content = parsed.content;
+      if (content && content.trim().length > 0) return content;
+    }
+    if (parsed.choices?.[0]?.delta?.content) {
+      const content = parsed.choices[0].delta.content;
+      if (content && content.trim().length > 0) return content;
+    }
+    if (parsed.choices?.[0]?.message?.content) {
+      const content = parsed.choices[0].message.content;
+      if (content && content.trim().length > 0) return content;
+    }
+    if (parsed.choices?.[0]?.text) {
+      const content = parsed.choices[0].text;
+      if (content && content.trim().length > 0) return content;
+    }
+  } catch {
+    // Ignore parsing errors
+  }
+  
+  return '';
+}
 
   processOpenAIChunk(line) {
     if (!line.startsWith('data: ')) return '';
-    const data = line.slice(6);
+    const data = line.slice(6).trim();
     if (data === '[DONE]') return '';
     
     try {
@@ -475,6 +569,10 @@ class BaseAIProvider {
     this.streamingHandler = new StreamingHandler();
   }
 
+  supportsStreaming() {
+    return true;
+  }
+
   async send(payload, opts = {}) {
     const requestId = this.generateRequestId();
     
@@ -497,10 +595,6 @@ class BaseAIProvider {
     }
   }
 
-  supportsStreaming() {
-    return true;
-  }
-
   async sendStreamingRequest(url, headers, body, opts, requestId) {
     const response = await this.networkManager.fetchWithRetry(url, {
       method: 'POST',
@@ -509,9 +603,17 @@ class BaseAIProvider {
       timeout: opts.timeoutMs
     }, requestId);
 
+    if (!response.body) {
+      throw new Error('Response body is not readable');
+    }
+
     const accumulatedText = await this.streamingHandler.handleStreamingResponse(
       response,
-      opts.onChunk || (() => {}),
+      (chunk) => {
+        if (opts.onChunk) {
+          opts.onChunk(chunk);
+        }
+      },
       this.getStreamingFormat()
     );
 
@@ -598,12 +700,9 @@ class LocalAIProvider extends BaseAIProvider {
       model: this.plugin.settings.localModel,
       messages: payload.messages,
       temperature: payload.temperature || this.plugin.settings.temperature,
-      max_tokens: payload.max_tokens || this.plugin.settings.max_tokens
+      max_tokens: payload.max_tokens || this.plugin.settings.max_tokens,
+      stream: payload.stream || false
     };
-
-    if (payload.stream) {
-      body.stream = true;
-    }
 
     return JSON.stringify(body);
   }
@@ -1039,16 +1138,21 @@ class APIManager {
   }
   
   async sendMessage(payload, opts = {}) {
-    const mode = this.plugin.settings.currentMode;
-    const apiType = mode === 'cloud' ? this.plugin.settings.cloudApiType : 'local';
-    
-    const provider = this.providers[apiType];
-    if (!provider) {
-      throw new Error(`Unknown API provider: ${apiType}`);
-    }
-    
-    return await provider.send(payload, opts);
+  const mode = this.plugin.settings.currentMode;
+  const apiType = mode === 'cloud' ? this.plugin.settings.cloudApiType : 'local';
+  
+  const provider = this.providers[apiType];
+  if (!provider) {
+    throw new Error(`Unknown API provider: ${apiType}`);
   }
+  
+  // Ensure stream is set to true in the payload if we want streaming
+  if (opts.onChunk) {
+    payload.stream = true;
+  }
+  
+  return await provider.send(payload, opts);
+}
   
   async checkHealth() {
     const mode = this.plugin.settings.currentMode;
@@ -2423,76 +2527,112 @@ class ChatView extends ItemView {
   }
 
   async _onSend() {
-    const txt = this.inputEl.value.trim();
-    if (!txt && this.pendingAttachments.length === 0) { 
-      new Notice('Message is empty'); 
-      return; 
-    }
-    
-    let s = this.plugin._sessionManager.getActive();
-    if (!s) { 
-      this.plugin._sessionManager.create('New Conversation');
-      s = this.plugin._sessionManager.getActive();
-    }
-    
-    this.plugin._sessionManager.addMessage('user', txt, this.pendingAttachments);
-    this.plugin.saveState();
-    
-    this._appendBubble('user', txt, this.pendingAttachments);
-    
-    this.inputEl.value = '';
-    this.pendingAttachments = [];
-
-    const messages = this.plugin._sessionManager.getMessagesForRequest();
-
-    let acc = '';
-    const loadingMsg = this._appendBubble('assistant', '⏳ Processing...');
-    
-    try {
-      let dots = 0;
-      const loadingInterval = setInterval(() => {
-        dots = (dots + 1) % 4;
-        loadingMsg.textContent = '⏳ Processing' + '.'.repeat(dots);
-      }, 500);
-      
-      const result = await this.plugin.apiManager.sendMessage({
-        messages: messages,
-        temperature: this.plugin.settings.temperature,
-        max_tokens: this.plugin.settings.max_tokens,
-        stream: false
-      }, {
-        timeoutMs: this.plugin.settings.timeoutMs
-      });
-      
-      clearInterval(loadingInterval);
-      
-      const finalText = (result && result.final) ? result.final : acc;
-      
-      loadingMsg.empty();
-      MarkdownRenderer.render(this.app, finalText, loadingMsg, '', this.plugin);
-      this.plugin._sessionManager.addMessage('assistant', finalText);
-      this.plugin.saveState();
-      
-    } catch (e) {
-      console.error("Chat Error:", e);
-      
-      let errorMessage = '❌ Error occurred';
-      if (e.message.includes('429')) {
-        errorMessage = '⏳ Rate limit exceeded. Please wait a moment and try again.';
-      } else if (e.message.includes('401') || e.message.includes('403')) {
-        errorMessage = '🔐 Authentication failed. Please check your API key.';
-      } else if (e.message.includes('timeout')) {
-        errorMessage = '⏱️ Request timed out. Check your internet connection.';
-      } else if (e.message.includes('fetch')) {
-        errorMessage = '🌐 Network error. Please check if the service is running.';
-      } else {
-        errorMessage = `❌ Error: ${e.message}`;
-      }
-      
-      loadingMsg.textContent = errorMessage;
-      new Notice(errorMessage);
-    }
+  const txt = this.inputEl.value.trim();
+  if (!txt && this.pendingAttachments.length === 0) { 
+    new Notice('Message is empty'); 
+    return; 
   }
+  
+  let s = this.plugin._sessionManager.getActive();
+  if (!s) { 
+    this.plugin._sessionManager.create('New Conversation');
+    s = this.plugin._sessionManager.getActive();
+  }
+  
+  // Add user message with attachments
+  this.plugin._sessionManager.addMessage('user', txt, this.pendingAttachments);
+  this.plugin.saveState();
+  
+  // Display user message
+  this._appendBubble('user', txt, this.pendingAttachments);
+  
+  // Clear input and attachments
+  this.inputEl.value = '';
+  const currentAttachments = [...this.pendingAttachments];
+  this.pendingAttachments = [];
+
+  const messages = this.plugin._sessionManager.getMessagesForRequest();
+
+  let acc = '';
+  let hasReceivedContent = false;
+  
+  // Create an empty message container for streaming
+  const msgContainer = this.chatEl.createDiv({ cls: `ai-msg-container assistant` });
+  msgContainer.style.marginBottom = '16px';
+  msgContainer.style.maxWidth = '88%';
+  msgContainer.style.alignSelf = 'flex-end';
+  
+  const streamingMsg = msgContainer.createDiv({ cls: `ai-msg assistant` });
+  streamingMsg.style.padding = '12px 16px';
+  streamingMsg.style.borderRadius = '12px 12px 12px 4px';
+  streamingMsg.style.background = 'var(--background-secondary)';
+  streamingMsg.style.color = 'var(--text-normal)';
+  streamingMsg.style.lineHeight = '1.5';
+  streamingMsg.style.whiteSpace = 'pre-wrap';
+  streamingMsg.style.wordBreak = 'break-word';
+  streamingMsg.style.fontSize = '14px';
+  streamingMsg.textContent = ''; // Start empty
+  
+  try {
+    const result = await this.plugin.apiManager.sendMessage({
+      messages: messages,
+      temperature: this.plugin.settings.temperature,
+      max_tokens: this.plugin.settings.max_tokens,
+      stream: true
+    }, {
+      onChunk: (chunk) => {
+        // Only process non-empty chunks
+        if (chunk && chunk.trim().length > 0) {
+          acc += chunk;
+          hasReceivedContent = true;
+          streamingMsg.textContent = acc;
+          this.chatEl.scrollTop = this.chatEl.scrollHeight;
+        }
+      },
+      timeoutMs: this.plugin.settings.timeoutMs
+    });
+    
+    const finalText = (result && result.final) ? result.final : acc;
+    
+    // If we never received any content but have a final result
+    if (!hasReceivedContent && finalText) {
+      streamingMsg.textContent = finalText;
+    }
+    
+    // If we received content, render it with Markdown
+    if (hasReceivedContent || finalText) {
+      const displayText = finalText || acc;
+      streamingMsg.empty();
+      MarkdownRenderer.render(this.app, displayText, streamingMsg, '', this.plugin);
+      
+      // Add assistant message to history
+      this.plugin._sessionManager.addMessage('assistant', displayText, currentAttachments);
+      this.plugin.saveState();
+    } else {
+      // If no content at all, show an error
+      streamingMsg.textContent = '❌ No response received';
+    }
+    
+  } catch (e) {
+    console.error("Chat Error:", e);
+    
+    let errorMessage = '❌ Error occurred';
+    if (e.message.includes('429')) {
+      errorMessage = '⏳ Rate limit exceeded. Please wait a moment and try again.';
+    } else if (e.message.includes('401') || e.message.includes('403')) {
+      errorMessage = '🔐 Authentication failed. Please check your API key.';
+    } else if (e.message.includes('timeout')) {
+      errorMessage = '⏱️ Request timed out. Check your internet connection.';
+    } else if (e.message.includes('fetch') || e.message.includes('Failed to fetch')) {
+      errorMessage = '🌐 Cannot connect to Local AI. Please check if the server is running at ' + this.plugin.settings.baseUrl;
+    } else {
+      errorMessage = `❌ Error: ${e.message}`;
+    }
+    
+    streamingMsg.textContent = errorMessage;
+    new Notice(errorMessage);
+  }
+}
 }
 
 // ==================== SETTINGS MODAL ====================
@@ -2506,8 +2646,8 @@ class SettingsModal extends Modal {
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.style.minWidth = '500px';
-    contentEl.style.maxWidth = '800px';
+    contentEl.style.minWidth = '100%';
+    contentEl.style.maxWidth = '100%';
     
     contentEl.createEl('h2', { text: '⚙️ AI Assistant Settings' });
     

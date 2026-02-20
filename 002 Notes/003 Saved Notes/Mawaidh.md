@@ -12,18 +12,29 @@ tags:
   - islamic/Mawaidh
 ---
 ## سور من القرآن
+
+###### عشوائية
+
+<audio controls>
+  <source src="https://serverkw.quran-uni.com:8194/;*.mp3" type="audio/mpeg">
+</audio> 
+
 ###### سورة الحديد
 
 ![[057.mp3]]
+
 ###### سورة الحجر
 ![[015.mp3]]
 ## مواعظ
+
+###### رسالة ابن أبي سفيان
+
 ![[Takwa.mp3]]
 
 ###### أحداث يوم عظيم
 ![[تذكر]]
 
-###### تذكيرات
+###### موعظة
 <iframe src="https://www.youtube-nocookie.com/embed/QEbSvw_0tcA?rel=0" width="100%" height="315" title="إذ الأغلال في أعناقهم والسلاسل يسحبون _ ساعة كاملة" frameborder="4" allowfullscreen></iframe>
 
 

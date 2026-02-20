@@ -20,7 +20,7 @@
   "openaiApiKey": "",
   "openaiModel": "gpt-3.5-turbo",
   "openaiEndpoint": "https://api.openai.com/v1/chat/completions",
-  "geminiApiKey": "AIzaSyAYrla_KgqNSBh1PMo53mbuKclzu70drE0",
+  "geminiApiKey": "",
   "geminiModel": "gemini-2.5-flash",
   "geminiEndpoint": "https://generativelanguage.googleapis.com/v1beta/models",
   "anthropicApiKey": "",
@@ -36,10 +36,47 @@
   "autoSaveConversations": false,
   "sessions": [
     {
-      "id": "1771605647445",
-      "name": "Default",
+      "id": "1771624087423",
+      "name": "Ts",
       "systemPrompt": "",
-      "messages": []
+      "messages": [
+        {
+          "role": "user",
+          "content": "Say hello, end",
+          "attachments": [],
+          "timestamp": 1771624100484
+        },
+        {
+          "role": "assistant",
+          "content": "Hello! How can I assist you today?",
+          "attachments": [],
+          "timestamp": 1771624105402
+        },
+        {
+          "role": "user",
+          "content": "What is your name",
+          "attachments": [],
+          "timestamp": 1771624123248
+        },
+        {
+          "role": "user",
+          "content": "Why",
+          "attachments": [],
+          "timestamp": 1771624331416
+        },
+        {
+          "role": "user",
+          "content": "Say",
+          "attachments": [],
+          "timestamp": 1771624500797
+        },
+        {
+          "role": "assistant",
+          "content": "I do not have a name. I am a large language model, trained by Google.",
+          "attachments": [],
+          "timestamp": 1771624501820
+        }
+      ]
     }
   ]
 }

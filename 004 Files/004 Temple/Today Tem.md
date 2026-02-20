@@ -12,7 +12,7 @@ Memorizing the Quran:
 links pages:
   - "[[warsh.pdf]]"
   - "[[005 Diaries]]"
-  - "[[Tracker A]]"
+  - "[[Mawaidh]]"
 ui: preview
 banner_y: 40
 icon: lucide-calendar-minus-2

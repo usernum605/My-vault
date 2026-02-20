@@ -8,21 +8,37 @@
         "type": "tabs",
         "children": [
           {
-            "id": "6c844d677b200d47",
+            "id": "b2f83473c9af987b",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "002 Notes/001 Notes/Obsidian Ai Assistant.md",
+                "file": "001 Dashboard/Dashboard/Dashboard.md",
                 "mode": "preview",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "Obsidian Ai Assistant"
+              "title": "Dashboard"
+            }
+          },
+          {
+            "id": "532bcda35aad577e",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "002 Notes/003 Saved Notes/Mawaidh.md",
+                "mode": "preview",
+                "source": true,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "Mawaidh"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -113,7 +129,7 @@
         "state": {
           "type": "outline",
           "state": {
-            "file": "003 Daily/001 Active Diaries/2026-02-20.md",
+            "file": "002 Notes/003 Saved Notes/Mawaidh.md",
             "followCursor": false,
             "showSearch": false,
             "searchQuery": ""
@@ -148,7 +164,7 @@
         "state": {
           "type": "localgraph",
           "state": {
-            "file": "002 Notes/001 Notes/P au.md",
+            "file": "002 Notes/003 Saved Notes/Mawaidh.md",
             "options": {
               "collapse-filter": true,
               "search": "",
@@ -190,10 +206,11 @@
         }
       }
     ],
-    "currentTab": 4
+    "currentTab": 2
   },
   "left-ribbon": {
     "hiddenItems": {
+      "Ai-Assistant:AI Assistant": false,
       "audio-recorder:Start/stop recording": false,
       "switcher:Open quick switcher": true,
       "canvas:Create new canvas": true,
@@ -201,34 +218,52 @@
       "command-palette:Open command palette": true,
       "bases:Create new base": true,
       "graph:Open graph view": false,
-      "Ai-Assistant:AI Assistant": false,
       "daily-notes:Open today's daily note": false,
       "zk-prefixer:Create new unique note": false,
       "browse-internet:Internet": true
     }
   },
-  "active": "6c844d677b200d47",
+  "active": "532bcda35aad577e",
   "lastOpenFiles": [
-    "002 Notes/001 Notes/Hi.md",
-    "001 Dashboard/Dashboard/Dashboard.md",
     "003 Daily/001 Active Diaries/2026-02-20.md",
     "001 Dashboard/My tools.md",
-    "001 Dashboard/points of my knowledge.md",
-    "002 Notes/001 Notes/P au.md",
-    "001 Dashboard/Dashboard/Bases/002 My projects.md",
-    "002 Notes/003 Saved Notes/سلسلة أحداث يوم الحساب.md",
-    "002 Notes/003 Saved Notes/تذكر.md",
-    "002 Notes/003 Saved Notes/سلسلة الموت.md",
-    "002 Notes/003 Saved Notes/Prompt.md",
+    "004 Files/003 AI Conversations/Ts.md",
     "002 Notes/003 Saved Notes/Mawaidh.md",
+    "004 Files/003 AI Conversations/Default.md",
+    "001 Dashboard/Dashboard/Dashboard.md",
     "001 Dashboard/Dashboard/Trackers/Tracker A.md",
-    "001 Dashboard/Dashboard/Bases/000 Ultimate Base.md",
-    "001 Dashboard/Azkaru.md",
-    "001 Dashboard/Dashboard/Bases/005 Diaries.md",
-    "002 Notes/001 Notes/Go.md",
-    "004 Files/002 Archive/كيف نستثمر اوقاتنا.md",
-    "002 Notes/001 Notes/Issue.md",
-    "001 Dashboard/Dashboard/Bases/004 My notes.md",
-    "002 Notes/003 Saved Notes/My YouTube Channels.md"
+    "004 Files/004 Temple/Today Tem.md",
+    "hypervault/node_modules/esbuild/node_modules/@esbuild/android-arm64/bin/esbuild",
+    "hypervault/node_modules/esbuild/node_modules/@esbuild/android-arm64/README.md",
+    "hypervault/node_modules/esbuild/node_modules/@esbuild/android-arm64/package.json",
+    "hypervault/node_modules/esbuild/node_modules/@esbuild/android-arm64/bin",
+    "hypervault/node_modules/esbuild/node_modules/@esbuild/android-arm64",
+    "hypervault/node_modules/esbuild/node_modules/@esbuild",
+    "hypervault/node_modules/esbuild/node_modules",
+    "hypervault/packages/obsidian-plugin/node_modules/three/examples/jsm/nodes/functions/BSDF/BRDF_Sheen.js",
+    "hypervault/packages/obsidian-plugin/node_modules/three/examples/jsm/nodes/functions/BSDF/BRDF_Lambert.js",
+    "hypervault/packages/obsidian-plugin/node_modules/three/examples/jsm/nodes/functions/BSDF/BRDF_GGX.js",
+    "hypervault/packages/obsidian-plugin/node_modules/three/src/renderers/shaders/ShaderLib/backgroundCube.glsl.js",
+    "hypervault/packages/obsidian-plugin/node_modules/@marijn/find-cluster-break/README.md",
+    "hypervault/packages/obsidian-plugin/node_modules/@types/three/README.md",
+    "hypervault/packages/obsidian-plugin/node_modules/@types/node/README.md",
+    "hypervault/packages/obsidian-plugin/node_modules/@types/codemirror/README.md",
+    "hypervault/packages/obsidian-plugin/node_modules/@codemirror/view/README.md",
+    "hypervault/packages/obsidian-plugin/node_modules/@codemirror/view/CHANGELOG.md",
+    "hypervault/packages/obsidian-plugin/node_modules/@codemirror/state/README.md",
+    "hypervault/packages/obsidian-plugin/node_modules/@codemirror/state/CHANGELOG.md",
+    "hypervault/packages/obsidian-plugin/node_modules/use-sync-external-store/README.md",
+    "hypervault/packages/obsidian-plugin/node_modules/zustand/readme.md",
+    "hypervault/packages/obsidian-plugin/node_modules/react/README.md",
+    "hypervault/packages/obsidian-plugin/node_modules/obsidian/README.md",
+    "hypervault/packages/obsidian-plugin/node_modules/obsidian/LICENSE.md",
+    "hypervault/packages/obsidian-plugin/node_modules/obsidian/CHANGELOG.md",
+    "hypervault/packages/core/node_modules/@types/three/README.md",
+    "hypervault/packages/core/node_modules/use-sync-external-store/README.md",
+    "hypervault/packages/core/node_modules/zustand/readme.md",
+    "hypervault/site/assets/hypervault_03.png",
+    "hypervault/site/assets/hypervault_02.png",
+    "hypervault/site/assets/hypervault_01.png",
+    "hypervault/site/assets/hero.png"
   ]
 }
