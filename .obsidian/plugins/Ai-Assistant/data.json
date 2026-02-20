@@ -15,7 +15,7 @@
     "saveConversation": "Ctrl+S"
   },
   "conversationsFolder": "004 Files/003 AI Conversations",
-  "currentMode": "cloud",
+  "currentMode": "local",
   "cloudApiType": "gemini",
   "openaiApiKey": "",
   "openaiModel": "gpt-3.5-turbo",
@@ -35,47 +35,10 @@
   "autoSaveConversations": false,
   "sessions": [
     {
-      "id": "1771624087423",
-      "name": "Ts",
+      "id": "1771626170414",
+      "name": "Default",
       "systemPrompt": "",
-      "messages": [
-        {
-          "role": "user",
-          "content": "Say hello, end",
-          "attachments": [],
-          "timestamp": 1771624100484
-        },
-        {
-          "role": "assistant",
-          "content": "Hello! How can I assist you today?",
-          "attachments": [],
-          "timestamp": 1771624105402
-        },
-        {
-          "role": "user",
-          "content": "What is your name",
-          "attachments": [],
-          "timestamp": 1771624123248
-        },
-        {
-          "role": "user",
-          "content": "Why",
-          "attachments": [],
-          "timestamp": 1771624331416
-        },
-        {
-          "role": "user",
-          "content": "Say",
-          "attachments": [],
-          "timestamp": 1771624500797
-        },
-        {
-          "role": "assistant",
-          "content": "I do not have a name. I am a large language model, trained by Google.",
-          "attachments": [],
-          "timestamp": 1771624501820
-        }
-      ]
+      "messages": []
     }
   ]
 }
