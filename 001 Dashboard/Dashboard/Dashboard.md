@@ -12,7 +12,8 @@ links pages:
 banner_y: 33
 ui: preview
 ---
-![](https://youtu.be/TGUsvlJIXXw?si=vEXN6LxuCG_6U4kV)
+<iframe src="https://www.youtube.com/embed/TGUsvlJIXXw" width="100%" height="315" title="A YouTube video" frameborder="0" allowfullscreen></iframe>
+
 # <span><u>Dashboard</u></span>
 
 - Basic files

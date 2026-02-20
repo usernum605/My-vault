@@ -9,6 +9,8 @@ links pages:
   - " path: 002 Notes"
   - "path: 001 Dashboard"
   - "[[Dashboard]]"
+  - "[[Dashboard]]"
+  - "[[Dashboard]]"
 ---
 ## MY PROJECTS
 ![[002 My projects]]

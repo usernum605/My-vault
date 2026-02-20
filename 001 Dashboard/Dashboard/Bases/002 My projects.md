@@ -6,8 +6,13 @@ links pages:
 
 ```base
 filters:
-  and:
+  or:
     - file.folder == "002 Notes/001 Notes"
+    - file.folder == "002 Notes/003 Saved Notes"
+    - and:
+        - file.hasProperty("The Topic")
+        - file.name != "Quick Notes tem"
+        - file.folder != "002 Notes/002 lessons"
 views:
   - type: table
     name: Table
