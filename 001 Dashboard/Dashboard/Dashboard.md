@@ -12,6 +12,7 @@ links pages:
 banner_y: 33
 ui: preview
 ---
+![](https://youtu.be/TGUsvlJIXXw?si=vEXN6LxuCG_6U4kV)
 # <span><u>Dashboard</u></span>
 
 - Basic files
