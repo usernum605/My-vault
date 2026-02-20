@@ -1,3 +1,4 @@
+```js
 const { Plugin, PluginSettingTab, Setting, MarkdownView, getIcon, getIconIds, SuggestModal, TFile, TFolder, debounce, Menu, Modal, Notice, setIcon, requestUrl } = require("obsidian");
 
 const DEFAULT_SETTINGS = {
@@ -2024,3 +2025,4 @@ class StyleshVaultSettingTab extends PluginSettingTab {
         hiddenList.style.display = "none";
     }
 }
+```
