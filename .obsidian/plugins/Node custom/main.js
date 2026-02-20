@@ -13,12 +13,11 @@ class OptimizedCombinedGraphPlugin extends Plugin {
 	async onload() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 
-		this.folderCache = new Map();
+		this.folderCache = new Map();          // cache folder file lists
 		
-		// Add settings tab
 		this.addSettingTab(new CombinedSettingTab(this.app, this));
 
-		// Register event to update links when metadata changes
+		// ---- Folder‑based graph edges (via metadata) ----
 		this.registerEvent(
 			this.app.metadataCache.on("changed", (file) => {
 				if (file.extension === "md") {
@@ -26,39 +25,47 @@ class OptimizedCombinedGraphPlugin extends Plugin {
 				}
 			})
 		);
-
-		// Register event for when files are renamed/moved
 		this.registerEvent(
 			this.app.vault.on("rename", (file, oldPath) => {
 				if (file.extension === "md") {
-					// Clear cache for affected folders
 					this.folderCache.clear();
 					this.updateAllFolderBasedLinks();
 				}
-			}
-		));
-
-		// Initial update after all files are loaded
-		this.app.workspace.onLayoutReady(() => {
-			this.updateAllFolderBasedLinks();
-		});
-
-		// Also update when the graph is opened
-		this.registerEvent(
-			this.app.workspace.on("layout-change", () => {
-				this.updateAllFolderBasedLinks();
 			})
 		);
+
+		// ---- Node resizing (weights) ----
+		// Apply weights on layout change
+		this.registerEvent(
+			this.app.workspace.on("layout-change", () => {
+				this.applyNodeWeights();
+			})
+		);
+
+		// Also run once when all files are loaded
+		this.app.workspace.onLayoutReady(() => {
+			this.updateAllFolderBasedLinks();
+			this.applyNodeWeights();
+		});
+
+		// ---- Primitive, persistent reapplication ----
+		// Every second, reapply weights to ensure they stay
+		this.interval = setInterval(() => {
+			this.applyNodeWeights();
+		}, 1000);
 	}
 
 	onunload() {
-		// Clean up any added links
 		this.cleanupAllFolderLinks();
+		if (this.interval) {
+			clearInterval(this.interval);
+			this.interval = null;
+		}
 	}
 
-	// =============================
-	// FOLDER LINK MANAGEMENT
-	// =============================
+	// ============================================================
+	// FOLDER‑BASED GRAPH EDGES (metadata cache manipulation)
+	// ============================================================
 
 	updateAllFolderBasedLinks() {
 		const markdownFiles = this.app.vault.getMarkdownFiles();
@@ -86,7 +93,6 @@ class OptimizedCombinedGraphPlugin extends Plugin {
 			}
 		}
 
-		// Create or update the resolved links
 		this.createFolderBasedLinks(file.path, Array.from(targetFiles));
 	}
 
@@ -123,7 +129,6 @@ class OptimizedCombinedGraphPlugin extends Plugin {
 		if (!folder?.children) return [];
 
 		const files = [];
-
 		const walk = (items) => {
 			for (const item of items) {
 				if (item.children) {
@@ -133,29 +138,24 @@ class OptimizedCombinedGraphPlugin extends Plugin {
 				}
 			}
 		};
-
 		walk(folder.children);
 
 		this.folderCache.set(folderPath, files);
 		return files;
 	}
 
-	// =============================
-	// GRAPH VIEW INTEGRATION
-	// =============================
-
 	createFolderBasedLinks(sourcePath, targetPaths) {
 		const metadataCache = this.app.metadataCache;
 		
-		// Get or initialize resolved links for this file
+		// Ensure resolvedLinks object exists
 		if (!metadataCache.resolvedLinks[sourcePath]) {
 			metadataCache.resolvedLinks[sourcePath] = {};
 		}
+		if (!metadataCache.unresolvedLinks[sourcePath]) {
+			metadataCache.unresolvedLinks[sourcePath] = {};
+		}
 
-		// Store original resolved links to detect changes
-		const originalLinks = { ...metadataCache.resolvedLinks[sourcePath] };
-		
-		// Mark which links are from our plugin (for cleanup)
+		// Store our added links for cleanup
 		if (!metadataCache.folderBasedLinks) {
 			metadataCache.folderBasedLinks = {};
 		}
@@ -163,54 +163,32 @@ class OptimizedCombinedGraphPlugin extends Plugin {
 			metadataCache.folderBasedLinks[sourcePath] = new Set();
 		}
 
-		// Remove old folder-based links
+		// Remove old folder‑based links
 		for (const oldTarget of metadataCache.folderBasedLinks[sourcePath]) {
 			delete metadataCache.resolvedLinks[sourcePath][oldTarget];
-			
-			// Also update unresolved links
-			if (metadataCache.unresolvedLinks[sourcePath]?.[oldTarget]) {
-				delete metadataCache.unresolvedLinks[sourcePath][oldTarget];
-			}
+			delete metadataCache.unresolvedLinks[sourcePath][oldTarget];
 		}
-
-		// Add new folder-based links
 		metadataCache.folderBasedLinks[sourcePath].clear();
-		
+
+		// Add new links
 		for (const targetPath of targetPaths) {
-			if (targetPath === sourcePath) continue; // Skip self
-			
-			// Check if the target file exists
+			if (targetPath === sourcePath) continue;
 			const targetFile = this.app.vault.getFileByPath(targetPath);
 			if (targetFile) {
-				// Add to resolved links
 				metadataCache.resolvedLinks[sourcePath][targetPath] = 
 					(metadataCache.resolvedLinks[sourcePath][targetPath] || 0) + 1;
-				
 				metadataCache.folderBasedLinks[sourcePath].add(targetPath);
 			} else {
-				// Add to unresolved links if file doesn't exist
-				if (!metadataCache.unresolvedLinks[sourcePath]) {
-					metadataCache.unresolvedLinks[sourcePath] = {};
-				}
 				metadataCache.unresolvedLinks[sourcePath][targetPath] = 1;
 			}
 		}
 
-		// Trigger metadata cache change to update graph
-		if (JSON.stringify(originalLinks) !== JSON.stringify(metadataCache.resolvedLinks[sourcePath])) {
-			metadataCache.trigger("changed", this.app.vault.getFileByPath(sourcePath));
-
-requestAnimationFrame(() => {
-	requestAnimationFrame(() => {
-		this.initializeGraph();
-	});
-});
-		}
+		// Trigger graph update
+		metadataCache.trigger("changed", this.app.vault.getFileByPath(sourcePath));
 	}
 
 	cleanupAllFolderLinks() {
 		const metadataCache = this.app.metadataCache;
-		
 		if (!metadataCache.folderBasedLinks) return;
 		
 		for (const sourcePath in metadataCache.folderBasedLinks) {
@@ -222,27 +200,34 @@ requestAnimationFrame(() => {
 			}
 			delete metadataCache.folderBasedLinks[sourcePath];
 		}
-		
-		// Trigger refresh
+		// Force a refresh
 		const anyFile = this.app.vault.getMarkdownFiles()[0];
-		if (anyFile) {
-			metadataCache.trigger("changed", anyFile);
-		}
+		if (anyFile) metadataCache.trigger("changed", anyFile);
 	}
 
-	// =============================
-	// WEIGHT CALCULATION
-	// =============================
+	// ============================================================
+	// NODE RESIZING (weight calculation)
+	// ============================================================
 
-	// Your existing weight calculation code for the graph renderer
-	initializeGraph() {
-		const leaf = this.app.workspace.getLeavesOfType("graph").first();
-		if (!leaf) return;
+	applyNodeWeights() {
+		const graphLeaf = this.app.workspace.getLeavesOfType("graph").first();
+		if (!graphLeaf) return;
 
-		const renderer = leaf.view.renderer;
+		const renderer = graphLeaf.view.renderer;
 		if (!renderer?.nodes) return;
 
+		// Update each node's weight based on current links + frontmatter
 		this.updateWeights(renderer.nodes);
+
+		// Force the graph to redraw (weights affect node sizes)
+		if (renderer.zoom) {
+			// Slight zoom change to trigger redraw
+			const originalZoom = renderer.zoom;
+			renderer.setZoom(originalZoom * 1.001);
+			renderer.setZoom(originalZoom);
+		} else {
+			renderer.onZoom && renderer.onZoom();
+		}
 	}
 
 	updateWeights(nodes) {
@@ -253,7 +238,7 @@ requestAnimationFrame(() => {
 
 	calculateWeight(node) {
 		const manualSize = this.getManualSize(node);
-		if (this.settings.manualOverride)
+		if (this.settings.manualOverride && manualSize > 0)
 			return manualSize;
 
 		let weight = 0;
@@ -288,8 +273,14 @@ requestAnimationFrame(() => {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+		// After settings change, reapply weights
+		this.applyNodeWeights();
 	}
 }
+
+// ============================================================
+// SETTINGS TAB
+// ============================================================
 
 class CombinedSettingTab extends PluginSettingTab {
 	constructor(app, plugin) {
@@ -308,7 +299,7 @@ class CombinedSettingTab extends PluginSettingTab {
 				.onChange(async v => {
 					this.plugin.settings.fwdMultiplier = v;
 					await this.plugin.saveSettings();
-					this.plugin.initializeGraph();
+					this.plugin.applyNodeWeights();
 				}));
 
 		new Setting(containerEl)
@@ -318,7 +309,7 @@ class CombinedSettingTab extends PluginSettingTab {
 				.onChange(async v => {
 					this.plugin.settings.bwdMultiplier = v;
 					await this.plugin.saveSettings();
-					this.plugin.initializeGraph();
+					this.plugin.applyNodeWeights();
 				}));
 
 		new Setting(containerEl)
@@ -328,7 +319,28 @@ class CombinedSettingTab extends PluginSettingTab {
 				.onChange(async v => {
 					this.plugin.settings.lettersPerWt = v;
 					await this.plugin.saveSettings();
-					this.plugin.initializeGraph();
+					this.plugin.applyNodeWeights();
+				}));
+
+		new Setting(containerEl)
+			.setName("Manual multiplier")
+			.addSlider(sl => sl.setLimits(0, 20, 1)
+				.setValue(this.plugin.settings.manualMultiplier)
+				.onChange(async v => {
+					this.plugin.settings.manualMultiplier = v;
+					await this.plugin.saveSettings();
+					this.plugin.applyNodeWeights();
+				}));
+
+		new Setting(containerEl)
+			.setName("Manual override")
+			.setDesc("If enabled, only manual node_size will be used")
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.manualOverride)
+				.onChange(async v => {
+					this.plugin.settings.manualOverride = v;
+					await this.plugin.saveSettings();
+					this.plugin.applyNodeWeights();
 				}));
 	}
 }
