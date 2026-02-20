@@ -11,6 +11,7 @@ tags:
   - islamic/dine
   - islamic/Mawaidh
 ---
+
 ## سور من القرآن
 
 ###### عشوائية
@@ -21,17 +22,25 @@ tags:
 
 ###### سورة الحديد
 
-![[057.mp3]]
+<audio controls>
+  <source src="https://server11.mp3quran.net/hazza/057.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
 
 ###### سورة الحجر
-![[015.mp3]]
+
+<audio controls>
+  <source src="https://server11.mp3quran.net/hazza/015.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
 ## مواعظ
 
 ###### رسالة ابن أبي سفيان
 
 ![[Takwa.mp3]]
 
-###### أحداث يوم عظيم
+###### أحداث بعد الموت
 ![[تذكر]]
 
 ###### موعظة

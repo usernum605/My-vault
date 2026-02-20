@@ -22,7 +22,7 @@ icon: lucide-calendar-minus-2
   <span style="font-size: 1.5em; color: #667eea; font-weight: 600;">﴿ وَاصْبِرْ وَمَا صَبْرُكَ إِلَّا بِاللَّهِ ﴾</span>
 </div>
 
-![](Tazkira.m4a)
+![](Rec-Tazkira.m4a)
 
 - [ ] العمل على مشروع ...
 ## مهام هذا اليوم 
