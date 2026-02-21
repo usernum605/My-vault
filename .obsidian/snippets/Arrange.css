@@ -3,6 +3,13 @@
 /* =============================================== */
 
 /* Individual RTL Classes */
+div.side-dock-ribbon-action[aria-label="AI Assistant"] {
+    display: none !important;
+}
+.side-dock-ribbon-action[aria-label="Internet"] {
+    display: none !important;
+}
+
 .rtl-title h1,
 .rtl-title h2,
 .rtl-title h3,

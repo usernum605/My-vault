@@ -7,6 +7,8 @@ banner: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJShHBWwcAi8tdOP3G
 cssclasses:
   - invert-banner
   - recolor-images
+The Topic:
+  - Zin
 ---
 ##### تذكر
 

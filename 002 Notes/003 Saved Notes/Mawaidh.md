@@ -10,6 +10,8 @@ cssclasses:
 tags:
   - islamic/dine
   - islamic/Mawaidh
+The Topic:
+  - Zin
 ---
 
 ## سور من القرآن

@@ -10,9 +10,13 @@ icon: lucide-layout-grid
 links pages:
   - "[[000 Ultimate Base]]"
 banner_y: 33
-ui: preview
 ---
-<iframe src="https://www.youtube.com/embed/TGUsvlJIXXw" width="100%" height="315" title="A YouTube video" frameborder="0" allowfullscreen></iframe>
+```dataview
+TASK
+FROM "003 Daily/001 Active Diaries"
+WHERE file.day = date(today) AND !completed
+WHERE contains(text, "العمل على مشروع")
+```
 
 # <span><u>Dashboard</u></span>
 

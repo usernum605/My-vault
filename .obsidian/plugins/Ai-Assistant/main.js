@@ -540,9 +540,9 @@ class SessionManager {
     }
     
     session.messages.forEach((msg, index) => {
-      const role = msg.role === 'user' ? '👤 User' : '🤖 Assistant';
+      const role = msg.role === 'user' ? 'User' : 'Assistant';
       const time = msg.timestamp ? new Date(msg.timestamp).toLocaleString() : '';
-      content += `### ${role} (Message ${index + 1}) ${time ? '- ' + time : ''}\n\n`;
+      content += `###### ${role} (Message ${index + 1}) ${time ? '- ' + time : ''}\n\n`;
       
       if (msg.attachments && msg.attachments.length > 0) {
         content += `**Attachments:**\n`;
