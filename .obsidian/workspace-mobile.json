@@ -21,15 +21,25 @@
               "icon": "lucide-file",
               "title": "Dashboard"
             }
+          },
+          {
+            "id": "8ef702dc016378c8",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
+            }
           }
         ]
       },
       {
-        "id": "9cc7bc94872da182",
+        "id": "0e0a09ec917102b8",
         "type": "tabs",
         "children": [
           {
-            "id": "f1d755b636f6fefe",
+            "id": "5ca5c822785ecff5",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -112,7 +122,7 @@
         }
       },
       {
-        "id": "c2de760f533cbf3b",
+        "id": "fa9f950e3e00860e",
         "type": "leaf",
         "state": {
           "type": "bookmarks",
@@ -134,7 +144,7 @@
         "state": {
           "type": "outline",
           "state": {
-            "file": "003 Daily/001 Active Diaries/2026-02-20.md",
+            "file": "001 Dashboard/Dashboard/Dashboard.md",
             "followCursor": false,
             "showSearch": false,
             "searchQuery": ""
@@ -169,7 +179,7 @@
         "state": {
           "type": "localgraph",
           "state": {
-            "file": "004 Files/004 Temple/Today Tem.md",
+            "file": "003 Daily/001 Active Diaries/2026-02-21.md",
             "options": {
               "collapse-filter": true,
               "search": "",
@@ -211,7 +221,8 @@
         }
       }
     ],
-    "currentTab": 4
+    "currentTab": 3,
+    "pinned": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -224,33 +235,39 @@
       "graph:Open graph view": false,
       "daily-notes:Open today's daily note": false,
       "zk-prefixer:Create new unique note": false,
-      "Ai-Assistant:AI Assistant": true,
-      "browse-internet:Internet": true
+      "Ai-Assistant:AI Assistant": false,
+      "browse-internet:Internet": false,
+      "workspaces:Manage workspace layouts": true
     }
   },
-  "active": "f1d755b636f6fefe",
+  "active": "5ca5c822785ecff5",
   "lastOpenFiles": [
-    "004 Files/004 Temple/Today Tem.md",
-    "003 Daily/001 Active Diaries/2026-02-21.md",
     "001 Dashboard/Dashboard/Dashboard.md",
+    "003 Daily/001 Active Diaries/2026-02-21.md",
+    "004 Files/002 Archive/Olds/Old Topics/Termux commands Pomo.md",
+    "004 Files/002 Archive/Olds/Old codes/Pomo.md",
+    "codeblock 5011.md",
+    "codeblock 1815.md",
+    "codeblock 5412.md",
     "001 Dashboard/My tools.md",
+    "001 Dashboard/Athkar & Adia.md",
     "001 Dashboard/Azkaru.md",
+    "002 Notes/001 Notes/Compiler.md",
+    "001 Dashboard/Dashboard/Bases/002 My projects.md",
+    "002 Notes/001 Notes/Go.md",
+    "002 Notes/003 Saved Notes/كيف نستثمر اوقاتنا.md",
+    "004 Files/004 Temple/Today Tem.md",
     "001 Dashboard/Diny.md",
     "001 Dashboard/Dashboard/Bases/003 Notes.md",
     "001 Dashboard/Dashboard/Bases/004 My notes.md",
     "001 Dashboard/Dashboard/Bases/005 Diaries.md",
-    "001 Dashboard/Dashboard/Bases/002 My projects.md",
     "001 Dashboard/Dashboard/Bases/001 Dash.md",
     "001 Dashboard/Dashboard/Bases/000 Ultimate Base.md",
     "002 Notes/003 Saved Notes/تذكر.md",
     "002 Notes/003 Saved Notes/سلسلة أحداث يوم الحساب.md",
     "002 Notes/003 Saved Notes/سلسلة الموت.md",
-    "002 Notes/003 Saved Notes/كيف نستثمر اوقاتنا.md",
     "002 Notes/003 Saved Notes/My YouTube Channels.md",
     "002 Notes/003 Saved Notes/Mawaidh.md",
-    "002 Notes/003 Saved Notes/Interesting topic.md",
-    "004 Files/004 Temple/Quick Notes tem.md",
-    "003 Daily/001 Active Diaries/2026-02-20.md",
     "004 Files/001 Attach/Sounds/Rec-Tazkira.m4a"
   ]
 }

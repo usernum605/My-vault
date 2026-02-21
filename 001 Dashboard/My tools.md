@@ -9,9 +9,12 @@ cssclasses:
 icon: lucide-tool-case
 tags:
   - self↑up
+node_size: 19
 ---
 #### أدوات مفيدة
 
+[GitHub](https://github.com)
+[Compiler](https://aistudio.google.com/apps/582b0a2b-ad64-457f-b7fa-a5d8478421ac?fullscreenApplet=true&showPreview=true&showAssistant=true)
 [Google Ai Studio](https://aistudio.google.com/u/1/prompts/)
 #### بعض أدوات الذكاء الاصطناعي والمواقع
 ##### الاصوات

@@ -11,11 +11,15 @@ links pages:
   - "[[000 Ultimate Base]]"
 banner_y: 33
 ---
-```dataview
-TASK
-FROM "003 Daily/001 Active Diaries"
-WHERE file.day = date(today) AND !completed
-WHERE contains(text, "العمل على مشروع")
+```dataviewjs
+const tasks = dv.pages('"003 Daily/001 Active Diaries"')
+  .where(p => p.file.day && dv.date(p.file.day).equals(dv.date("today")))
+  .file.tasks
+  .where(t => !t.completed && t.text.includes("العمل على مشروع"));
+
+if (tasks.length > 0) {
+  dv.taskList(tasks, false);
+}
 ```
 
 # <span><u>Dashboard</u></span>

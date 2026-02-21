@@ -1042,7 +1042,7 @@ module.exports = class StyleshVault extends Plugin {
     }
 
     updateTabIcons() {
-        if (!this.settings.enableIcon) return;
+        if (!this.settings.enableIcon && !this.settings.showFileExplorerIcons) return;
 
         this.app.workspace.iterateAllLeaves((leaf) => {
             if (!(leaf.view instanceof MarkdownView) || !leaf.view.file) return;
