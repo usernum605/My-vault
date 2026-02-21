@@ -1,6 +1,6 @@
 {
-  "collapse-filter": false,
-  "search": "![\"links pages\":my tool",
+  "collapse-filter": true,
+  "search": "",
   "showTags": true,
   "showAttachments": true,
   "hideUnresolved": true,

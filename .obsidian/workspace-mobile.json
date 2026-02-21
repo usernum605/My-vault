@@ -35,7 +35,7 @@
         ]
       },
       {
-        "id": "0e0a09ec917102b8",
+        "id": "b12fe521b6cc1027",
         "type": "tabs",
         "children": [
           {
@@ -144,7 +144,7 @@
         "state": {
           "type": "outline",
           "state": {
-            "file": "003 Daily/001 Active Diaries/2026-02-21.md",
+            "file": "001 Dashboard/Dashboard/Dashboard.md",
             "followCursor": false,
             "showSearch": false,
             "searchQuery": ""
@@ -179,7 +179,7 @@
         "state": {
           "type": "localgraph",
           "state": {
-            "file": "003 Daily/001 Active Diaries/2026-02-21.md",
+            "file": "001 Dashboard/Dashboard/Dashboard.md",
             "options": {
               "collapse-filter": true,
               "search": "",
@@ -240,10 +240,10 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "5ca5c822785ecff5",
+  "active": "19c003a36a5455dc",
   "lastOpenFiles": [
-    "001 Dashboard/Dashboard/Dashboard.md",
     "003 Daily/001 Active Diaries/2026-02-21.md",
+    "001 Dashboard/Dashboard/Dashboard.md",
     "002 Notes/003 Saved Notes/Mawaidh.md"
   ]
 }
