@@ -7,7 +7,7 @@ cssclasses:
   - color-images
   - page-black
   - center-title
-  - dashboard-list
+  - dashboard
 ui: preview
 The Topic:
   - Tool

@@ -634,6 +634,39 @@ these to suit your own folder structure and vault theme!
     transparent
   );
 }
+/* pdf invert dark */
+.theme-dark .pdf-container,
+.theme-dark .pdf-viewer,
+.theme-dark .pdf-embed,
+.theme-dark iframe[src*=".pdf"],
+.theme-dark div[data-pdf] {
+    filter: invert(1) hue-rotate(180deg);
+    mix-blend-mode: screen;
+}
+
+.theme-dark .pdf-container *,
+.theme-dark .pdf-viewer *,
+.theme-dark .pdf-embed * {
+    mix-blend-mode: screen;
+}
+
+.theme-dark .pdf-container img,
+.theme-dark .pdf-viewer img {
+    filter: invert(1) hue-rotate(180deg);
+}
+
+.theme-dark .pdf-embed {
+    filter: invert(1) hue-rotate(180deg);
+    mix-blend-mode: screen;
+}
+/* pdf light mode */
+.theme-light .workspace-leaf-content[data-type=pdf] .pdf-viewer .canvasWrapper,
+.theme-light .workspace-leaf-content[data-type=pdf] .pdfViewer .canvasWrapper,
+.theme-light .pdf-container,
+.theme-light .pdf-viewer,
+.theme-light .pdf-embed {
+    mix-blend-mode: multiply;
+}
 
 /* Global Variables */
 :root {

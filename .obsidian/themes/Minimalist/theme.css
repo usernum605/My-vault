@@ -1687,15 +1687,6 @@ body {
     .theme-dark .pdfViewer .canvasWrapper {
         opacity:var(--pdf-dark-opacity)
     }
-    .theme-dark .workspace-leaf-content[data-type=pdf] .pdf-viewer .canvasWrapper,
-    .theme-dark .workspace-leaf-content[data-type=pdf] .pdfViewer .canvasWrapper {
-        filter:invert(1) hue-rotate(180deg);
-        mix-blend-mode:screen
-    }
-    .theme-light .workspace-leaf-content[data-type=pdf] .pdf-viewer .canvasWrapper,
-    .theme-light .workspace-leaf-content[data-type=pdf] .pdfViewer .canvasWrapper {
-        mix-blend-mode:multiply
-    }
     body {
         --table-header-border-width:0;
         --table-column-first-border-width:0;

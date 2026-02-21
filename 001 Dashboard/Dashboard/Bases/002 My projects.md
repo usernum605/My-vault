@@ -26,10 +26,6 @@ views:
       - file.tags
     sort: []
     summaries: {}
-    columnSize:
-      file.name: 140
-      file.links: 140
-      file.tags: 210
     rowHeight: medium
     markers: bullet
 
