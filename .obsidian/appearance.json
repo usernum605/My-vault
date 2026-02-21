@@ -8,7 +8,8 @@
     "Aligner",
     "Arrange",
     "Coller",
-    "Cardlink"
+    "Cardlink",
+    "Cards"
   ],
   "interfaceFontFamily": "Noto Naskh Arabic",
   "monospaceFontFamily": "Noto Naskh Arabic",

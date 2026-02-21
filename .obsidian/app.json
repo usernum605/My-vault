@@ -13,7 +13,7 @@
   "newFileFolderPath": "002 Notes/001 Notes",
   "promptDelete": false,
   "spellcheck": false,
-  "readableLineLength": true,
+  "readableLineLength": false,
   "showUnsupportedFiles": true,
   "rightToLeft": false,
   "openBehavior": "",

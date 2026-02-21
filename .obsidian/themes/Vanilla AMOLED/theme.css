@@ -20,6 +20,7 @@
 	--background-secondary: var(--color-base-05);
 	--titlebar-background: var(--color-base-00);
 	--titlebar-background-focused: var(--color-base-10);
+	--background-modifier-border:var(--color-base-25);
 
 	--hr-gradient: linear-gradient(
 		to right,
@@ -150,4 +151,16 @@
 
 .markdown-embed-link {
 	display: none !important;
+}
+/* Mobile sidebars (when pinned) */
+.is-mobile .workspace-drawer.mod-left.is-pinned {
+    width: 500px ;
+    min-width: 350px ;
+    max-width: 500px ;
+}
+
+.is-mobile .workspace-drawer.mod-right.is-pinned {
+    width: 450px ;
+    min-width: 350px ;
+    max-width: 450px ;
 }
