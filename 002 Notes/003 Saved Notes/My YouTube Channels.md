@@ -6,8 +6,8 @@ cssclasses:
   - pen-red
   - color-images
   - page-black
-  - dashboard
   - center-title
+  - dashboard-list
 ui: preview
 The Topic:
   - Tool

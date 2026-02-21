@@ -5,10 +5,9 @@ aliases:
 tags:
   - self↑up
 cssclasses:
-  - cards-cols-2
   - card
   - list-cards
-  - cards-cover
+  - cards-cols-2
 icon: lucide-languages
 ---
 > انت تعرف أهمية الإنجليزية ولكنك كسول وهذه هي مشكلتك لذا استعن بالله ولا تعجز
@@ -17,6 +16,7 @@ icon: lucide-languages
 #### منهاج التعلم
 - أفضل منهج لتعلم الانجلش
     > افضل وقت للبدأ فيه هو الآن فإذا ماطلت ذهب هذا الوقت ولن يعود لذا استفد منه
+    > ![](https://i.imgur.com/7DUNTbX.jpeg)
 - محاولة التنفيذ
     - [روايات باللغة الإنجليزية](https://dalilk4english.com/library/reading) لتعلم اللغة بتسلية 
     - [يوڨليتش](https:youglish.com/) لتعلم الانجليزية عن طريق الاستماع
