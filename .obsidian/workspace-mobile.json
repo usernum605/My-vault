@@ -179,7 +179,7 @@
         "state": {
           "type": "localgraph",
           "state": {
-            "file": "003 Daily/001 Active Diaries/2026-02-21.md",
+            "file": "001 Dashboard/Dashboard/Dashboard.md",
             "options": {
               "collapse-filter": true,
               "search": "",
@@ -240,7 +240,7 @@
       "workspaces:Manage workspace layouts": true
     }
   },
-  "active": "5ca5c822785ecff5",
+  "active": "19c003a36a5455dc",
   "lastOpenFiles": [
     "003 Daily/001 Active Diaries/2026-02-21.md",
     "001 Dashboard/Dashboard/Dashboard.md"
