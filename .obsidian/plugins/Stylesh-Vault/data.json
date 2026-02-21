@@ -5,7 +5,7 @@
   "bannerHeight": 150,
   "bannerMargin": 0,
   "bannerFading": true,
-  "enableIcon": true,
+  "enableIcon": false,
   "iconProperty": "icon",
   "iconSize": 40,
   "iconTopMargin": 70,

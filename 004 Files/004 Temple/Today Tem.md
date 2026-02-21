@@ -67,7 +67,7 @@ icon: lucide-calendar-minus-2
 - [ ] <span class="backdrop-blur-xl2"><u>سكة الحسنات</u></span>
 
 #####  <span style="color: #8b1000;">ذنب</span>
-- [ ] <span style="color: #8A0000;"><u>سكة الذنوب</u></span>
+- [ ] <span style="color: #8A0000;"><u>سكة الذنوب أو الغفلة</u></span>
 
 
 {{SPECIAL_DAYS}}
