@@ -3,13 +3,13 @@
   "cssTheme": "Minimalist",
   "enabledCssSnippets": [
     "dashboard",
-    "Arabic",
     "Callout",
     "Aligner",
     "Arrange",
     "Coller",
     "Cardlink",
-    "Cards"
+    "Cards",
+    "Arabic"
   ],
   "interfaceFontFamily": "Noto Naskh Arabic",
   "monospaceFontFamily": "Noto Naskh Arabic",

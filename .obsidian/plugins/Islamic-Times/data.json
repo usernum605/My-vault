@@ -91,21 +91,21 @@
   "displayReference": "sunrise",
   "cached": {
     "prayerTimes": {
-      "Fajr": "06:12",
-      "Sunrise": "07:37",
+      "Fajr": "06:10",
+      "Sunrise": "07:36",
       "Dhuhr": "13:11",
-      "Asr": "16:18",
-      "Maghrib": "18:46",
-      "Isha": "20:06",
-      "Midnight": "01:12"
+      "Asr": "16:19",
+      "Maghrib": "18:47",
+      "Isha": "20:07",
+      "Midnight": "01:11"
     },
     "hijri": {
-      "date": "05-09-1447",
+      "date": "06-09-1447",
       "format": "DD-MM-YYYY",
-      "day": "5",
+      "day": "6",
       "weekday": {
-        "en": "Al Ahad",
-        "ar": "الاحد"
+        "en": "Al Athnayn",
+        "ar": "الاثنين"
       },
       "month": {
         "number": 9,
@@ -122,7 +122,7 @@
       "adjustedHolidays": [],
       "method": "HJCoSA"
     },
-    "fetchedAtISO": "2026-02-22T04:40:11.393Z"
+    "fetchedAtISO": "2026-02-22T23:00:09.470Z"
   },
   "enableDailyNotes": true,
   "dailyNotesFolder": "003 Daily/001 Active Diaries",
