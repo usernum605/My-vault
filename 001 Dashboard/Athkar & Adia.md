@@ -7,7 +7,7 @@ banner_y: 62
 aliases:
   - أذكار وأدعية
 tags:
-  - islamic/dine
+  - Islamic/Dine
 links pages:
   - "[[Azkaru]]"
   - "[[Diny|Diny]]"

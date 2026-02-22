@@ -4,8 +4,8 @@ banner: https://images.unsplash.com/photo-1517842645767-c639042777db?w=500&auto=
 cssclasses:
   - card
 tags:
-  - self↑up/programing
-  - quick-notes
+  - Self↑up/Programing
+  - Type/Saved-Notes
 The Topic:
   - Game Dev
 ---

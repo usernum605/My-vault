@@ -8,8 +8,8 @@ cssclasses:
   - center-everything
   - pen-blue
 tags:
-  - islamic/dine
-  - islamic/Mawaidh
+  - Islamic/Dine
+  - Islamic/Mawaidh
 The Topic:
   - Zin
 ---

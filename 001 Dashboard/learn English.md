@@ -3,7 +3,7 @@ banner: https://images.pexels.com/photos/247819/pexels-photo-247819.jpeg?auto=co
 aliases:
   - تعلم الانجليزية
 tags:
-  - self↑up
+  - Self↑up
 cssclasses:
   - card
   - list-cards

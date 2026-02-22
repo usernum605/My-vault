@@ -179,7 +179,7 @@
         "state": {
           "type": "localgraph",
           "state": {
-            "file": "003 Daily/001 Active Diaries/2026-02-22.md",
+            "file": "001 Dashboard/Dashboard/Dashboard.md",
             "options": {
               "collapse-filter": true,
               "search": "",
@@ -226,6 +226,7 @@
   },
   "left-ribbon": {
     "hiddenItems": {
+      "korean-book-search:Automatic book information entry": false,
       "audio-recorder:Start/stop recording": false,
       "switcher:Open quick switcher": true,
       "canvas:Create new canvas": true,
@@ -240,15 +241,35 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "981ed2b7831150a5",
+  "active": "19c003a36a5455dc",
   "lastOpenFiles": [
-    "002 Notes/003 Saved Notes/Mawaidh.md",
+    "003 Daily/001 Active Diaries/2026-02-22.md",
+    "002 Notes/001 Notes/Untitled.md",
+    "002 Notes/002 lessons/001 The Courses.md",
     "001 Dashboard/Dashboard/Dashboard.md",
+    "001 Dashboard/Athkar & Adia.md",
+    "002 Notes/003 Saved Notes/Prompt.md",
+    "002 Notes/002 lessons/000 Map of content.md",
+    "002 Notes/002 lessons/002 Game dev.md",
+    "002 Notes/001 Notes/Bg.md",
+    "002 Notes/001 Notes/Judg.md",
+    "002 Notes/001 Notes/Gb.md",
+    "002 Notes/001 Notes/For get.md",
+    "004 Files/002 Archive/Olds/Old codes/Minimal theme with plugin.md",
     "001 Dashboard/My tools.md",
     "001 Dashboard/Dashboard/Bases/000 Ultimate Base.md",
-    "003 Daily/001 Active Diaries/2026-02-22.md",
-    "003 Daily/001 Active Diaries/2026-02-21.md",
-    "001 Dashboard/Dashboard/Trackers/Tracker A.md",
-    "001 Dashboard/Dashboard/Bases/005 Diaries.md"
+    "002 Notes/003 Saved Notes/My YouTube Channels.md",
+    "004 Files/004 Temple/Save Note Tem.md",
+    "002 Notes/002 lessons/003 Math.md",
+    "002 Notes/003 Saved Notes/40-Sunday-2026.md",
+    "002 Notes/003 Saved Notes/39-Sunday-2026.md",
+    "004 Files/003 AI Conversations/الدالة - رياضيات.md",
+    "004 Files/004 Temple/Quick Notes tem.md",
+    "004 Files/004 Temple/Log Tem.md",
+    "004 Files/004 Temple/Today Tem.md",
+    "002 Notes/003 Saved Notes/35-Sunday-2026.md",
+    "004 Files/003 AI Conversations/القرآن.md",
+    "002 Notes/003 Saved Notes/long projects",
+    "004 Files/001 Attach/warsh.pdf"
   ]
 }

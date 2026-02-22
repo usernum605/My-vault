@@ -5,7 +5,7 @@ ui: edit
 cssclasses:
   - card
 tags:
-  - quick-notes
+  - Type/Quick-Notes
 links pages:
   - "[[003 Notes]]"
 The Topic:

@@ -4,10 +4,11 @@ banner: https://images.unsplash.com/photo-1517842645767-c639042777db?w=500&auto=
 cssclasses:
   - card
 tags:
-  - self↑up/programing
-  - quick-notes
+  - Self↑up/Programing
+  - Type/Quick-Notes
 The Topic:
   - Obsidian plugins
+  - Stylesh Vault plugin
 ---
 ### Note About Rebuild icons
 - يتم حذف ثم اعادة رندرة الأيقونة كلما تم التبديل من وضع البريفيو الى الاديت او العكس

@@ -10,7 +10,15 @@
 }
 
 .invert-banner.invert-dark .banner-image img {
-    filter: invert(0) brightness(0.5) contrast(1.2);
+    /* This creates a black-and-white effect with high contrast */
+    filter: brightness(0.8) contrast(1.4) grayscale(1);
+    mix-blend-mode: normal;
+}
+
+/* Alternative if you want more of a "black pen on white" look */
+.invert-banner.invert-dark-alt .banner-image img {
+    filter: brightness(0) saturate(100%) invert(14%) sepia(19%) saturate(296%) hue-rotate(5deg) brightness(90%) contrast(96%);
+    mix-blend-mode: normal;
 }
 
 .invert-banner.invert-color .banner-image img {

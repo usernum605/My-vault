@@ -1,7 +1,7 @@
 ---
 icon: lucide-book-marked
 tags:
-  - islamic/dine
+  - Islamic/Dine
 banner: https://i.pinimg.com/564x/b9/22/90/b92290fd29d73807fe553ca95b635182.jpg
 cssclasses:
   - card

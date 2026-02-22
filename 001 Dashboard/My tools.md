@@ -8,7 +8,7 @@ cssclasses:
   - center-everything
 icon: lucide-tool-case
 tags:
-  - self↑up
+  - Self↑up
 node_size: 19
 ---
 #### أدوات مفيدة
@@ -24,7 +24,7 @@ node_size: 19
 [إزالة الموسيقى ](https://vocalremover.org/)
 [تشكيل الكلام](https://tashkeel.alsharekh.org)
 ##### السكريبت والأفكار 
-[ذكاء اصطناعي يجاوب مع إعطاء الصور](https://www.perplexity.ai/) 
+[ذكاء اصطناعي مخصص للبحوث](https://www.perplexity.ai/)
 [تحويل الصوت إلى كلام](https://ar.vidnoz.com/audio-to-text.html?utm_source=chatgpt.com)
 [شات جي بي تي](https://chat.openai.com/)
 [كاتب](https://katteb.com/ar/dashboard/) 

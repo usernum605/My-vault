@@ -5,8 +5,8 @@ cssclasses:
   - card
   - invert-banner
 tags:
-  - self↑up/programing
-  - quick-notes
+  - Self↑up/Programing
+  - Type/Saved-Notes
 The Topic:
   - Game Dev
 ---

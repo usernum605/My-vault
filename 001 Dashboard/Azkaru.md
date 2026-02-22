@@ -8,7 +8,7 @@ cssclasses:
   - page-black
 banner_y: 50
 tags:
-  - islamic/dine
+  - Islamic/Dine
 links pages:
   - "[[Athkar & Adia|Athkar & Adia]]"
   - "[[أذكار الصباح]]"

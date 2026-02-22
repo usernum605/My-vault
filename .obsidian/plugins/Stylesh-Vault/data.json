@@ -24,12 +24,12 @@
   "hiddenProperties": [
     "ui",
     "icon",
-    "banner",
     "aliases",
     "tags",
     "cssclasses",
     "banner_y",
-    "node_size"
+    "node_size",
+    "banner"
   ],
   "temporaryHiddenProperties": [
     "cssclasses",
@@ -44,7 +44,7 @@
   "cacheExpiryDays": 1000000,
   "hideScrollbars": true,
   "showPropertiesOnCreate": true,
-  "showPropertiesOnCreateDuration": 30,
+  "showPropertiesOnCreateDuration": 60,
   "propertyVisibilityDuration": 30,
   "bannerInvert": false,
   "bannerInvertDarkMode": "never",

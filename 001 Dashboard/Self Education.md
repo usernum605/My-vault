@@ -4,7 +4,7 @@ banner: https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=1472
 cssclasses:
   - card
 tags:
-  - self↑up
+  - Self↑up
 ---
 #### الصلاة والإنتاجية
 <div style='color: skyblue'>الصلاة هي المقياس للقيام بالأعمال فإذا كانت الصلاة قريبة اوقف العمل وأتوضؤ</div>
