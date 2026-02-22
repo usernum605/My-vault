@@ -35,6 +35,7 @@ if (tasks.length > 0) {
 -  side files
     - [[Azkaru]]
     - [[My tools]]
+    - [[Mawaidh]]
     - [[004 My notes]]
     - [[learn English]]
     - [[points of my knowledge]]

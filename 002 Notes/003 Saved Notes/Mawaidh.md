@@ -49,6 +49,7 @@ The Topic:
 ![[تذكر]]
 
 ###### موعظة
+![](https://youtu.be/PnHKBDdmRrA?si=xqsIlIvtEw5_bVt9)
 <iframe src="https://www.youtube-nocookie.com/embed/QEbSvw_0tcA?rel=0" width="100%" height="315" title="إذ الأغلال في أعناقهم والسلاسل يسحبون _ ساعة كاملة" frameborder="4" allowfullscreen></iframe>
 
 

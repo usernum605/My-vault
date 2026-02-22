@@ -8,6 +8,7 @@ tags:
   - Type/Quick-Notes
 The Topic:
   - Projects
+  - important
 ---
 ### Note About Quran
 - هل يمكن الحصول على قرآن كامل مجود عبر أكواد برمجية
