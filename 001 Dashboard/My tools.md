@@ -14,6 +14,7 @@ ui: preview
 ---
 #### أدوات مفيدة
 
+[Search](https://duckduckgo.com)
 [GitHub](https://github.com)
 [Compiler](https://aistudio.google.com/apps/582b0a2b-ad64-457f-b7fa-a5d8478421ac?fullscreenApplet=true&showPreview=true&showAssistant=true)
 [Google Ai Studio](https://aistudio.google.com/u/1/prompts/)
