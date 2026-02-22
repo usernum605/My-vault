@@ -10,14 +10,7 @@
 }
 
 .invert-banner.invert-dark .banner-image img {
-    /* This creates a black-and-white effect with high contrast */
     filter: brightness(0.8) contrast(1.4) grayscale(1);
-    mix-blend-mode: normal;
-}
-
-/* Alternative if you want more of a "black pen on white" look */
-.invert-banner.invert-dark-alt .banner-image img {
-    filter: brightness(0) saturate(100%) invert(14%) sepia(19%) saturate(296%) hue-rotate(5deg) brightness(90%) contrast(96%);
     mix-blend-mode: normal;
 }
 
@@ -25,6 +18,10 @@
     filter: hue-rotate(180deg) saturate(1.5);
 }
 
+.invert-banner.invert-dark-apt .banner-image img {
+    mix-blend-mode: multiply;
+    filter: brightness(0.7) grayscale(0.7) opacity(0.5);
+}
 /* BANNERS */
 
 .banner-image:not(:empty) {

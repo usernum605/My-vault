@@ -10,6 +10,7 @@ icon: lucide-tool-case
 tags:
   - Self↑up
 node_size: 19
+ui: preview
 ---
 #### أدوات مفيدة
 
