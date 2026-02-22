@@ -35,22 +35,22 @@
         ]
       },
       {
-        "id": "b12fe521b6cc1027",
+        "id": "3e5eafe1ecc79250",
         "type": "tabs",
         "children": [
           {
-            "id": "8c7803f076d8fb1e",
+            "id": "8854d8e20b0712ed",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "003 Daily/001 Active Diaries/2026-02-22.md",
-                "mode": "preview",
+                "file": "002 Notes/002 lessons/Learn Something.md",
+                "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "2026-02-22"
+              "title": "Learn Something"
             }
           }
         ]
@@ -242,15 +242,33 @@
   },
   "active": "19c003a36a5455dc",
   "lastOpenFiles": [
-    "003 Daily/001 Active Diaries/2026-02-22.md",
-    "002 Notes/003 Saved Notes/Mawaidh.md",
+    "004 Files/002 Archive/Olds/Old Topics/Sync.md",
     "001 Dashboard/Dashboard/Dashboard.md",
-    "004 Files/004 Temple/Log Tem.md",
-    "004 Files/004 Temple/Quick Notes tem.md",
-    "004 Files/004 Temple/Save Note Tem.md",
-    "004 Files/004 Temple/Today Tem.md",
-    "002 Notes/001 Notes/Quran.md",
     "002 Notes/002 lessons/Learn Something.md",
+    "001 Dashboard/Athkar & Adia.md",
+    "001 Dashboard/Self Education.md",
+    "002 Notes/002 lessons/الدوال.md",
+    "002 Notes/003 Saved Notes/Something.md",
+    "002 Notes/001 Notes/Rebuild icons.md",
+    "004 Files/004 Temple/Today Tem.md",
+    "004 Files/001.Attach/warsh.pdf",
+    "002 Notes/003 Saved Notes/Mawaidh.md",
+    "004 Files/004 Temple/Log Tem.md",
+    "004 Files/001.Attach/Sounds/Ayam.m4a",
+    "004 Files/001.Attach/Sounds/Rec-Tazkira.m4a",
+    "004 Files/001.Attach/Sounds/Takwa.mp3",
+    "004 Files/001.Attach/Sounds/pre-athan.m4a",
+    "004 Files/001.Attach/Sounds/night.m4a",
+    "004 Files/001.Attach/Sounds/morning.m4a",
+    "004 Files/001.Attach/Sounds/iqama.m4a",
+    "004 Files/001.Attach/Sounds/fasting.m4a",
+    "004 Files/001.Attach/Sounds/Athan.mp3",
+    "002 Notes/001 Notes/Quran.md",
+    "004 Files/004 Temple/Save Note Tem.md",
+    "004 Files/004 Temple/Quick Notes tem.md",
+    "003 Daily/002 Archived Diaries/2026-02-14.md",
+    "003 Daily/001 Active Diaries/2026-02-22.md",
+    "003 Daily/002 Archived Diaries/2026-01-25.md",
     "001 Dashboard/My tools.md",
     "002 Notes/002 lessons/003 Math.md",
     "002 Notes/002 lessons/001 The Courses.md",
@@ -259,16 +277,6 @@
     "002 Notes/003 Saved Notes/Prompt.md",
     "002 Notes/003 Saved Notes/Interesting topic.md",
     "002 Notes/001 Notes/Invert-dark feature.md",
-    "002 Notes/003 Saved Notes/39-Sunday-2026.md",
-    "002 Notes/003 Saved Notes/36-Sunday-2026.md",
-    "004 Files/002 Archive/Attach Embedded/أذكار المساء.md",
-    "002 Notes/003 Saved Notes/11-Sunday-2026.md",
-    "002 Notes/003 Saved Notes/10-Sunday-2026.md",
-    "002 Notes/003 Saved Notes/09-Sunday-2026.md",
-    "001 Dashboard/Dashboard/Bases/004 My notes.md",
-    "004 Files/003 AI Conversations/الدالة - رياضيات.md",
-    "001 Dashboard/Athkar & Adia.md",
-    "002 Notes/003 Saved Notes/long projects",
-    "004 Files/001 Attach/warsh.pdf"
+    "002 Notes/003 Saved Notes/39-Sunday-2026.md"
   ]
 }

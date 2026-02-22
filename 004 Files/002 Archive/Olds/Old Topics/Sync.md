@@ -8,6 +8,8 @@ The Topic: Dev life
 banner_y: 33
 icon: sync-small
 ---
+##### sync
+
 ```bash
 proot-distro login ubuntu
 cd shared/obsidian/obsidian\ N
@@ -15,5 +17,14 @@ git add .gitattributes
 git add .obsidian/plugins/Ai-Assistant/data.json
 git commit -m "sync"
 sync
+
+```
+
+#####
+
+```bash
+
+git rm -r --cached "004 Files/001.Attach/" 2>/dev/null
+git rm -r --cached ".trash/" 2>/dev/null
 
 ```
