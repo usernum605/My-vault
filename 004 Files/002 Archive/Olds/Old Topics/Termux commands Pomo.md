@@ -1,5 +1,11 @@
 ---
 icon: lucide-square-terminal
+links pages:
+  - "[[Termux commands Ai]]"
+  - "[[Sync]]"
+The Topic:
+  - Terminal
+  - Tool
 ---
 ### إنشاء موقع لمؤقت البومو
 

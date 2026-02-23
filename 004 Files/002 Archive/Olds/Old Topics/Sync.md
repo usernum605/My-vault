@@ -4,8 +4,10 @@ cssclasses:
   - card
   - invert-banner
 links pages:
-  - "[[003 Notes]]"
-The Topic: Dev life
+  - "[[Termux commands Ai]]"
+  - "[[Termux commands Pomo]]"
+The Topic:
+  - Terminal
 banner_y: 33
 icon: sync-small
 ---

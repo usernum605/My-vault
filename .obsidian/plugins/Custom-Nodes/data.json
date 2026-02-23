@@ -1,8 +1,8 @@
 {
-  "wordsPerWeight": 1,
+  "lettersPerWt": 0,
   "manualMultiplier": 0,
   "manualOverride": true,
+  "wordsPerWeight": 1,
   "fwdMultiplier": 1,
-  "bwdMultiplier": 1,
-  "lettersPerWt": 0
+  "bwdMultiplier": 1
 }

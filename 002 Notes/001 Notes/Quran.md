@@ -7,7 +7,6 @@ tags:
   - Self↑up/Programing
   - Type/Quick-Notes
 The Topic:
-  - Projects
   - important
 ---
 ### Note About Quran

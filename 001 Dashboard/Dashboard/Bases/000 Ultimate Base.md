@@ -6,7 +6,6 @@ cssclasses:
   - cards-cols-2
   - card
 links pages:
-  - " path: 002 Notes"
   - "path: 001 Dashboard"
   - "[[Dashboard]]"
   - "[[Dashboard]]"

@@ -1,5 +1,11 @@
 ---
 icon: lucide-square-terminal
+links pages:
+  - "[[Termux commands Pomo]]"
+  - "[[Sync]]"
+The Topic:
+  - Terminal
+  - Ai
 ---
 ### بناء ذكاء اصطناعي محلي 
 #### التجهيزات

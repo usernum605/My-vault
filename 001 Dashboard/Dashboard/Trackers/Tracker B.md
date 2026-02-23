@@ -532,10 +532,9 @@ container.appendChild(canvas);
 
 
 ```dataviewjs
-// نقل الملفات الأقدم من 30 يوم
 const tasksFolder = "003 Daily/001 Active Diaries";
 const archiveFolder = "003 Daily/002 Archived Diaries";
-const threeDaysAgo = moment().subtract(30, 'days');
+const threeDaysAgo = moment().subtract(15, 'days');
 
 // الحصول على جميع الملفات في مجلد المهام
 const files = app.vault.getFiles()
@@ -559,7 +558,6 @@ if (files.length > 0) {
     });
     dv.paragraph(`✅ تم نقل ${files.length} ملف إلى الأرشيف`);
 } else {
-    dv.paragraph("⚠️ لا توجد مهام أقدم من شهر");
 }
 ```
 
@@ -598,6 +596,5 @@ if (files.length > 0) {
     
     dv.paragraph(`✅ تم نقل ${files.length} ملف إلى الأرشيف`);
 } else {
-    dv.paragraph("⚠️ لا توجد ملفات أقدم من 30 يوم");
 }
 ```
