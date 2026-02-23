@@ -561,3 +561,43 @@ if (files.length > 0) {
 } else {
     dv.paragraph("⚠️ لا توجد مهام أقدم من شهر");
 }
+```
+
+```dataviewjs
+// نقل الملفات الأقدم من 30 يوم باستخدام ctime
+const sourceFolder = "002 Notes/001 Notes";
+const archiveFolder = "002 Notes/004 Archived Notes";
+const thirtyDaysAgo = moment().subtract(30, 'days');
+
+// الحصول على جميع الملفات في المجلد المصدر
+const files = app.vault.getFiles()
+    .filter(file => file.path.startsWith(sourceFolder))
+    .filter(file => {
+        // الحصول على وقت إنشاء الملف
+        const fileCtime = moment(file.stat.ctime);
+        // التحقق إذا كان الملف أقدم من 30 يوم
+        return fileCtime.isBefore(thirtyDaysAgo);
+    });
+
+// نقل الملفات
+if (files.length > 0) {
+    files.forEach(async (file) => {
+        // إنشاء المسار الجديد في مجلد الأرشيف
+        const newPath = file.path.replace(sourceFolder, archiveFolder);
+        
+        // التأكد من وجود المجلد الهدف (اختياري)
+        const archiveFolderExists = app.vault.getAbstractFileByPath(archiveFolder);
+        if (!archiveFolderExists) {
+            await app.vault.createFolder(archiveFolder);
+        }
+        
+        // نقل الملف
+        await app.vault.rename(file, newPath);
+        console.log(`تم نقل: ${file.name} إلى الأرشيف`);
+    });
+    
+    dv.paragraph(`✅ تم نقل ${files.length} ملف إلى الأرشيف`);
+} else {
+    dv.paragraph("⚠️ لا توجد ملفات أقدم من 30 يوم");
+}
+```

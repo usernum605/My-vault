@@ -48,6 +48,13 @@
         "a": 1,
         "rgb": 10067632
       }
+    },
+    {
+      "query": "path:\"002 Notes/004 Archived Notes\"  ",
+      "color": {
+        "a": 1,
+        "rgb": 10067632
+      }
     }
   ],
   "collapse-display": true,
@@ -60,6 +67,6 @@
   "repelStrength": 8.16270922537953,
   "linkStrength": 0.187037757882445,
   "linkDistance": 30,
-  "scale": 0.6767193953372596,
+  "scale": 0.7103964594205702,
   "close": true
 }

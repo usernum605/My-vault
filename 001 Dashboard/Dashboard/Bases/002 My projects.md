@@ -12,7 +12,7 @@ filters:
     - and:
         - file.hasProperty("The Topic")
         - file.name != "Quick Notes tem"
-        - file.folder != "002 Notes/002 lessons"
+        - file.folder != "002 Notes/002 Lessons"
         - file.name != "Sync"
 views:
   - type: table
