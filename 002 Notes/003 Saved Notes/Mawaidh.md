@@ -14,7 +14,9 @@ tags:
   - Islamic/Dine
   - Islamic/Mawaidh
 The Topic:
-  - Zin
+  - الموت
+  - النار
+  - يوم القيامة
 ---
 
 ## سور من القرآن
