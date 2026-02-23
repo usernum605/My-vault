@@ -1,9 +1,8 @@
 const { Plugin, PluginSettingTab, Setting } = require("obsidian");
 
 const DEFAULT_SETTINGS = {
-	fwdMultiplier: 1,
-	bwdMultiplier: 1,
-	lettersPerWt: 0,
+	wordsPerWeight: 100,
+	folderMultiplier: 1,
 	manualMultiplier: 1,
 	manualOverride: false
 };
@@ -13,91 +12,103 @@ class OptimizedCombinedGraphPlugin extends Plugin {
 	async onload() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 
-		this.folderCache = new Map();          // cache folder file lists
-		
+		this.virtualEdges = new Set();
+		this.folderCache = new Map();
+		this.wordCounts = new Map();
+
 		this.addSettingTab(new CombinedSettingTab(this.app, this));
 
-		// ---- Folder‑based graph edges (via metadata) ----
-		this.registerEvent(
-			this.app.metadataCache.on("changed", (file) => {
-				if (file.extension === "md") {
-					this.updateFolderBasedLinks(file);
-				}
-			})
-		);
-		this.registerEvent(
-			this.app.vault.on("rename", (file, oldPath) => {
-				if (file.extension === "md") {
-					this.folderCache.clear();
-					this.updateAllFolderBasedLinks();
-				}
-			})
-		);
-
-		// ---- Node resizing (weights) ----
-		// Apply weights on layout change
+		// React to layout changes (graph opening)
 		this.registerEvent(
 			this.app.workspace.on("layout-change", () => {
-				this.applyNodeWeights();
+				this.initializeGraph();
 			})
 		);
 
-		// Also run once when all files are loaded
-		this.app.workspace.onLayoutReady(() => {
-			this.updateAllFolderBasedLinks();
-			this.applyNodeWeights();
-		});
+		// Update word count when a file is modified
+		this.registerEvent(
+			this.app.vault.on("modify", (file) => {
+				if (file.extension === "md") {
+					this.updateWordCountForFile(file).then(() => this.refreshGraph());
+				}
+			})
+		);
 
-		// ---- Primitive, persistent reapplication ----
-		// Every second, reapply weights to ensure they stay
-		this.interval = setInterval(() => {
-			this.applyNodeWeights();
-		}, 1000);
+		// Refresh graph when any file's links change (affects tree‑note sums)
+		this.registerEvent(
+			this.app.metadataCache.on("changed", () => {
+				this.refreshGraph();
+			})
+		);
 	}
 
 	onunload() {
-		this.cleanupAllFolderLinks();
-		if (this.interval) {
-			clearInterval(this.interval);
-			this.interval = null;
-		}
+		this.cleanupVirtualEdges();
 	}
 
-	// ============================================================
-	// FOLDER‑BASED GRAPH EDGES (metadata cache manipulation)
-	// ============================================================
+	// =============================
+	// INITIALIZATION
+	// =============================
 
-	updateAllFolderBasedLinks() {
-		const markdownFiles = this.app.vault.getMarkdownFiles();
-		for (const file of markdownFiles) {
-			this.updateFolderBasedLinks(file);
-		}
+	initializeGraph() {
+		const leaf = this.app.workspace.getLeavesOfType("graph").first();
+		if (!leaf) return;
+
+		const renderer = leaf.view.renderer;
+		if (!renderer?.nodes) return;
+
+		this.cleanupVirtualEdges();
+		this.injectVirtualEdges(renderer.nodes);
+		this.updateWeights(renderer.nodes);
+
+		// Load word counts for nodes that need them (async)
+		this.loadWordCountsForNodes(renderer.nodes);
 	}
 
-	updateFolderBasedLinks(file) {
+	// =============================
+	// CLEANUP
+	// =============================
+
+	cleanupVirtualEdges() {
+		const leaf = this.app.workspace.getLeavesOfType("graph").first();
+		if (!leaf) return;
+
+		const nodes = leaf.view.renderer.nodes;
+		if (!nodes) return;
+
+		nodes.forEach(node => {
+			if (!node.forward || !node.reverse) return;
+
+			this.virtualEdges.forEach(key => {
+				const [src, dst] = key.split("->");
+				if (node.id === src && node.forward[dst]) {
+					delete node.forward[dst];
+				}
+				if (node.id === dst && node.reverse[src]) {
+					delete node.reverse[src];
+				}
+			});
+		});
+
+		this.virtualEdges.clear();
+	}
+
+	// =============================
+	// FRONTMATTER
+	// =============================
+
+	getFolderPathsFromFrontmatter(node) {
+		const file = this.app.vault.getFileByPath(node.id);
+		if (!file) return [];
+
 		const cache = this.app.metadataCache.getFileCache(file);
-		if (!cache?.frontmatter) return;
+		if (!cache?.frontmatter) return [];
 
 		const linkPages = cache.frontmatter["links pages"];
-		if (!Array.isArray(linkPages)) return;
+		if (!Array.isArray(linkPages)) return [];
 
-		const folderPaths = this.parseFolderPaths(linkPages);
-		if (folderPaths.length === 0) return;
-
-		// Get all markdown files in these folders
-		const targetFiles = new Set();
-		for (const folderPath of folderPaths) {
-			const files = this.getFolderMarkdownFiles(folderPath);
-			for (const f of files) {
-				targetFiles.add(f);
-			}
-		}
-
-		this.createFolderBasedLinks(file.path, Array.from(targetFiles));
-	}
-
-	parseFolderPaths(linkPages) {
 		const paths = [];
+
 		for (const entry of linkPages) {
 			if (typeof entry === "object" && entry !== null) {
 				for (const key in entry) {
@@ -109,6 +120,7 @@ class OptimizedCombinedGraphPlugin extends Plugin {
 					}
 				}
 			}
+
 			if (typeof entry === "string") {
 				const match = entry.match(/path\s*:\s*(.+)/i);
 				if (match) {
@@ -118,6 +130,7 @@ class OptimizedCombinedGraphPlugin extends Plugin {
 				}
 			}
 		}
+
 		return paths;
 	}
 
@@ -129,6 +142,7 @@ class OptimizedCombinedGraphPlugin extends Plugin {
 		if (!folder?.children) return [];
 
 		const files = [];
+
 		const walk = (items) => {
 			for (const item of items) {
 				if (item.children) {
@@ -138,97 +152,62 @@ class OptimizedCombinedGraphPlugin extends Plugin {
 				}
 			}
 		};
+
 		walk(folder.children);
 
 		this.folderCache.set(folderPath, files);
 		return files;
 	}
 
-	createFolderBasedLinks(sourcePath, targetPaths) {
-		const metadataCache = this.app.metadataCache;
-		
-		// Ensure resolvedLinks object exists
-		if (!metadataCache.resolvedLinks[sourcePath]) {
-			metadataCache.resolvedLinks[sourcePath] = {};
-		}
-		if (!metadataCache.unresolvedLinks[sourcePath]) {
-			metadataCache.unresolvedLinks[sourcePath] = {};
-		}
+	// =============================
+	// EDGE INJECTION
+	// =============================
 
-		// Store our added links for cleanup
-		if (!metadataCache.folderBasedLinks) {
-			metadataCache.folderBasedLinks = {};
-		}
-		if (!metadataCache.folderBasedLinks[sourcePath]) {
-			metadataCache.folderBasedLinks[sourcePath] = new Set();
-		}
+	injectVirtualEdges(nodes) {
+		const nodeMap = new Map();
+		nodes.forEach(n => nodeMap.set(n.id, n));
 
-		// Remove old folder‑based links
-		for (const oldTarget of metadataCache.folderBasedLinks[sourcePath]) {
-			delete metadataCache.resolvedLinks[sourcePath][oldTarget];
-			delete metadataCache.unresolvedLinks[sourcePath][oldTarget];
-		}
-		metadataCache.folderBasedLinks[sourcePath].clear();
+		nodes.forEach(sourceNode => {
+			if (!sourceNode.id.endsWith(".md")) return;
 
-		// Add new links
-		for (const targetPath of targetPaths) {
-			if (targetPath === sourcePath) continue;
-			const targetFile = this.app.vault.getFileByPath(targetPath);
-			if (targetFile) {
-				metadataCache.resolvedLinks[sourcePath][targetPath] = 
-					(metadataCache.resolvedLinks[sourcePath][targetPath] || 0) + 1;
-				metadataCache.folderBasedLinks[sourcePath].add(targetPath);
-			} else {
-				metadataCache.unresolvedLinks[sourcePath][targetPath] = 1;
-			}
-		}
+			const folderPaths = this.getFolderPathsFromFrontmatter(sourceNode);
+			if (!folderPaths.length) return;
 
-		// Trigger graph update
-		metadataCache.trigger("changed", this.app.vault.getFileByPath(sourcePath));
-	}
+			for (const folderPath of folderPaths) {
+				const files = this.getFolderMarkdownFiles(folderPath);
 
-	cleanupAllFolderLinks() {
-		const metadataCache = this.app.metadataCache;
-		if (!metadataCache.folderBasedLinks) return;
-		
-		for (const sourcePath in metadataCache.folderBasedLinks) {
-			const links = metadataCache.folderBasedLinks[sourcePath];
-			if (metadataCache.resolvedLinks[sourcePath]) {
-				for (const targetPath of links) {
-					delete metadataCache.resolvedLinks[sourcePath][targetPath];
+				for (const filePath of files) {
+					if (filePath === sourceNode.id) continue;
+
+					const targetNode = nodeMap.get(filePath);
+					if (!targetNode) continue;
+
+					const edgeKey = `${sourceNode.id}::${filePath}`;
+					if (this.virtualEdges.has(edgeKey)) continue;
+
+					if (!sourceNode.forward)
+						sourceNode.forward = {};
+					if (!targetNode.reverse)
+						targetNode.reverse = {};
+
+					sourceNode.forward[filePath] = {
+						target: targetNode,
+						_virtual: true
+					};
+					targetNode.reverse[sourceNode.id] = {
+						source: sourceNode,
+						_virtual: true
+					};
+
+					this.virtualEdges.add(edgeKey);
 				}
 			}
-			delete metadataCache.folderBasedLinks[sourcePath];
-		}
-		// Force a refresh
-		const anyFile = this.app.vault.getMarkdownFiles()[0];
-		if (anyFile) metadataCache.trigger("changed", anyFile);
+		});
 	}
 
-	// ============================================================
-	// NODE RESIZING (weight calculation)
-	// ============================================================
-
-	applyNodeWeights() {
-		const graphLeaf = this.app.workspace.getLeavesOfType("graph").first();
-		if (!graphLeaf) return;
-
-		const renderer = graphLeaf.view.renderer;
-		if (!renderer?.nodes) return;
-
-		// Update each node's weight based on current links + frontmatter
-		this.updateWeights(renderer.nodes);
-
-		// Force the graph to redraw (weights affect node sizes)
-		if (renderer.zoom) {
-			// Slight zoom change to trigger redraw
-			const originalZoom = renderer.zoom;
-			renderer.setZoom(originalZoom * 1.001);
-			renderer.setZoom(originalZoom);
-		} else {
-			renderer.onZoom && renderer.onZoom();
-		}
-	}
+	// =============================
+	// WEIGHT CALCULATION
+	// =============================
 
 	updateWeights(nodes) {
 		nodes.forEach(node => {
@@ -243,15 +222,37 @@ class OptimizedCombinedGraphPlugin extends Plugin {
 
 		let weight = 0;
 
-		const backwardCount = Object.keys(node.reverse || {}).length;
-		weight += backwardCount * this.settings.bwdMultiplier;
+		// ---- Word count contribution ----
+		if (this.shouldCountWords(node) && this.wordCounts.has(node.id)) {
+			const wordCount = this.wordCounts.get(node.id);
+			if (this.settings.wordsPerWeight > 0) {
+				weight += wordCount / this.settings.wordsPerWeight;
+			}
+		}
 
-		const forwardCount = Object.keys(node.forward || {}).length;
-		weight += forwardCount * this.settings.fwdMultiplier;
+		// ---- Folder multiplier (virtual outlinks) ----
+		// Count only virtual forward edges (injected via folder linking)
+		const virtualForwardCount = Object.values(node.forward || {})
+			.filter(e => e._virtual).length;
+		weight += virtualForwardCount * this.settings.folderMultiplier;
 
-		if (this.settings.lettersPerWt > 0)
-			weight += this.letterCount(node) / this.settings.lettersPerWt;
+		// ---- Tree‑note contribution ----
+		if (this.shouldApplyTreeNote(node)) {
+			const folderPaths = this.getFolderPathsFromFrontmatter(node);
+			let totalOutlinks = 0;
+			for (const folderPath of folderPaths) {
+				const files = this.getFolderMarkdownFiles(folderPath);
+				for (const filePath of files) {
+					if (filePath === node.id) continue;
+					totalOutlinks += this.getOutlinksCount(filePath);
+				}
+			}
+			if (this.settings.wordsPerWeight > 0) {
+				weight += totalOutlinks / this.settings.wordsPerWeight;
+			}
+		}
 
+		// ---- Manual size ----
 		if (manualSize > 0)
 			weight += manualSize * this.settings.manualMultiplier;
 
@@ -265,24 +266,79 @@ class OptimizedCombinedGraphPlugin extends Plugin {
 		return cache?.frontmatter?.node_size || 0;
 	}
 
-	letterCount(node) {
+	shouldCountWords(node) {
 		const file = this.app.vault.getFileByPath(node.id);
-		if (!file || file.extension !== "md") return 0;
-		return file.stat.size;
+		if (!file || file.extension !== "md") return false;
+		const cache = this.app.metadataCache.getFileCache(file);
+		return cache?.frontmatter?.["count-words"] === true;
+	}
+
+	shouldApplyTreeNote(node) {
+		const file = this.app.vault.getFileByPath(node.id);
+		if (!file || file.extension !== "md") return false;
+		const cache = this.app.metadataCache.getFileCache(file);
+		return cache?.frontmatter?.["tree-note"] === true;
+	}
+
+	getOutlinksCount(filePath) {
+		const resolved = this.app.metadataCache.resolvedLinks[filePath];
+		return resolved ? Object.keys(resolved).length : 0;
+	}
+
+	// =============================
+	// WORD COUNT MANAGEMENT
+	// =============================
+
+	async loadWordCountsForNodes(nodes) {
+		for (const node of nodes) {
+			if (this.shouldCountWords(node) && !this.wordCounts.has(node.id)) {
+				await this.loadWordCountForNode(node);
+			}
+		}
+	}
+
+	async loadWordCountForNode(node) {
+		const file = this.app.vault.getFileByPath(node.id);
+		if (!file) return;
+
+		const content = await this.app.vault.read(file);
+		const words = content.split(/\s+/).filter(w => w.length > 0);
+		this.wordCounts.set(node.id, words.length);
+		node.weight = this.calculateWeight(node);
+	}
+
+	async updateWordCountForFile(file) {
+		const nodeId = file.path;
+		const cache = this.app.metadataCache.getFileCache(file);
+		const shouldCount = cache?.frontmatter?.["count-words"] === true;
+
+		if (shouldCount) {
+			const content = await this.app.vault.read(file);
+			const words = content.split(/\s+/).filter(w => w.length > 0);
+			this.wordCounts.set(nodeId, words.length);
+		} else {
+			this.wordCounts.delete(nodeId);
+		}
+	}
+
+	async refreshGraph() {
+		const leaf = this.app.workspace.getLeavesOfType("graph").first();
+		if (!leaf) return;
+
+		const renderer = leaf.view.renderer;
+		if (!renderer?.nodes) return;
+
+		this.updateWeights(renderer.nodes);
 	}
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-		// After settings change, reapply weights
-		this.applyNodeWeights();
+		this.refreshGraph();
 	}
 }
 
-// ============================================================
-// SETTINGS TAB
-// ============================================================
-
 class CombinedSettingTab extends PluginSettingTab {
+
 	constructor(app, plugin) {
 		super(app, plugin);
 		this.plugin = plugin;
@@ -293,54 +349,42 @@ class CombinedSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName("Forward multiplier")
-			.addSlider(sl => sl.setLimits(0, 20, 1)
-				.setValue(this.plugin.settings.fwdMultiplier)
+			.setName("Words per weight unit")
+			.setDesc("Number of words (or outlinks for tree‑notes) that increase node size by 1")
+			.addSlider(sl => sl.setLimits(1, 1000, 10)
+				.setValue(this.plugin.settings.wordsPerWeight)
 				.onChange(async v => {
-					this.plugin.settings.fwdMultiplier = v;
+					this.plugin.settings.wordsPerWeight = v;
 					await this.plugin.saveSettings();
-					this.plugin.applyNodeWeights();
 				}));
 
 		new Setting(containerEl)
-			.setName("Backward multiplier")
+			.setName("Folder multiplier")
+			.setDesc("How much each note in a folder increases the folder node’s size")
 			.addSlider(sl => sl.setLimits(0, 20, 1)
-				.setValue(this.plugin.settings.bwdMultiplier)
+				.setValue(this.plugin.settings.folderMultiplier)
 				.onChange(async v => {
-					this.plugin.settings.bwdMultiplier = v;
+					this.plugin.settings.folderMultiplier = v;
 					await this.plugin.saveSettings();
-					this.plugin.applyNodeWeights();
-				}));
-
-		new Setting(containerEl)
-			.setName("Letters per weight")
-			.addSlider(sl => sl.setLimits(0, 1000, 10)
-				.setValue(this.plugin.settings.lettersPerWt)
-				.onChange(async v => {
-					this.plugin.settings.lettersPerWt = v;
-					await this.plugin.saveSettings();
-					this.plugin.applyNodeWeights();
 				}));
 
 		new Setting(containerEl)
 			.setName("Manual multiplier")
+			.setDesc("Multiplier for manual node_size frontmatter")
 			.addSlider(sl => sl.setLimits(0, 20, 1)
 				.setValue(this.plugin.settings.manualMultiplier)
 				.onChange(async v => {
 					this.plugin.settings.manualMultiplier = v;
 					await this.plugin.saveSettings();
-					this.plugin.applyNodeWeights();
 				}));
 
 		new Setting(containerEl)
 			.setName("Manual override")
-			.setDesc("If enabled, only manual node_size will be used")
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.manualOverride)
+			.setDesc("If a node has manual size, use it directly (ignores other factors)")
+			.addToggle(t => t.setValue(this.plugin.settings.manualOverride)
 				.onChange(async v => {
 					this.plugin.settings.manualOverride = v;
 					await this.plugin.saveSettings();
-					this.plugin.applyNodeWeights();
 				}));
 	}
 }

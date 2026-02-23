@@ -3,7 +3,6 @@
     "aliases": "aliases",
     "cssclasses": "multitext",
     "tags": "tags",
-    "sport": "checkbox",
     "Memorizing the Quran": "checkbox",
     "The number of pages you have memorized from the Quran": "number",
     "The number of pages you finished reading from the Quran": "number",

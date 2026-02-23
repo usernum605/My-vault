@@ -2,6 +2,7 @@
 banner: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQaE9KO_-t4YpMroMWhq8KpPHZQQ0TSjkA6_G3gt5QaBg&s=10
 cssclasses:
   - card
+  - invert-banner
 links pages:
   - "[[003 Notes]]"
 The Topic: Dev life

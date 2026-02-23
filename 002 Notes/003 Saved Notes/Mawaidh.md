@@ -3,6 +3,7 @@ banner: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSV9VNjcV7pZQMdB-gI
 icon: lucide-speech
 links pages:
   - "[[My tools#وضع الفيديو في اوبسيديان]]"
+  - "[[warsh.pdf]]"
 banner_y: 59
 cssclasses:
   - center-everything

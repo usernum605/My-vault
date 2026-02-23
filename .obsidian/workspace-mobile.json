@@ -179,7 +179,7 @@
         "state": {
           "type": "localgraph",
           "state": {
-            "file": "003 Daily/001 Active Diaries/2026-02-23.md",
+            "file": "001 Dashboard/Dashboard/Dashboard.md",
             "options": {
               "collapse-filter": true,
               "search": "",
@@ -240,12 +240,13 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "2ec43f95d50e2e13",
+  "active": "19c003a36a5455dc",
   "lastOpenFiles": [
-    "002 Notes/001 Notes/Quran.md",
-    "002 Notes/004 Archived Notes/Prompt.md",
     "003 Daily/001 Active Diaries/2026-02-23.md",
     "001 Dashboard/Dashboard/Dashboard.md",
+    "003 Daily/001 Active Diaries/2026-02-22.md",
+    "002 Notes/001 Notes/Quran.md",
+    "002 Notes/004 Archived Notes/Prompt.md",
     "001 Dashboard/My tools.md"
   ]
 }
