@@ -461,21 +461,49 @@ class StreamingHandler {
 
 class SessionManager {
   constructor(saved = []) {
-    this.sessions = (saved && saved.length) ? saved : [];
+    // تصفية أي جلسات مؤقتة قد تكون وردت من التخزين (احتياطي)
+    this.sessions = (saved && saved.length) ? saved.filter(s => !s.isTemporary) : [];
     this.activeId = (this.sessions[0] && this.sessions[0].id) || null;
   }
   
   create(name = null, sys = "") {
+    this.deleteTemporary(); // حذف أي محادثة مؤقتة موجودة
     const id = Date.now().toString();
     const session = { 
       id, 
       name: name || `Session ${this.sessions.length + 1}`, 
       systemPrompt: sys || "", 
-      messages: [] 
+      messages: [],
+      isTemporary: false
     };
     this.sessions.push(session);
     this.activeId = id;
     return session;
+  }
+  
+  createTemporary(name = null) {
+    this.deleteTemporary(); // حذف أي مؤقتة سابقة
+    const id = Date.now().toString() + '_temp';
+    const session = {
+      id,
+      name: name || 'Temporary Chat',
+      systemPrompt: "",
+      messages: [],
+      isTemporary: true
+    };
+    this.sessions.push(session);
+    this.activeId = id;
+    return session;
+  }
+  
+  deleteTemporary() {
+    const tempSession = this.sessions.find(s => s.isTemporary);
+    if (tempSession) {
+      this.sessions = this.sessions.filter(s => !s.isTemporary);
+      if (this.activeId === tempSession.id) {
+        this.activeId = this.sessions.length ? this.sessions[0].id : null;
+      }
+    }
   }
   
   delete(id) {
@@ -486,7 +514,15 @@ class SessionManager {
   }
   
   switchTo(id) {
-    if (this.sessions.find(s => s.id === id)) this.activeId = id;
+    const targetSession = this.sessions.find(s => s.id === id);
+    if (targetSession) {
+      // إذا كانت الجلسة النشطة الحالية مؤقتة وتختلف عن الهدف، احذف المؤقتة
+      const currentActive = this.getActive();
+      if (currentActive && currentActive.isTemporary && currentActive.id !== id) {
+        this.deleteTemporary(); // هذا سيحذف المؤقتة فقط، الهدف لا يزال موجوداً
+      }
+      this.activeId = id;
+    }
   }
   
   getActive() { 
@@ -2015,37 +2051,23 @@ class ChatView extends ItemView {
       cls: 'ai-shortcuts-btn',
       text: '⚡'
     });
-    this.shortcutsBtn.style.background = 'transparent';
-    this.shortcutsBtn.style.border = 'none';
-    this.shortcutsBtn.style.cursor = 'pointer';
-    this.shortcutsBtn.style.fontSize = '20px';
-    this.shortcutsBtn.style.color = 'var(--text-normal)';
-    this.shortcutsBtn.style.padding = '4px 8px';
-    this.shortcutsBtn.style.borderRadius = '4px';
-    this.shortcutsBtn.style.width = '32px';
-    this.shortcutsBtn.style.height = '32px';
-    this.shortcutsBtn.style.display = 'flex';
-    this.shortcutsBtn.style.alignItems = 'center';
-    this.shortcutsBtn.style.justifyContent = 'center';
+    this.styleButton(this.shortcutsBtn);
     this.shortcutsBtn.title = 'Shortcuts';
 
     this.modeToggleBtn = topBar.createEl('button', {
       cls: 'ai-mode-toggle',
       text: this.getProviderIcon()
     });
-    this.modeToggleBtn.style.background = 'transparent';
-    this.modeToggleBtn.style.border = 'none';
-    this.modeToggleBtn.style.cursor = 'pointer';
-    this.modeToggleBtn.style.fontSize = '20px';
-    this.modeToggleBtn.style.color = 'var(--text-normal)';
-    this.modeToggleBtn.style.padding = '4px 8px';
-    this.modeToggleBtn.style.borderRadius = '4px';
-    this.modeToggleBtn.style.width = '32px';
-    this.modeToggleBtn.style.height = '32px';
-    this.modeToggleBtn.style.display = 'flex';
-    this.modeToggleBtn.style.alignItems = 'center';
-    this.modeToggleBtn.style.justifyContent = 'center';
+    this.styleButton(this.modeToggleBtn);
     this.modeToggleBtn.title = this.getProviderInfo();
+
+    // زر المحادثة المؤقتة
+    this.tempChatBtn = topBar.createEl('button', {
+      cls: 'ai-temp-chat-btn',
+      text: '⏳'
+    });
+    this.styleButton(this.tempChatBtn);
+    this.tempChatBtn.title = 'New Temporary Chat (unsaved)';
 
     this.tokenCounter = topBar.createDiv({ 
       cls: 'ai-token-counter',
@@ -2072,20 +2094,10 @@ class ChatView extends ItemView {
       text: '⚙️', 
       cls: 'ai-settings-btn'
     });
-    this.settingsBtn.style.background = 'transparent';
-    this.settingsBtn.style.border = 'none';
-    this.settingsBtn.style.cursor = 'pointer';
-    this.settingsBtn.style.fontSize = '20px';
-    this.settingsBtn.style.color = 'var(--text-normal)';
-    this.settingsBtn.style.padding = '4px 8px';
-    this.settingsBtn.style.borderRadius = '4px';
-    this.settingsBtn.style.width = '32px';
-    this.settingsBtn.style.height = '32px';
-    this.settingsBtn.style.display = 'flex';
-    this.settingsBtn.style.alignItems = 'center';
-    this.settingsBtn.style.justifyContent = 'center';
+    this.styleButton(this.settingsBtn);
     this.settingsBtn.title = 'Settings';
 
+    // الأحداث
     this.modeToggleBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       this.toggleAIMode();
@@ -2094,7 +2106,6 @@ class ChatView extends ItemView {
     this.settingsBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       e.preventDefault();
-      
       const settingsModal = new SettingsModal(this.app, this.plugin);
       settingsModal.open();
     });
@@ -2102,6 +2113,11 @@ class ChatView extends ItemView {
     this.shortcutsBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       this.showShortcutsMenu();
+    });
+
+    this.tempChatBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.createTemporaryChat();
     });
 
     this.chatEl = this.containerEl.createDiv({ cls: 'ai-chat' });
@@ -2125,7 +2141,7 @@ class ChatView extends ItemView {
     this.inputEl = inputWrap.createEl('textarea', { 
       cls: 'ai-input',
       attr: { 
-        placeholder: 'Type a message... (Shift+Enter for new line)',
+        placeholder: 'Type a message... (Shift+Enter send)',
         rows: '2'
       }
     });
@@ -2146,44 +2162,16 @@ class ChatView extends ItemView {
       text: '+', 
       cls: 'ai-attach-btn floating-btn'
     });
-    this.attachBtn.style.position = 'absolute';
-    this.attachBtn.style.width = '36px';
-    this.attachBtn.style.height = '36px';
-    this.attachBtn.style.borderRadius = '50%';
-    this.attachBtn.style.border = 'none';
-    this.attachBtn.style.cursor = 'pointer';
-    this.attachBtn.style.display = 'flex';
-    this.attachBtn.style.alignItems = 'center';
-    this.attachBtn.style.justifyContent = 'center';
-    this.attachBtn.style.fontSize = '16px';
-    this.attachBtn.style.zIndex = '100';
-    this.attachBtn.style.boxShadow = '0 3px 10px rgba(0,0,0,0.2)';
+    this.styleFloatingButton(this.attachBtn);
     this.attachBtn.style.bottom = '60px';
-    this.attachBtn.style.right = '15px';
-    this.attachBtn.style.background = 'var(--interactive-accent)';
-    this.attachBtn.style.color = 'var(--text-on-accent)';
     this.attachBtn.title = 'Attach files';
 
     this.sendBtn = inputWrap.createEl('button', { 
       text: '➤', 
       cls: 'ai-send-btn floating-btn' 
     });
-    this.sendBtn.style.position = 'absolute';
-    this.sendBtn.style.width = '36px';
-    this.sendBtn.style.height = '36px';
-    this.sendBtn.style.borderRadius = '50%';
-    this.sendBtn.style.border = 'none';
-    this.sendBtn.style.cursor = 'pointer';
-    this.sendBtn.style.display = 'flex';
-    this.sendBtn.style.alignItems = 'center';
-    this.sendBtn.style.justifyContent = 'center';
-    this.sendBtn.style.fontSize = '16px';
-    this.sendBtn.style.zIndex = '100';
-    this.sendBtn.style.boxShadow = '0 3px 10px rgba(0,0,0,0.2)';
+    this.styleFloatingButton(this.sendBtn);
     this.sendBtn.style.bottom = '15px';
-    this.sendBtn.style.right = '15px';
-    this.sendBtn.style.background = 'var(--interactive-accent)';
-    this.sendBtn.style.color = 'var(--text-on-accent)';
     this.sendBtn.title = 'Send';
 
     this.sendBtn.addEventListener('click', (e) => {
@@ -2197,14 +2185,11 @@ class ChatView extends ItemView {
     });
     
     this.inputEl.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        if (e.shiftKey) {
-          return;
-        } else {
-          e.preventDefault();
-          this._onSend();
-        }
+      if (e.key === 'Enter' && e.shiftKey) {
+        e.preventDefault();
+        this._onSend();
       }
+      // Enter alone creates a new line (default)
     });
 
     this._renderMessages();
@@ -2213,6 +2198,83 @@ class ChatView extends ItemView {
     if (this.plugin.settings.showTokenCounter) {
       this.inputEl.addEventListener('input', () => this._updateTokenCounter());   
       setTimeout(() => this._updateTokenCounter(), 100);
+    }
+  }
+
+  // دوال مساعدة لتنسيق الأزرار
+  styleButton(btn) {
+    btn.style.background = 'transparent';
+    btn.style.border = 'none';
+    btn.style.cursor = 'pointer';
+    btn.style.fontSize = '20px';
+    btn.style.color = 'var(--text-normal)';
+    btn.style.padding = '4px 8px';
+    btn.style.borderRadius = '4px';
+    btn.style.width = '32px';
+    btn.style.height = '32px';
+    btn.style.display = 'flex';
+    btn.style.alignItems = 'center';
+    btn.style.justifyContent = 'center';
+  }
+
+  styleFloatingButton(btn) {
+    btn.style.position = 'absolute';
+    btn.style.width = '36px';
+    btn.style.height = '36px';
+    btn.style.borderRadius = '50%';
+    btn.style.border = 'none';
+    btn.style.cursor = 'pointer';
+    btn.style.display = 'flex';
+    btn.style.alignItems = 'center';
+    btn.style.justifyContent = 'center';
+    btn.style.fontSize = '16px';
+    btn.style.zIndex = '100';
+    btn.style.boxShadow = '0 3px 10px rgba(0,0,0,0.2)';
+    btn.style.right = '15px';
+    btn.style.background = 'var(--interactive-accent)';
+    btn.style.color = 'var(--text-on-accent)';
+  }
+
+  // دالة إنشاء محادثة مؤقتة
+  createTemporaryChat() {
+    this.plugin._sessionManager.createTemporary('Temporary Chat');
+    this._renderMessages();
+    this.plugin.saveState(); // لا يحفظ المؤقتة، فقط الجلسات العادية
+    new Notice('⏳ Temporary chat created (will be deleted when switching or closing)');
+  }
+
+  createNewConversation() {
+    const name = prompt('New conversation name:', `Conversation ${this.plugin._sessionManager.sessions.length + 1}`);
+    if (name && name.trim()) {
+      this.plugin._sessionManager.create(name.trim());
+      this._renderMessages();
+      this.plugin.saveState();
+      new Notice(`✅ Created conversation: ${name}`);
+    }
+  }
+
+  async saveCurrentConversation() {
+    const session = this.plugin._sessionManager.getActive();
+    if (!session) {
+      new Notice('No active conversation to save');
+      return;
+    }
+    try {
+      const content = this.plugin._sessionManager.exportToMarkdown(session);
+      const folderPath = this.plugin.settings.conversationsFolder || 'AI Conversations';
+      const fileName = `${session.name.replace(/[\\/:*?"<>|]/g, '_')}.md`;
+      const fullPath = folderPath ? `${folderPath}/${fileName}` : fileName;
+      
+      const folderExists = await this.app.vault.adapter.exists(folderPath);
+      if (!folderExists) {
+        await this.app.vault.createFolder(folderPath);
+      }
+      
+      await this.app.vault.create(fullPath, content);
+      new Notice(`✅ Conversation saved to: ${fullPath}`);
+    } catch (error) {
+      console.error('Error saving conversation:', error);
+      new Notice(`❌ Error saving conversation: ${error.message}`);
     }
   }
 
@@ -2325,42 +2387,6 @@ class ChatView extends ItemView {
     setTimeout(() => {
       document.addEventListener('click', closeMenu);
     }, 10);
-  }
-
-  createNewConversation() {
-    const name = prompt('New conversation name:', `Conversation ${this.plugin._sessionManager.sessions.length + 1}`);
-    if (name && name.trim()) {
-      this.plugin._sessionManager.create(name.trim());
-      this._renderMessages();
-      this.plugin.saveState();
-      new Notice(`✅ Created conversation: ${name}`);
-    }
-  }
-
-  async saveCurrentConversation() {
-    const session = this.plugin._sessionManager.getActive();
-    if (!session) {
-      new Notice('No active conversation to save');
-      return;
-    }
-    
-    try {
-      const content = this.plugin._sessionManager.exportToMarkdown(session);
-      const folderPath = this.plugin.settings.conversationsFolder || 'AI Conversations';
-      const fileName = `${session.name.replace(/[\\/:*?"<>|]/g, '_')}.md`;
-      const fullPath = folderPath ? `${folderPath}/${fileName}` : fileName;
-      
-      const folderExists = await this.app.vault.adapter.exists(folderPath);
-      if (!folderExists) {
-        await this.app.vault.createFolder(folderPath);
-      }
-      
-      await this.app.vault.create(fullPath, content);
-      new Notice(`✅ Conversation saved to: ${fullPath}`);
-    } catch (error) {
-      console.error('Error saving conversation:', error);
-      new Notice(`❌ Error saving conversation: ${error.message}`);
-    }
   }
 
   getProviderIcon() {
@@ -2527,112 +2553,112 @@ class ChatView extends ItemView {
   }
 
   async _onSend() {
-  const txt = this.inputEl.value.trim();
-  if (!txt && this.pendingAttachments.length === 0) { 
-    new Notice('Message is empty'); 
-    return; 
-  }
-  
-  let s = this.plugin._sessionManager.getActive();
-  if (!s) { 
-    this.plugin._sessionManager.create('New Conversation');
-    s = this.plugin._sessionManager.getActive();
-  }
-  
-  // Add user message with attachments
-  this.plugin._sessionManager.addMessage('user', txt, this.pendingAttachments);
-  this.plugin.saveState();
-  
-  // Display user message
-  this._appendBubble('user', txt, this.pendingAttachments);
-  
-  // Clear input and attachments
-  this.inputEl.value = '';
-  const currentAttachments = [...this.pendingAttachments];
-  this.pendingAttachments = [];
-
-  const messages = this.plugin._sessionManager.getMessagesForRequest();
-
-  let acc = '';
-  let hasReceivedContent = false;
-  
-  // Create an empty message container for streaming
-  const msgContainer = this.chatEl.createDiv({ cls: `ai-msg-container assistant` });
-  msgContainer.style.marginBottom = '16px';
-  msgContainer.style.maxWidth = '88%';
-  msgContainer.style.alignSelf = 'flex-end';
-  
-  const streamingMsg = msgContainer.createDiv({ cls: `ai-msg assistant` });
-  streamingMsg.style.padding = '12px 16px';
-  streamingMsg.style.borderRadius = '12px 12px 12px 4px';
-  streamingMsg.style.background = 'var(--background-secondary)';
-  streamingMsg.style.color = 'var(--text-normal)';
-  streamingMsg.style.lineHeight = '1.5';
-  streamingMsg.style.whiteSpace = 'pre-wrap';
-  streamingMsg.style.wordBreak = 'break-word';
-  streamingMsg.style.fontSize = '14px';
-  streamingMsg.textContent = ''; // Start empty
-  
-  try {
-    const result = await this.plugin.apiManager.sendMessage({
-      messages: messages,
-      temperature: this.plugin.settings.temperature,
-      max_tokens: this.plugin.settings.max_tokens,
-      stream: true
-    }, {
-      onChunk: (chunk) => {
-        // Only process non-empty chunks
-        if (chunk && chunk.trim().length > 0) {
-          acc += chunk;
-          hasReceivedContent = true;
-          streamingMsg.textContent = acc;
-          this.chatEl.scrollTop = this.chatEl.scrollHeight;
-        }
-      },
-      timeoutMs: this.plugin.settings.timeoutMs
-    });
-    
-    const finalText = (result && result.final) ? result.final : acc;
-    
-    // If we never received any content but have a final result
-    if (!hasReceivedContent && finalText) {
-      streamingMsg.textContent = finalText;
+    const txt = this.inputEl.value.trim();
+    if (!txt && this.pendingAttachments.length === 0) { 
+      new Notice('Message is empty'); 
+      return; 
     }
     
-    // If we received content, render it with Markdown
-    if (hasReceivedContent || finalText) {
-      const displayText = finalText || acc;
-      streamingMsg.empty();
-      MarkdownRenderer.render(this.app, displayText, streamingMsg, '', this.plugin);
+    let s = this.plugin._sessionManager.getActive();
+    if (!s) { 
+      this.plugin._sessionManager.create('New Conversation');
+      s = this.plugin._sessionManager.getActive();
+    }
+    
+    // Add user message with attachments
+    this.plugin._sessionManager.addMessage('user', txt, this.pendingAttachments);
+    this.plugin.saveState();
+    
+    // Display user message
+    this._appendBubble('user', txt, this.pendingAttachments);
+    
+    // Clear input and attachments
+    this.inputEl.value = '';
+    const currentAttachments = [...this.pendingAttachments];
+    this.pendingAttachments = [];
+
+    const messages = this.plugin._sessionManager.getMessagesForRequest();
+
+    let acc = '';
+    let hasReceivedContent = false;
+    
+    // Create an empty message container for streaming
+    const msgContainer = this.chatEl.createDiv({ cls: `ai-msg-container assistant` });
+    msgContainer.style.marginBottom = '16px';
+    msgContainer.style.maxWidth = '88%';
+    msgContainer.style.alignSelf = 'flex-end';
+    
+    const streamingMsg = msgContainer.createDiv({ cls: `ai-msg assistant` });
+    streamingMsg.style.padding = '12px 16px';
+    streamingMsg.style.borderRadius = '12px 12px 12px 4px';
+    streamingMsg.style.background = 'var(--background-secondary)';
+    streamingMsg.style.color = 'var(--text-normal)';
+    streamingMsg.style.lineHeight = '1.5';
+    streamingMsg.style.whiteSpace = 'pre-wrap';
+    streamingMsg.style.wordBreak = 'break-word';
+    streamingMsg.style.fontSize = '14px';
+    streamingMsg.textContent = ''; // Start empty
+    
+    try {
+      const result = await this.plugin.apiManager.sendMessage({
+        messages: messages,
+        temperature: this.plugin.settings.temperature,
+        max_tokens: this.plugin.settings.max_tokens,
+        stream: true
+      }, {
+        onChunk: (chunk) => {
+          // Only process non-empty chunks
+          if (chunk && chunk.trim().length > 0) {
+            acc += chunk;
+            hasReceivedContent = true;
+            streamingMsg.textContent = acc;
+            this.chatEl.scrollTop = this.chatEl.scrollHeight;
+          }
+        },
+        timeoutMs: this.plugin.settings.timeoutMs
+      });
       
-      // Add assistant message to history
-      this.plugin._sessionManager.addMessage('assistant', displayText, currentAttachments);
-      this.plugin.saveState();
-    } else {
-      // If no content at all, show an error
-      streamingMsg.textContent = '❌ No response received';
+      const finalText = (result && result.final) ? result.final : acc;
+      
+      // If we never received any content but have a final result
+      if (!hasReceivedContent && finalText) {
+        streamingMsg.textContent = finalText;
+      }
+      
+      // If we received content, render it with Markdown
+      if (hasReceivedContent || finalText) {
+        const displayText = finalText || acc;
+        streamingMsg.empty();
+        MarkdownRenderer.render(this.app, displayText, streamingMsg, '', this.plugin);
+        
+        // Add assistant message to history
+        this.plugin._sessionManager.addMessage('assistant', displayText, currentAttachments);
+        this.plugin.saveState();
+      } else {
+        // If no content at all, show an error
+        streamingMsg.textContent = '❌ No response received';
+      }
+      
+    } catch (e) {
+      console.error("Chat Error:", e);
+      
+      let errorMessage = '❌ Error occurred';
+      if (e.message.includes('429')) {
+        errorMessage = '⏳ Rate limit exceeded. Please wait a moment and try again Or Try changing the model.';
+      } else if (e.message.includes('401') || e.message.includes('403')) {
+        errorMessage = '🔐 Authentication failed. Please check your API key.';
+      } else if (e.message.includes('timeout')) {
+        errorMessage = '⏱️ Request timed out. Check your internet connection.';
+      } else if (e.message.includes('fetch') || e.message.includes('Failed to fetch')) {
+        errorMessage = '🌐 Cannot connect to Local AI. Please check if the server is running at ' + this.plugin.settings.baseUrl;
+      } else {
+        errorMessage = `❌ Error: ${e.message}`;
+      }
+      
+      streamingMsg.textContent = errorMessage;
+      new Notice(errorMessage);
     }
-    
-  } catch (e) {
-    console.error("Chat Error:", e);
-    
-    let errorMessage = '❌ Error occurred';
-    if (e.message.includes('429')) {
-      errorMessage = '⏳ Rate limit exceeded. Please wait a moment and try again.';
-    } else if (e.message.includes('401') || e.message.includes('403')) {
-      errorMessage = '🔐 Authentication failed. Please check your API key.';
-    } else if (e.message.includes('timeout')) {
-      errorMessage = '⏱️ Request timed out. Check your internet connection.';
-    } else if (e.message.includes('fetch') || e.message.includes('Failed to fetch')) {
-      errorMessage = '🌐 Cannot connect to Local AI. Please check if the server is running at ' + this.plugin.settings.baseUrl;
-    } else {
-      errorMessage = `❌ Error: ${e.message}`;
-    }
-    
-    streamingMsg.textContent = errorMessage;
-    new Notice(errorMessage);
   }
-}
 }
 
 // ==================== SETTINGS MODAL ====================
@@ -2733,6 +2759,20 @@ class SettingsModal extends Modal {
       this.setActiveTab(conversationsTab, [localTab, cloudTab, generalTab, shortcutsTab]);
       this.showConversationsSettings(contentContainer);
     });
+    // داخل حلقة sessions.forEach
+const nameSpan = sessionInfo.createEl('div', { 
+  cls: 'ai-session-name',
+  text: session.isTemporary ? '⏳ ' + session.name : session.name 
+});
+nameSpan.style.fontWeight = '600';
+nameSpan.style.fontSize = '14px';
+nameSpan.style.color = session.isTemporary ? '#ffb74d' : 'var(--text-normal)'; // لون برتقالي للمؤقتة
+// ... باقي الخصائص
+
+// تغيير لون خلفية الصف إذا كانت مؤقتة
+if (session.isTemporary) {
+  sessionRow.style.backgroundColor = 'rgba(255, 193, 7, 0.1)'; // خلفية صفراء خفيفة
+}
     
     const buttonRow = contentEl.createDiv({ cls: 'ai-settings-btn-row' });
     buttonRow.style.display = 'flex';
@@ -3570,6 +3610,7 @@ module.exports = class AIPlugin extends Plugin {
     await this.loadSettings();
     
     const saved = await this.loadData();
+    // تمرير الجلسات المحفوظة إلى SessionManager، وسيقوم بتصفية المؤقتة تلقائياً
     this._sessionManager = saved && saved.sessions ? new SessionManager(saved.sessions) : new SessionManager();
     if (!this._sessionManager.sessions.length) this._sessionManager.create('Default Conversation', '');
 
@@ -3735,8 +3776,10 @@ module.exports = class AIPlugin extends Plugin {
     this.app.workspace.revealLeaf(leaf);
   }
 
+  // دالة حفظ الحالة: نحفظ فقط الجلسات غير المؤقتة
   async saveState() {
-    await this.saveData({ ...this.settings, sessions: this._sessionManager.sessions });
+    const nonTemporarySessions = this._sessionManager.sessions.filter(s => !s.isTemporary);
+    await this.saveData({ ...this.settings, sessions: nonTemporarySessions });
   }
 
   async loadSettings() {
@@ -3754,6 +3797,10 @@ module.exports = class AIPlugin extends Plugin {
   }
 
   onunload() {
+    // حذف أي محادثة مؤقتة عند إغلاق البرنامج المساعد
+    if (this._sessionManager) {
+      this._sessionManager.deleteTemporary();
+    }
     const styleEl = document.getElementById('ai-plugin-css');
     if (styleEl) {
       styleEl.remove();
@@ -3763,4 +3810,4 @@ module.exports = class AIPlugin extends Plugin {
       this.networkManager.abortAllRequests();
     }
   }
-};
+}

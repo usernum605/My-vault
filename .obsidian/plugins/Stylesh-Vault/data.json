@@ -17,9 +17,9 @@
   "showFileExplorerIcons": true,
   "folderIcons": {
     "001 Dashboard/Dashboard": "lucide-layout",
-    "001 Dashboard/Dashboard/Trackers": "lucide-area-chart",
+    "004 Files": "lucide-folder-archive",
     "001 Dashboard/Dashboard/Bases": "lucide-layout",
-    "004 Files": "lucide-folder-archive"
+    "001 Dashboard/Dashboard/Trackers": "lucide-area-chart"
   },
   "hiddenProperties": [
     "ui",

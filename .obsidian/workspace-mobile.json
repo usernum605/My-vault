@@ -8,14 +8,14 @@
         "type": "tabs",
         "children": [
           {
-            "id": "19c003a36a5455dc",
+            "id": "8ef702dc016378c8",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "001 Dashboard/Dashboard/Dashboard.md",
+                "file": "001 Dashboard/Dashboard/Trackers/Dashboard.md",
                 "mode": "preview",
-                "source": true,
+                "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
@@ -23,7 +23,7 @@
             }
           },
           {
-            "id": "8ef702dc016378c8",
+            "id": "fc554a86a5d8bb20",
             "type": "leaf",
             "state": {
               "type": "graph",
@@ -35,11 +35,11 @@
         ]
       },
       {
-        "id": "85dfe0a0e611a622",
+        "id": "15af5ea56ca15ed4",
         "type": "tabs",
         "children": [
           {
-            "id": "f448887c037ad075",
+            "id": "b31d39068bfc3fbf",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -144,7 +144,7 @@
         "state": {
           "type": "outline",
           "state": {
-            "file": "003 Daily/001 Active Diaries/2026-02-23.md",
+            "file": "001 Dashboard/Dashboard/Dashboard.md",
             "followCursor": false,
             "showSearch": false,
             "searchQuery": ""
@@ -179,7 +179,7 @@
         "state": {
           "type": "localgraph",
           "state": {
-            "file": "003 Daily/001 Active Diaries/2026-02-24.md",
+            "file": "002 Notes/001 Notes/Ai.md",
             "options": {
               "collapse-filter": true,
               "search": "",
@@ -221,7 +221,7 @@
         }
       }
     ],
-    "currentTab": 3,
+    "currentTab": 2,
     "pinned": true
   },
   "left-ribbon": {
@@ -240,10 +240,20 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "f448887c037ad075",
+  "active": "b31d39068bfc3fbf",
   "lastOpenFiles": [
-    "001 Dashboard/Dashboard/Dashboard.md",
+    "002 Notes/001 Notes/Q.md",
+    "001 Dashboard/Dashboard/Trackers/Dashboard.md",
     "003 Daily/001 Active Diaries/2026-02-24.md",
+    "001 Dashboard/My tools.md",
+    "002 Notes/001 Notes/Test.md",
+    "002 Notes/001 Notes/Ai.md",
+    "002 Notes/001 Notes/Translate.md",
+    "004 Files/003 AI Conversations/Temporary Chat.md",
+    "001 Dashboard/Dashboard/Bases/005 Diaries.md",
+    "003 Daily/001 Active Diaries/2026-02-23.md",
+    "001 Dashboard/Dashboard/Trackers/Tracker A.md",
+    "004 Files/002 Archive/Attach Embedded/أذكار الصباح.md",
     "001 Dashboard/Self Education.md"
   ]
 }
