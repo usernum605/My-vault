@@ -14,6 +14,7 @@ filters:
         - file.name != "Quick Notes tem"
         - file.folder != "002 Notes/002 Lessons"
         - file.name != "Sync"
+        - file.name != "Tem"
 views:
   - type: table
     name: Table

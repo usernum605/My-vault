@@ -6,6 +6,7 @@ banner: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRzIg8KgmlGtYJif9lb
 cssclasses:
   - invert-banner
   - invert-dark
+node_size: 20
 ---
 ```base
 filters:

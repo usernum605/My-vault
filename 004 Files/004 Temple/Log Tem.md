@@ -5,29 +5,30 @@ cssclasses:
   - invert-dark
   - invert-banner
 ---
-# 📚 Learning Log - {{DATE:YYYY-MM-DD}}
+### 📚 Learning Log - {{DATE:YYYY-MM-DD}}
 
-## 🧩 Topic: Learn {{TITLE}}
+#### 🧩 Topic: Learn {{TITLE}}
 
 > 
 
-## 🔗 Sources
+#### 🔗 Sources
 
 - [ ] Resource 1
 
-## 📝 Notes
+#### 📝 Notes
 
 - 
 
-## ❓ Questions / Gaps
+#### ❓ Questions / Gaps
 
 - 
 
-## 🔄 Next Steps
+#### 🔄 Next Steps
 
 - [ ] 
 
-## 🔗 Reference
+#### 🔗 Reference
 
-- [[
+- ![[Pomodoro]]
 - [link](
+- [[

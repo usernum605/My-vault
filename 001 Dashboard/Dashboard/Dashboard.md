@@ -10,7 +10,6 @@ icon: lucide-layout-grid
 links pages:
   - "[[000 Ultimate Base]]"
 banner_y: 33
-node_size: 35
 ---
 ```dataviewjs
 const tasks = dv.pages('"003 Daily/001 Active Diaries"')

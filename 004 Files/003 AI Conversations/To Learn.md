@@ -3,8 +3,8 @@ The Topic:
   - Learn how to learn
 translate: true
 links pages:
-  - "[[How]]"
   - "[[Learn]]"
+  - "[[How]]"
 tags:
   - Self↑up/knowledge
 ---
@@ -12,27 +12,13 @@ tags:
 
 **Created:** 2/24/2026, 5:15:44 PM
 
-**Messages:** 2
+**Messages:** 1
 
-###### User (Message 1) - 2/24/2026, 5:17:24 PM
-
-**Attachments:**
-- 📄 **Q**
-- 📄 **Default Conversation**
-
-Help me to improve from my learning how to learn because i need this skill now i start to use obsidian for make brain 2
-Can you give me some advices
-### some recherches
-
-[📎 2 files attached](How.md)
-
----
-
-###### Assistant (Message 2) - 2/24/2026, 5:17:41 PM
+###### Assistant (Message 1) - 2/24/2026, 5:17:41 PM
 
 **Attachments:**
-- 📄 **Q**
-- 📄 **Default Conversation**
+- 📄 [[How]]
+- 📄 [[Learn]]
 
 It's fantastic that you're diving into "learning how to learn" and simultaneously setting up your "second brain" in Obsidian! These two pursuits are incredibly synergistic, as a well-designed personal knowledge management system can significantly amplify your learning effectiveness.
 

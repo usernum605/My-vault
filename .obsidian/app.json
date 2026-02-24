@@ -18,7 +18,10 @@
   "rightToLeft": false,
   "openBehavior": "",
   "userIgnoreFilters": [
-    "003 Daily/002 Archived Diaries/"
+    "003 Daily/002 Archived Diaries/",
+    "002 Notes/001 Notes/",
+    "003 Daily/001 Active Diaries/",
+    "004 Files/002 Archive/"
   ],
   "tabSize": 4,
   "uriCallbacks": false
