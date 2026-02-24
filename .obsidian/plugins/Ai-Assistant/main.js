@@ -1,4 +1,4 @@
-const { Plugin, ItemView, Modal, Notice, MarkdownView, MarkdownRenderer } = require('obsidian');
+const { Plugin, ItemView, Modal, Notice, MarkdownView, MarkdownRenderer, setIcon } = require('obsidian');
 
 const VIEW_TYPE = 'ai-sidebar';
 
@@ -567,7 +567,8 @@ class SessionManager {
   }
 
   exportToMarkdown(session) {
-    let content = `# ${session.name}\n\n`;
+    let content = `---\nThe Topic: \n- ${session.name}\n- Ai Conversations\n---\n`;
+    content += `# ${session.name}\n\n`
     content += `**Created:** ${new Date(parseInt(session.id)).toLocaleString()}\n\n`;
     content += `**Messages:** ${session.messages.length}\n\n`;
     
@@ -791,10 +792,10 @@ class LocalAIProvider extends BaseAIProvider {
             try {
               const data = await response.json();
               if (data && (data.status === 'ok' || data.status === 'healthy' || data.ready === true)) {
-                return { ok: true, message: '✅ Service is healthy' };
+                return { ok: true, message: '✔️ Service is healthy' };
               }
             } catch {
-              return { ok: true, message: '✅ Service is reachable' };
+              return { ok: true, message: '✔️ Service is reachable' };
             }
           }
         } catch {
@@ -810,15 +811,15 @@ class LocalAIProvider extends BaseAIProvider {
         }, { timeoutMs: 5000 });
         
         if (testResponse && testResponse.final) {
-          return { ok: true, message: '✅ Service is responding' };
+          return { ok: true, message: '✔️ Service is responding' };
         }
       } catch {
         // Ignore
       }
       
-      return { ok: false, message: '❌ Local AI service is not reachable' };
+      return { ok: false, message: '✖️ Local AI service is not reachable' };
     } catch (error) {
-      return { ok: false, message: `❌ ${error.message}` };
+      return { ok: false, message: `✖️ ${error.message}` };
     }
   }
 }
@@ -875,12 +876,12 @@ class OpenAIProvider extends BaseAIProvider {
       });
       
       if (response.status === 401) {
-        return { ok: false, message: '❌ Invalid API key' };
+        return { ok: false, message: '✖️ Invalid API key' };
       }
       
-      return { ok: response.ok, message: response.ok ? '✅ Connected to OpenAI' : `❌ Error ${response.status}` };
+      return { ok: response.ok, message: response.ok ? '✔️ Connected to OpenAI' : `✖️ Error ${response.status}` };
     } catch (e) {
-      return { ok: false, message: `❌ ${e.message}` };
+      return { ok: false, message: `✖️ ${e.message}` };
     }
   }
 }
@@ -983,16 +984,16 @@ class GeminiProvider extends BaseAIProvider {
       });
       
       if (response.status === 403 || response.status === 401) {
-        return { ok: false, message: '❌ Invalid API key' };
+        return { ok: false, message: '✖️ Invalid API key' };
       }
       
       if (response.status === 429) {
         return { ok: false, message: '⏳ Rate limit exceeded. Please wait.' };
       }
       
-      return { ok: response.ok, message: response.ok ? '✅ Connected to Gemini' : `❌ Error ${response.status}` };
+      return { ok: response.ok, message: response.ok ? '✔️ Connected to Gemini' : `✖️ Error ${response.status}` };
     } catch (e) {
-      return { ok: false, message: `❌ ${e.message}` };
+      return { ok: false, message: `✖️ ${e.message}` };
     }
   }
 }
@@ -1056,12 +1057,12 @@ class AnthropicProvider extends BaseAIProvider {
       });
       
       if (response.status === 401) {
-        return { ok: false, message: '❌ Invalid API key' };
+        return { ok: false, message: '✖️ Invalid API key' };
       }
       
-      return { ok: response.ok, message: response.ok ? '✅ Connected to Anthropic' : `❌ Error ${response.status}` };
+      return { ok: response.ok, message: response.ok ? '✔️ Connected to Anthropic' : `✖️ Error ${response.status}` };
     } catch (e) {
-      return { ok: false, message: `❌ ${e.message}` };
+      return { ok: false, message: `✖️ ${e.message}` };
     }
   }
 }
@@ -1148,12 +1149,12 @@ class CustomProvider extends BaseAIProvider {
       
       return { 
         ok: true, 
-        message: `✅ Connection successful. Response: "${testResponse.final.substring(0, 50)}..."` 
+        message: `✔️ Connection successful. Response: "${testResponse.final.substring(0, 50)}..."` 
       };
     } catch (error) {
       return { 
         ok: false, 
-        message: `❌ ${error.message}` 
+        message: `✖️ ${error.message}` 
       };
     }
   }
@@ -1212,15 +1213,8 @@ class APIManager {
   }
 
   getCurrentProviderIcon() {
-    if (this.plugin.settings.currentMode === 'local') return '🖥️';
-    
-    const icons = {
-      openai: '🎡',
-      gemini: '🌀',
-      anthropic: '☁️',
-      custom: '⚙️'
-    };
-    return icons[this.plugin.settings.cloudApiType] || '☁️';
+    if (this.plugin.settings.currentMode === 'local') return 'monitor-speaker';
+    return 'server';
   }
 }
 
@@ -1748,7 +1742,7 @@ class InNoteAIInteractions {
       
       editor.replaceRange('\n\n---\n\n', editor.getCursor());
     } catch (error) {
-      editor.replaceRange(`\n\n❌ Error: ${error.message}\n\n`, editor.getCursor());
+      editor.replaceRange(`\n\n✖️ Error: ${error.message}\n\n`, editor.getCursor());
       new Notice('AI Error: ' + error.message);
     }
   }
@@ -2048,30 +2042,29 @@ class ChatView extends ItemView {
     topBar.style.gap = '8px';
 
     this.shortcutsBtn = topBar.createEl('button', {
-      cls: 'ai-shortcuts-btn',
-      text: '⚡'
+      cls: 'ai-shortcuts-btn'
     });
+    setIcon(this.shortcutsBtn, 'command');
     this.styleButton(this.shortcutsBtn);
     this.shortcutsBtn.title = 'Shortcuts';
 
     this.modeToggleBtn = topBar.createEl('button', {
-      cls: 'ai-mode-toggle',
-      text: this.getProviderIcon()
+      cls: 'ai-mode-toggle'
     });
+    setIcon(this.modeToggleBtn, this.getProviderIcon());
     this.styleButton(this.modeToggleBtn);
     this.modeToggleBtn.title = this.getProviderInfo();
 
     // زر المحادثة المؤقتة
     this.tempChatBtn = topBar.createEl('button', {
-      cls: 'ai-temp-chat-btn',
-      text: '⏳'
+      cls: 'ai-temp-chat-btn'
     });
+    setIcon(this.tempChatBtn, 'message-square-dashed');
     this.styleButton(this.tempChatBtn);
     this.tempChatBtn.title = 'New Temporary Chat (unsaved)';
 
     this.tokenCounter = topBar.createDiv({ 
-      cls: 'ai-token-counter',
-      text: '🔢 0/8192'
+      cls: 'ai-token-counter'
     });
     this.tokenCounter.style.fontSize = '11px';
     this.tokenCounter.style.padding = '4px 8px';
@@ -2082,8 +2075,16 @@ class ChatView extends ItemView {
     this.tokenCounter.style.display = 'flex';
     this.tokenCounter.style.alignItems = 'center';
     this.tokenCounter.style.justifyContent = 'center';
+    this.tokenCounter.style.gap = '4px';
     this.tokenCounter.style.minWidth = '70px';
     this.tokenCounter.style.height = '24px';
+    
+    const tokenIcon = this.tokenCounter.createSpan();
+    setIcon(tokenIcon, 'binary');
+    tokenIcon.style.display = 'flex';
+    
+    const tokenText = this.tokenCounter.createSpan();
+    tokenText.textContent = '0/8192';
     
     this.updateTokenCounterVisibility();
 
@@ -2091,9 +2092,9 @@ class ChatView extends ItemView {
     spacer.style.flex = '1';
 
     this.settingsBtn = topBar.createEl('button', { 
-      text: '⚙️', 
       cls: 'ai-settings-btn'
     });
+    setIcon(this.settingsBtn, 'settings');
     this.styleButton(this.settingsBtn);
     this.settingsBtn.title = 'Settings';
 
@@ -2206,7 +2207,6 @@ class ChatView extends ItemView {
     btn.style.background = 'transparent';
     btn.style.border = 'none';
     btn.style.cursor = 'pointer';
-    btn.style.fontSize = '20px';
     btn.style.color = 'var(--text-normal)';
     btn.style.padding = '4px 8px';
     btn.style.borderRadius = '4px';
@@ -2240,7 +2240,7 @@ class ChatView extends ItemView {
     this.plugin._sessionManager.createTemporary('Temporary Chat');
     this._renderMessages();
     this.plugin.saveState(); // لا يحفظ المؤقتة، فقط الجلسات العادية
-    new Notice('⏳ Temporary chat created (will be deleted when switching or closing)');
+    new Notice('Temporary chat created (will be deleted when switching or closing)');
   }
 
   createNewConversation() {
@@ -2249,34 +2249,37 @@ class ChatView extends ItemView {
       this.plugin._sessionManager.create(name.trim());
       this._renderMessages();
       this.plugin.saveState();
-      new Notice(`✅ Created conversation: ${name}`);
+      new Notice(`✔️ Created conversation: ${name}`);
     }
   }
 
   async saveCurrentConversation() {
     const session = this.plugin._sessionManager.getActive();
     if (!session) {
-      new Notice('No active conversation to save');
-      return;
+        new Notice('No active conversation to save');
+        return;
     }
     try {
-      const content = this.plugin._sessionManager.exportToMarkdown(session);
-      const folderPath = this.plugin.settings.conversationsFolder || 'AI Conversations';
-      const fileName = `${session.name.replace(/[\\/:*?"<>|]/g, '_')}.md`;
-      const fullPath = folderPath ? `${folderPath}/${fileName}` : fileName;
-      
-      const folderExists = await this.app.vault.adapter.exists(folderPath);
-      if (!folderExists) {
-        await this.app.vault.createFolder(folderPath);
-      }
-      
-      await this.app.vault.create(fullPath, content);
-      new Notice(`✅ Conversation saved to: ${fullPath}`);
+        const content = this.plugin._sessionManager.exportToMarkdown(session);
+        const folderPath = this.plugin.settings.conversationsFolder || 'AI Conversations';
+        const baseName = session.name.replace(/[\\/:*?"<>|]/g, '_');
+        
+        // Ensure folder exists
+        const folderExists = await this.app.vault.adapter.exists(folderPath);
+        if (!folderExists) {
+            await this.app.vault.createFolder(folderPath);
+        }
+        
+        // Get unique file path
+        const fullPath = await this.plugin.getUniqueFilePath(folderPath, baseName, 'md');
+        
+        await this.app.vault.create(fullPath, content);
+        new Notice(`✔️ Conversation saved to: ${fullPath}`);
     } catch (error) {
-      console.error('Error saving conversation:', error);
-      new Notice(`❌ Error saving conversation: ${error.message}`);
+        console.error('Error saving conversation:', error);
+        new Notice(`✖️ Error saving conversation: ${error.message}`);
     }
-  }
+}
 
   updateTokenCounterVisibility() {
     if (!this.tokenCounter) return;
@@ -2409,7 +2412,8 @@ class ChatView extends ItemView {
     this.plugin.settings.currentMode = 
       this.plugin.settings.currentMode === 'local' ? 'cloud' : 'local';
     
-    this.modeToggleBtn.textContent = this.getProviderIcon();
+    this.modeToggleBtn.empty();
+    setIcon(this.modeToggleBtn, this.getProviderIcon());
     this.modeToggleBtn.title = this.getProviderInfo();
     
     this.plugin.saveSettings();
@@ -2436,7 +2440,13 @@ class ChatView extends ItemView {
     const providerName = this.getProviderName();
     
     if (this.tokenCounter) {
-      this.tokenCounter.textContent = `${this.getProviderIcon()} ${totalTokens}/${maxTokens}`;
+      this.tokenCounter.empty();
+      const tokenIcon = this.tokenCounter.createSpan();
+      setIcon(tokenIcon, 'binary');
+      tokenIcon.style.display = 'flex';
+      
+      const tokenText = this.tokenCounter.createSpan();
+      tokenText.textContent = `${totalTokens}/${maxTokens}`;
       this.tokenCounter.title = `${providerName}\nContext: ${contextTokens} | Input: ${estimatedTokens}`;
       
       if (totalTokens > maxTokens) {
@@ -2546,7 +2556,7 @@ class ChatView extends ItemView {
       const attachmentCount = this.pendingAttachments.length;
       if (attachmentCount > 0) {
         this.inputEl.value += `\n[📎 ${attachmentCount} file${attachmentCount > 1 ? 's' : ''} attached]`;
-        new Notice(`✅ ${attachmentCount} file${attachmentCount > 1 ? 's' : ''} ready to attach`);
+        new Notice(`✔️ ${attachmentCount} file${attachmentCount > 1 ? 's' : ''} ready to attach`);
       }
     });
     modal.open();
@@ -2636,13 +2646,13 @@ class ChatView extends ItemView {
         this.plugin.saveState();
       } else {
         // If no content at all, show an error
-        streamingMsg.textContent = '❌ No response received';
+        streamingMsg.textContent = '✖️ No response received';
       }
       
     } catch (e) {
       console.error("Chat Error:", e);
       
-      let errorMessage = '❌ Error occurred';
+      let errorMessage = '✖️ Error occurred';
       if (e.message.includes('429')) {
         errorMessage = '⏳ Rate limit exceeded. Please wait a moment and try again Or Try changing the model.';
       } else if (e.message.includes('401') || e.message.includes('403')) {
@@ -2652,7 +2662,7 @@ class ChatView extends ItemView {
       } else if (e.message.includes('fetch') || e.message.includes('Failed to fetch')) {
         errorMessage = '🌐 Cannot connect to Local AI. Please check if the server is running at ' + this.plugin.settings.baseUrl;
       } else {
-        errorMessage = `❌ Error: ${e.message}`;
+        errorMessage = `✖️ Error: ${e.message}`;
       }
       
       streamingMsg.textContent = errorMessage;
@@ -2675,7 +2685,13 @@ class SettingsModal extends Modal {
     contentEl.style.minWidth = '100%';
     contentEl.style.maxWidth = '100%';
     
-    contentEl.createEl('h2', { text: '⚙️ AI Assistant Settings' });
+    const h2 = contentEl.createEl('h2');
+    h2.style.display = 'flex';
+    h2.style.alignItems = 'center';
+    const h2Icon = h2.createSpan();
+    setIcon(h2Icon, 'settings');
+    h2Icon.style.marginRight = '8px';
+    h2.appendChild(document.createTextNode('AI Assistant Settings'));
     
     const tabsContainer = contentEl.createDiv({ cls: 'ai-settings-tabs' });
     tabsContainer.style.display = 'flex';
@@ -2685,39 +2701,42 @@ class SettingsModal extends Modal {
     tabsContainer.style.paddingBottom = '10px';
     tabsContainer.style.flexWrap = 'wrap';
     
-    const localTab = tabsContainer.createEl('button', { 
-      text: '🖥️ Local Model',
-      cls: 'ai-tab-btn active'
-    });
-    localTab.style.padding = '10px 16px';
-    localTab.style.border = 'none';
-    localTab.style.background = 'transparent';
-    localTab.style.color = 'var(--text-muted)';
-    localTab.style.cursor = 'pointer';
-    localTab.style.borderRadius = '6px';
-    localTab.style.fontSize = '14px';
+    const localTab = tabsContainer.createEl('button', { cls: 'ai-tab-btn active' });
+    const localIcon = localTab.createSpan();
+    setIcon(localIcon, 'monitor-speaker');
+    localIcon.style.marginRight = '6px';
+    localIcon.style.display = 'inline-flex';
+    localTab.appendChild(document.createTextNode('Local Model'));
     
-    const cloudTab = tabsContainer.createEl('button', { 
-      text: '☁️ Cloud Model',
-      cls: 'ai-tab-btn'
-    });
+    const cloudTab = tabsContainer.createEl('button', { cls: 'ai-tab-btn' });
+    const cloudIcon = cloudTab.createSpan();
+    setIcon(cloudIcon, 'server');
+    cloudIcon.style.marginRight = '6px';
+    cloudIcon.style.display = 'inline-flex';
+    cloudTab.appendChild(document.createTextNode('Cloud Model'));
     
-    const generalTab = tabsContainer.createEl('button', { 
-      text: '⚙️ General',
-      cls: 'ai-tab-btn'
-    });
+    const generalTab = tabsContainer.createEl('button', { cls: 'ai-tab-btn' });
+    const generalIcon = generalTab.createSpan();
+    setIcon(generalIcon, 'settings');
+    generalIcon.style.marginRight = '6px';
+    generalIcon.style.display = 'inline-flex';
+    generalTab.appendChild(document.createTextNode('General'));
     
-    const shortcutsTab = tabsContainer.createEl('button', { 
-      text: '⚡ Shortcuts',
-      cls: 'ai-tab-btn'
-    });
+    const shortcutsTab = tabsContainer.createEl('button', { cls: 'ai-tab-btn' });
+    const shortcutsIcon = shortcutsTab.createSpan();
+    setIcon(shortcutsIcon, 'command');
+    shortcutsIcon.style.marginRight = '6px';
+    shortcutsIcon.style.display = 'inline-flex';
+    shortcutsTab.appendChild(document.createTextNode('Shortcuts'));
     
-    const conversationsTab = tabsContainer.createEl('button', { 
-      text: '💬 Conversations',
-      cls: 'ai-tab-btn'
-    });
+    const conversationsTab = tabsContainer.createEl('button', { cls: 'ai-tab-btn' });
+    const convIcon = conversationsTab.createSpan();
+    setIcon(convIcon, 'message-square');
+    convIcon.style.marginRight = '6px';
+    convIcon.style.display = 'inline-flex';
+    conversationsTab.appendChild(document.createTextNode('Conversations'));
     
-    [cloudTab, generalTab, shortcutsTab, conversationsTab].forEach(tab => {
+    [localTab, cloudTab, generalTab, shortcutsTab, conversationsTab].forEach(tab => {
       tab.style.padding = '10px 16px';
       tab.style.border = 'none';
       tab.style.background = 'transparent';
@@ -2725,6 +2744,8 @@ class SettingsModal extends Modal {
       tab.style.cursor = 'pointer';
       tab.style.borderRadius = '6px';
       tab.style.fontSize = '14px';
+      tab.style.display = 'flex';
+      tab.style.alignItems = 'center';
     });
     
     const contentContainer = contentEl.createDiv({ cls: 'ai-settings-content' });
@@ -2759,20 +2780,6 @@ class SettingsModal extends Modal {
       this.setActiveTab(conversationsTab, [localTab, cloudTab, generalTab, shortcutsTab]);
       this.showConversationsSettings(contentContainer);
     });
-    // داخل حلقة sessions.forEach
-const nameSpan = sessionInfo.createEl('div', { 
-  cls: 'ai-session-name',
-  text: session.isTemporary ? '⏳ ' + session.name : session.name 
-});
-nameSpan.style.fontWeight = '600';
-nameSpan.style.fontSize = '14px';
-nameSpan.style.color = session.isTemporary ? '#ffb74d' : 'var(--text-normal)'; // لون برتقالي للمؤقتة
-// ... باقي الخصائص
-
-// تغيير لون خلفية الصف إذا كانت مؤقتة
-if (session.isTemporary) {
-  sessionRow.style.backgroundColor = 'rgba(255, 193, 7, 0.1)'; // خلفية صفراء خفيفة
-}
     
     const buttonRow = contentEl.createDiv({ cls: 'ai-settings-btn-row' });
     buttonRow.style.display = 'flex';
@@ -2781,10 +2788,16 @@ if (session.isTemporary) {
     buttonRow.style.paddingTop = '20px';
     buttonRow.style.borderTop = '1px solid var(--background-modifier-border)';
     
-    const saveBtn = buttonRow.createEl('button', { 
-      text: '💾 Save',
-      cls: 'ai-settings-save-btn'
-    });
+    const saveBtn = buttonRow.createEl('button', { cls: 'ai-settings-save-btn' });
+    const saveIcon = saveBtn.createSpan();
+    setIcon(saveIcon, 'save');
+    saveIcon.style.marginRight = '6px';
+    saveIcon.style.display = 'inline-flex';
+    saveIcon.style.verticalAlign = 'middle';
+    const saveText = saveBtn.createSpan();
+    saveText.textContent = 'Save';
+    saveText.style.verticalAlign = 'middle';
+    
     saveBtn.style.padding = '10px 24px';
     saveBtn.style.borderRadius = '8px';
     saveBtn.style.border = 'none';
@@ -2794,10 +2807,16 @@ if (session.isTemporary) {
     saveBtn.style.fontSize = '14px';
     saveBtn.style.fontWeight = '600';
     
-    const cancelBtn = buttonRow.createEl('button', { 
-      text: '❌ Cancel',
-      cls: 'ai-settings-cancel-btn'
-    });
+    const cancelBtn = buttonRow.createEl('button', { cls: 'ai-settings-cancel-btn' });
+    const cancelIcon = cancelBtn.createSpan();
+    setIcon(cancelIcon, 'x');
+    cancelIcon.style.marginRight = '6px';
+    cancelIcon.style.display = 'inline-flex';
+    cancelIcon.style.verticalAlign = 'middle';
+    const cancelText = cancelBtn.createSpan();
+    cancelText.textContent = 'Cancel';
+    cancelText.style.verticalAlign = 'middle';
+    
     cancelBtn.style.padding = '10px 24px';
     cancelBtn.style.borderRadius = '8px';
     cancelBtn.style.border = '1px solid var(--background-modifier-border)';
@@ -2808,7 +2827,7 @@ if (session.isTemporary) {
     
     saveBtn.addEventListener('click', async () => {
       await this.plugin.saveSettings();
-      new Notice('✅ Settings saved successfully!');
+      new Notice('✔️ Settings saved successfully!');
       this.close();
     });
     
@@ -2839,16 +2858,28 @@ if (session.isTemporary) {
     section.style.marginBottom = '20px';
     section.style.border = '1px solid var(--background-modifier-border)';
     
-    section.createEl('h3', { text: '🖥️ Local Model Configuration' });
+    const h3 = section.createEl('h3');
+    h3.style.display = 'flex';
+    h3.style.alignItems = 'center';
+    const h3Icon = h3.createSpan();
+    setIcon(h3Icon, 'monitor-speaker');
+    h3Icon.style.marginRight = '8px';
+    h3.appendChild(document.createTextNode('Local Model Configuration'));
     
     this.createInputField(section, 'Base URL:', 'baseUrl', this.plugin.settings.baseUrl, 'text', 'http://127.0.0.1:11434');
     this.createInputField(section, 'Endpoint:', 'localEndpoint', this.plugin.settings.localEndpoint, 'text', '/v1/chat/completions');
     this.createInputField(section, 'Model Name:', 'localModel', this.plugin.settings.localModel, 'text', 'llama2');
     
-    const testBtn = section.createEl('button', {
-      text: '🔄 Test Connection',
-      cls: 'ai-test-btn'
-    });
+    const testBtn = section.createEl('button', { cls: 'ai-test-btn' });
+    const testIcon = testBtn.createSpan();
+    setIcon(testIcon, 'refresh-cw');
+    testIcon.style.marginRight = '6px';
+    testIcon.style.display = 'inline-flex';
+    testIcon.style.verticalAlign = 'middle';
+    const testText = testBtn.createSpan();
+    testText.textContent = 'Test Connection';
+    testText.style.verticalAlign = 'middle';
+    
     testBtn.style.width = '100%';
     testBtn.style.padding = '12px';
     testBtn.style.borderRadius = '8px';
@@ -2867,15 +2898,23 @@ if (session.isTemporary) {
         const provider = new LocalAIProvider(this.plugin);
         const health = await provider.checkHealth();
         if (health.ok) {
-          new Notice('✅ ' + health.message);
+          new Notice('✔️ ' + health.message);
         } else {
-          new Notice('❌ ' + health.message);
+          new Notice('✖️ ' + health.message);
         }
       } catch (e) {
-        new Notice('❌ Error: ' + e.message);
+        new Notice('✖️ Error: ' + e.message);
       } finally {
         testBtn.disabled = false;
-        testBtn.textContent = '🔄 Test Connection';
+        testBtn.empty();
+        const icon = testBtn.createSpan();
+        setIcon(icon, 'refresh-cw');
+        icon.style.marginRight = '6px';
+        icon.style.display = 'inline-flex';
+        icon.style.verticalAlign = 'middle';
+        const text = testBtn.createSpan();
+        text.textContent = 'Test Connection';
+        text.style.verticalAlign = 'middle';
       }
     });
   }
@@ -2890,7 +2929,13 @@ if (session.isTemporary) {
     apiTypeSection.style.marginBottom = '20px';
     apiTypeSection.style.border = '1px solid var(--background-modifier-border)';
     
-    apiTypeSection.createEl('h3', { text: '☁️ Cloud Provider Selection' });
+    const h3 = apiTypeSection.createEl('h3');
+    h3.style.display = 'flex';
+    h3.style.alignItems = 'center';
+    const h3Icon = h3.createSpan();
+    setIcon(h3Icon, 'server');
+    h3Icon.style.marginRight = '8px';
+    h3.appendChild(document.createTextNode('Cloud Provider Selection'));
 
     this.createAPITypeSelector(apiTypeSection);
 
@@ -2906,17 +2951,27 @@ if (session.isTemporary) {
     row.style.flexWrap = 'wrap';
 
     const providers = [
-      { id: 'openai', name: 'OpenAI', icon: '🎡' },
-      { id: 'gemini', name: 'Gemini', icon: '🌀' },
-      { id: 'anthropic', name: 'Claude', icon: '☁️' },
-      { id: 'custom', name: 'Custom', icon: '⚙️' }
+      { id: 'openai', name: 'OpenAI', icon: 'cpu' },
+      { id: 'gemini', name: 'Gemini', icon: 'sparkles' },
+      { id: 'anthropic', name: 'Claude', icon: 'cloud' },
+      { id: 'custom', name: 'Custom', icon: 'settings' }
     ];
 
     providers.forEach(provider => {
       const btn = row.createEl('button', {
-        cls: `ai-provider-btn ${this.plugin.settings.cloudApiType === provider.id ? 'active' : ''}`,
-        text: `${provider.icon} ${provider.name}`
+        cls: `ai-provider-btn ${this.plugin.settings.cloudApiType === provider.id ? 'active' : ''}`
       });
+      
+      const iconSpan = btn.createSpan();
+      setIcon(iconSpan, provider.icon);
+      iconSpan.style.marginRight = '6px';
+      iconSpan.style.display = 'inline-flex';
+      iconSpan.style.verticalAlign = 'middle';
+      
+      const textSpan = btn.createSpan();
+      textSpan.textContent = provider.name;
+      textSpan.style.verticalAlign = 'middle';
+      
       btn.style.flex = '1';
       btn.style.minWidth = '120px';
       btn.style.padding = '12px';
@@ -2980,7 +3035,13 @@ if (session.isTemporary) {
     section.style.marginBottom = '20px';
     section.style.border = '1px solid var(--background-modifier-border)';
     
-    section.createEl('h3', { text: '🎡 OpenAI Configuration' });
+    const h3 = section.createEl('h3');
+    h3.style.display = 'flex';
+    h3.style.alignItems = 'center';
+    const h3Icon = h3.createSpan();
+    setIcon(h3Icon, 'cpu');
+    h3Icon.style.marginRight = '8px';
+    h3.appendChild(document.createTextNode('OpenAI Configuration'));
 
     this.createInputField(section, 'API Key:', 'openaiApiKey', 
       this.plugin.settings.openaiApiKey, 'password');
@@ -2991,7 +3052,16 @@ if (session.isTemporary) {
     this.createInputField(section, 'Custom Endpoint (optional):', 'openaiEndpoint', 
       this.plugin.settings.openaiEndpoint, 'text', 'https://api.openai.com/v1/chat/completions');
     
-    const testBtn = section.createEl('button', { text: '🔄 Test Connection', cls: 'ai-test-btn' });
+    const testBtn = section.createEl('button', { cls: 'ai-test-btn' });
+    const testIcon = testBtn.createSpan();
+    setIcon(testIcon, 'refresh-cw');
+    testIcon.style.marginRight = '6px';
+    testIcon.style.display = 'inline-flex';
+    testIcon.style.verticalAlign = 'middle';
+    const testText = testBtn.createSpan();
+    testText.textContent = 'Test Connection';
+    testText.style.verticalAlign = 'middle';
+    
     testBtn.style.width = '100%';
     testBtn.style.padding = '12px';
     testBtn.style.borderRadius = '8px';
@@ -3009,7 +3079,15 @@ if (session.isTemporary) {
       const health = await provider.checkHealth();
       new Notice(health.message);
       testBtn.disabled = false;
-      testBtn.textContent = '🔄 Test Connection';
+      testBtn.empty();
+      const icon = testBtn.createSpan();
+      setIcon(icon, 'refresh-cw');
+      icon.style.marginRight = '6px';
+      icon.style.display = 'inline-flex';
+      icon.style.verticalAlign = 'middle';
+      const text = testBtn.createSpan();
+      text.textContent = 'Test Connection';
+      text.style.verticalAlign = 'middle';
     });
   }
   
@@ -3021,7 +3099,13 @@ if (session.isTemporary) {
     section.style.marginBottom = '20px';
     section.style.border = '1px solid var(--background-modifier-border)';
     
-    section.createEl('h3', { text: '🌀 Google Gemini Configuration (Non-Streaming)' });
+    const h3 = section.createEl('h3');
+    h3.style.display = 'flex';
+    h3.style.alignItems = 'center';
+    const h3Icon = h3.createSpan();
+    setIcon(h3Icon, 'sparkles');
+    h3Icon.style.marginRight = '8px';
+    h3.appendChild(document.createTextNode('Google Gemini Configuration (Non-Streaming)'));
     
     this.createInputField(section, 'API Key:', 'geminiApiKey', 
       this.plugin.settings.geminiApiKey, 'password');
@@ -3029,10 +3113,16 @@ if (session.isTemporary) {
     this.createInputField(section, 'Model:', 'geminiModel', 
       this.plugin.settings.geminiModel, 'text', 'gemini-1.5-flash');
     
-    const testBtn = section.createEl('button', {
-      text: '🔄 Test Connection',
-      cls: 'ai-test-btn'
-    });
+    const testBtn = section.createEl('button', { cls: 'ai-test-btn' });
+    const testIcon = testBtn.createSpan();
+    setIcon(testIcon, 'refresh-cw');
+    testIcon.style.marginRight = '6px';
+    testIcon.style.display = 'inline-flex';
+    testIcon.style.verticalAlign = 'middle';
+    const testText = testBtn.createSpan();
+    testText.textContent = 'Test Connection';
+    testText.style.verticalAlign = 'middle';
+    
     testBtn.style.width = '100%';
     testBtn.style.padding = '12px';
     testBtn.style.borderRadius = '8px';
@@ -3052,7 +3142,15 @@ if (session.isTemporary) {
       new Notice(health.message);
       
       testBtn.disabled = false;
-      testBtn.textContent = '🔄 Test Connection';
+      testBtn.empty();
+      const icon = testBtn.createSpan();
+      setIcon(icon, 'refresh-cw');
+      icon.style.marginRight = '6px';
+      icon.style.display = 'inline-flex';
+      icon.style.verticalAlign = 'middle';
+      const text = testBtn.createSpan();
+      text.textContent = 'Test Connection';
+      text.style.verticalAlign = 'middle';
     });
   }
 
@@ -3064,7 +3162,13 @@ if (session.isTemporary) {
     section.style.marginBottom = '20px';
     section.style.border = '1px solid var(--background-modifier-border)';
     
-    section.createEl('h3', { text: '☁️ Anthropic Claude Configuration' });
+    const h3 = section.createEl('h3');
+    h3.style.display = 'flex';
+    h3.style.alignItems = 'center';
+    const h3Icon = h3.createSpan();
+    setIcon(h3Icon, 'cloud');
+    h3Icon.style.marginRight = '8px';
+    h3.appendChild(document.createTextNode('Anthropic Claude Configuration'));
 
     this.createInputField(section, 'API Key:', 'anthropicApiKey', 
       this.plugin.settings.anthropicApiKey, 'password');
@@ -3072,7 +3176,16 @@ if (session.isTemporary) {
     this.createInputField(section, 'Model:', 'anthropicModel', 
       this.plugin.settings.anthropicModel, 'text', 'claude-3-haiku-20240307');
     
-    const testBtn = section.createEl('button', { text: '🔄 Test Connection', cls: 'ai-test-btn' });
+    const testBtn = section.createEl('button', { cls: 'ai-test-btn' });
+    const testIcon = testBtn.createSpan();
+    setIcon(testIcon, 'refresh-cw');
+    testIcon.style.marginRight = '6px';
+    testIcon.style.display = 'inline-flex';
+    testIcon.style.verticalAlign = 'middle';
+    const testText = testBtn.createSpan();
+    testText.textContent = 'Test Connection';
+    testText.style.verticalAlign = 'middle';
+    
     testBtn.style.width = '100%';
     testBtn.style.padding = '12px';
     testBtn.style.borderRadius = '8px';
@@ -3090,7 +3203,15 @@ if (session.isTemporary) {
       const health = await provider.checkHealth();
       new Notice(health.message);
       testBtn.disabled = false;
-      testBtn.textContent = '🔄 Test Connection';
+      testBtn.empty();
+      const icon = testBtn.createSpan();
+      setIcon(icon, 'refresh-cw');
+      icon.style.marginRight = '6px';
+      icon.style.display = 'inline-flex';
+      icon.style.verticalAlign = 'middle';
+      const text = testBtn.createSpan();
+      text.textContent = 'Test Connection';
+      text.style.verticalAlign = 'middle';
     });
   }
 
@@ -3102,7 +3223,13 @@ if (session.isTemporary) {
     section.style.marginBottom = '20px';
     section.style.border = '1px solid var(--background-modifier-border)';
     
-    section.createEl('h3', { text: '⚙️ Custom API Configuration' });
+    const h3 = section.createEl('h3');
+    h3.style.display = 'flex';
+    h3.style.alignItems = 'center';
+    const h3Icon = h3.createSpan();
+    setIcon(h3Icon, 'settings');
+    h3Icon.style.marginRight = '8px';
+    h3.appendChild(document.createTextNode('Custom API Configuration'));
 
     this.createInputField(section, 'API Key:', 'customApiKey', this.plugin.settings.customApiKey, 'password');
     this.createInputField(section, 'Model Name:', 'customModel', this.plugin.settings.customModel, 'text');
@@ -3150,7 +3277,16 @@ if (session.isTemporary) {
       this.plugin.settings.customBodyTemplate = e.target.value;
     });
 
-    const testBtn = section.createEl('button', { text: '🔄 Test Connection', cls: 'ai-test-btn' });
+    const testBtn = section.createEl('button', { cls: 'ai-test-btn' });
+    const testIcon = testBtn.createSpan();
+    setIcon(testIcon, 'refresh-cw');
+    testIcon.style.marginRight = '6px';
+    testIcon.style.display = 'inline-flex';
+    testIcon.style.verticalAlign = 'middle';
+    const testText = testBtn.createSpan();
+    testText.textContent = 'Test Connection';
+    testText.style.verticalAlign = 'middle';
+    
     testBtn.style.width = '100%';
     testBtn.style.padding = '12px';
     testBtn.style.borderRadius = '8px';
@@ -3168,7 +3304,15 @@ if (session.isTemporary) {
       const health = await provider.checkHealth();
       new Notice(health.message);
       testBtn.disabled = false;
-      testBtn.textContent = '🔄 Test Connection';
+      testBtn.empty();
+      const icon = testBtn.createSpan();
+      setIcon(icon, 'refresh-cw');
+      icon.style.marginRight = '6px';
+      icon.style.display = 'inline-flex';
+      icon.style.verticalAlign = 'middle';
+      const text = testBtn.createSpan();
+      text.textContent = 'Test Connection';
+      text.style.verticalAlign = 'middle';
     });
   }
 
@@ -3182,7 +3326,13 @@ if (session.isTemporary) {
     section.style.marginBottom = '20px';
     section.style.border = '1px solid var(--background-modifier-border)';
     
-    section.createEl('h3', { text: '⚙️ General Settings' });
+    const h3 = section.createEl('h3');
+    h3.style.display = 'flex';
+    h3.style.alignItems = 'center';
+    const h3Icon = h3.createSpan();
+    setIcon(h3Icon, 'settings');
+    h3Icon.style.marginRight = '8px';
+    h3.appendChild(document.createTextNode('General Settings'));
     
     this.createSliderField(section, 'Temperature:', 'temperature', this.plugin.settings.temperature, 0, 2, 0.1);
     this.createInputField(section, 'Max Tokens:', 'max_tokens', this.plugin.settings.max_tokens, 'number', '2048');
@@ -3202,7 +3352,13 @@ if (session.isTemporary) {
     section.style.marginBottom = '20px';
     section.style.border = '1px solid var(--background-modifier-border)';
     
-    section.createEl('h3', { text: '⚡ Keyboard Shortcuts' });
+    const h3 = section.createEl('h3');
+    h3.style.display = 'flex';
+    h3.style.alignItems = 'center';
+    const h3Icon = h3.createSpan();
+    setIcon(h3Icon, 'command');
+    h3Icon.style.marginRight = '8px';
+    h3.appendChild(document.createTextNode('Keyboard Shortcuts'));
     
     this.createShortcutField(section, 'New Conversation:', 'shortcuts', 'newConversation', this.plugin.settings.shortcuts.newConversation);
     this.createShortcutField(section, 'Save Conversation:', 'shortcuts', 'saveConversation', this.plugin.settings.shortcuts.saveConversation);
@@ -3232,7 +3388,13 @@ if (session.isTemporary) {
     section.style.marginBottom = '20px';
     section.style.border = '1px solid var(--background-modifier-border)';
     
-    section.createEl('h3', { text: '💬 Conversation Management' });
+    const h3 = section.createEl('h3');
+    h3.style.display = 'flex';
+    h3.style.alignItems = 'center';
+    const h3Icon = h3.createSpan();
+    setIcon(h3Icon, 'message-square');
+    h3Icon.style.marginRight = '8px';
+    h3.appendChild(document.createTextNode('Conversation Management'));
     
     const sessionList = section.createDiv({ cls: 'ai-session-list' });
     sessionList.style.maxHeight = '300px';
@@ -3277,13 +3439,25 @@ if (session.isTemporary) {
         sessionInfo.style.flex = '1';
         sessionInfo.style.minWidth = '0';
         
-        const nameSpan = sessionInfo.createEl('div', { 
-          cls: 'ai-session-name',
-          text: session.name 
-        });
+        const nameSpan = sessionInfo.createEl('div', { cls: 'ai-session-name' });
+        if (session.isTemporary) {
+          const tempIcon = nameSpan.createSpan();
+          setIcon(tempIcon, 'message-square-dashed');
+          tempIcon.style.marginRight = '6px';
+          tempIcon.style.display = 'inline-flex';
+          tempIcon.style.verticalAlign = 'middle';
+          const textSpan = nameSpan.createSpan();
+          textSpan.textContent = session.name;
+          textSpan.style.verticalAlign = 'middle';
+          
+          sessionRow.style.backgroundColor = 'rgba(255, 193, 7, 0.1)';
+        } else {
+          nameSpan.textContent = session.name;
+        }
+        
         nameSpan.style.fontWeight = '600';
         nameSpan.style.fontSize = '14px';
-        nameSpan.style.color = 'var(--text-normal)';
+        nameSpan.style.color = session.isTemporary ? '#ffb74d' : 'var(--text-normal)';
         nameSpan.style.marginBottom = '2px';
         nameSpan.style.whiteSpace = 'nowrap';
         nameSpan.style.overflow = 'hidden';
@@ -3343,10 +3517,16 @@ if (session.isTemporary) {
           }
         });
         
-        const saveBtn = sessionActions.createEl('button', {
-          text: '💾 Save',
-          cls: 'ai-session-action-btn save'
-        });
+        const saveBtn = sessionActions.createEl('button', { cls: 'ai-session-action-btn save' });
+        const saveIcon = saveBtn.createSpan();
+        setIcon(saveIcon, 'save');
+        saveIcon.style.marginRight = '4px';
+        saveIcon.style.display = 'inline-flex';
+        saveIcon.style.verticalAlign = 'middle';
+        const saveText = saveBtn.createSpan();
+        saveText.textContent = 'Save';
+        saveText.style.verticalAlign = 'middle';
+        
         saveBtn.style.padding = '4px 8px';
         saveBtn.style.borderRadius = '4px';
         saveBtn.style.border = '1px solid #2e7d32';
@@ -3401,10 +3581,16 @@ if (session.isTemporary) {
     newSessionInput.style.color = 'var(--text-normal)';
     newSessionInput.style.fontSize = '14px';
     
-    const newSessionBtn = newSessionSection.createEl('button', {
-      text: '➕ New Conversation',
-      cls: 'ai-new-session-btn'
-    });
+    const newSessionBtn = newSessionSection.createEl('button', { cls: 'ai-new-session-btn' });
+    const newIcon = newSessionBtn.createSpan();
+    setIcon(newIcon, 'plus');
+    newIcon.style.marginRight = '6px';
+    newIcon.style.display = 'inline-flex';
+    newIcon.style.verticalAlign = 'middle';
+    const newText = newSessionBtn.createSpan();
+    newText.textContent = 'New Conversation';
+    newText.style.verticalAlign = 'middle';
+    
     newSessionBtn.style.padding = '10px 16px';
     newSessionBtn.style.borderRadius = '8px';
     newSessionBtn.style.border = '1px solid var(--background-modifier-border)';
@@ -3423,7 +3609,7 @@ if (session.isTemporary) {
       this.plugin._sessionManager.create(name);
       this.plugin.saveState();
       this.showConversationsSettings(container);
-      new Notice(`✅ Created conversation: ${name}`);
+      new Notice(`✔️ Created conversation: ${name}`);
       newSessionInput.value = '';
       this.refreshChatViews();
     });
@@ -3433,10 +3619,16 @@ if (session.isTemporary) {
     clearAllSection.style.paddingTop = '16px';
     clearAllSection.style.borderTop = '1px solid var(--background-modifier-border)';
     
-    const clearAllBtn = clearAllSection.createEl('button', {
-      text: '🗑️ Delete All Conversations',
-      cls: 'ai-clear-all-btn'
-    });
+    const clearAllBtn = clearAllSection.createEl('button', { cls: 'ai-clear-all-btn' });
+    const clearIcon = clearAllBtn.createSpan();
+    setIcon(clearIcon, 'trash-2');
+    clearIcon.style.marginRight = '6px';
+    clearIcon.style.display = 'inline-flex';
+    clearIcon.style.verticalAlign = 'middle';
+    const clearText = clearAllBtn.createSpan();
+    clearText.textContent = 'Delete All Conversations';
+    clearText.style.verticalAlign = 'middle';
+    
     clearAllBtn.style.width = '100%';
     clearAllBtn.style.padding = '12px';
     clearAllBtn.style.borderRadius = '8px';
@@ -3460,23 +3652,24 @@ if (session.isTemporary) {
 
   async saveConversationToFile(session) {
     try {
-      const content = this.plugin._sessionManager.exportToMarkdown(session);
-      const folderPath = this.plugin.settings.conversationsFolder || 'AI Conversations';
-      const fileName = `${session.name.replace(/[\\/:*?"<>|]/g, '_')}.md`;
-      const fullPath = folderPath ? `${folderPath}/${fileName}` : fileName;
-      
-      const folderExists = await this.app.vault.adapter.exists(folderPath);
-      if (!folderExists) {
-        await this.app.vault.createFolder(folderPath);
-      }
-      
-      await this.app.vault.create(fullPath, content);
-      new Notice(`✅ Conversation saved to: ${fullPath}`);
+        const content = this.plugin._sessionManager.exportToMarkdown(session);
+        const folderPath = this.plugin.settings.conversationsFolder || 'AI Conversations';
+        const baseName = session.name.replace(/[\\/:*?"<>|]/g, '_');
+        
+        const folderExists = await this.app.vault.adapter.exists(folderPath);
+        if (!folderExists) {
+            await this.app.vault.createFolder(folderPath);
+        }
+        
+        const fullPath = await this.plugin.getUniqueFilePath(folderPath, baseName, 'md');
+        
+        await this.app.vault.create(fullPath, content);
+        new Notice(`✔️ Conversation saved to: ${fullPath}`);
     } catch (error) {
-      console.error('Error saving conversation:', error);
-      new Notice(`❌ Error saving conversation: ${error.message}`);
+        console.error('Error saving conversation:', error);
+        new Notice(`✖️ Error saving conversation: ${error.message}`);
     }
-  }
+}
 
   refreshChatViews() {
     this.plugin.app.workspace.getLeavesOfType(VIEW_TYPE).forEach(leaf => {
@@ -3605,6 +3798,23 @@ if (session.isTemporary) {
 // ==================== MAIN PLUGIN ====================
 
 module.exports = class AIPlugin extends Plugin {
+  async getUniqueFilePath(folderPath, baseName, extension = 'md') {
+    let counter = 1;
+    let fileName = `${baseName}.${extension}`;
+    let fullPath = folderPath ? `${folderPath}/${fileName}` : fileName;
+    
+    if (await this.app.vault.adapter.exists(fullPath)) {
+        new Notice(`File already exists, copy from conversation '${fileName}'`);
+        
+        while (await this.app.vault.adapter.exists(fullPath)) {
+            fileName = `${baseName} (${counter}).${extension}`;
+            fullPath = folderPath ? `${folderPath}/${fileName}` : fileName;
+            counter++;
+        }
+    }
+    
+    return fullPath;
+  }
   async onload() {
     this.loadCSS();
     await this.loadSettings();
@@ -3649,7 +3859,7 @@ module.exports = class AIPlugin extends Plugin {
           if (name && name.trim()) {
             this._sessionManager.create(name.trim());
             this.saveState();
-            new Notice(`✅ Created conversation: ${name}`);
+            new Notice(`✔️ Created conversation: ${name}`);
           }
         }
       }
@@ -3714,28 +3924,29 @@ module.exports = class AIPlugin extends Plugin {
   async saveCurrentConversationFromAnywhere() {
     const session = this._sessionManager.getActive();
     if (!session) {
-      new Notice('No active conversation to save');
-      return;
+        new Notice('No active conversation to save');
+        return;
     }
     
     try {
-      const content = this._sessionManager.exportToMarkdown(session);
-      const folderPath = this.settings.conversationsFolder || 'AI Conversations';
-      const fileName = `${session.name.replace(/[\\/:*?"<>|]/g, '_')}.md`;
-      const fullPath = folderPath ? `${folderPath}/${fileName}` : fileName;
-      
-      const folderExists = await this.app.vault.adapter.exists(folderPath);
-      if (!folderExists) {
-        await this.app.vault.createFolder(folderPath);
-      }
-      
-      await this.app.vault.create(fullPath, content);
-      new Notice(`✅ Conversation saved to: ${fullPath}`);
+        const content = this._sessionManager.exportToMarkdown(session);
+        const folderPath = this.settings.conversationsFolder || 'AI Conversations';
+        const baseName = session.name.replace(/[\\/:*?"<>|]/g, '_');
+        
+        const folderExists = await this.app.vault.adapter.exists(folderPath);
+        if (!folderExists) {
+            await this.app.vault.createFolder(folderPath);
+        }
+        
+        const fullPath = await this.getUniqueFilePath(folderPath, baseName, 'md');
+        
+        await this.app.vault.create(fullPath, content);
+        new Notice(`✔️ Conversation saved to: ${fullPath}`);
     } catch (error) {
-      console.error('Error saving conversation:', error);
-      new Notice(`❌ Error saving conversation: ${error.message}`);
+        console.error('Error saving conversation:', error);
+        new Notice(`✖️ Error saving conversation: ${error.message}`);
     }
-  }
+}
 
   async replyInNote(editor) {
     const selection = editor.getSelection().trim();
@@ -3762,9 +3973,9 @@ module.exports = class AIPlugin extends Plugin {
       });
       
       editor.replaceSelection("\n\n---\n\n");
-      new Notice('✅ Response completed');
+      new Notice('✔️ Response completed');
     } catch (e) {
-      editor.replaceSelection(`\n\n❌ Error: ${e.message}\n\n`);
+      editor.replaceSelection(`\n\n✖️ Error: ${e.message}\n\n`);
       new Notice('AI Error: ' + e.message);
     }
   }

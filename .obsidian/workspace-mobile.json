@@ -144,7 +144,7 @@
         "state": {
           "type": "outline",
           "state": {
-            "file": "001 Dashboard/Dashboard/Dashboard.md",
+            "file": "003 Daily/001 Active Diaries/2026-02-24.md",
             "followCursor": false,
             "showSearch": false,
             "searchQuery": ""
@@ -179,7 +179,7 @@
         "state": {
           "type": "localgraph",
           "state": {
-            "file": "002 Notes/001 Notes/Ai.md",
+            "file": "003 Daily/001 Active Diaries/2026-02-24.md",
             "options": {
               "collapse-filter": true,
               "search": "",
@@ -240,16 +240,27 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "b31d39068bfc3fbf",
+  "active": "8d0c689c34a24f14",
   "lastOpenFiles": [
-    "002 Notes/001 Notes/Q.md",
+    "004 Files/003 AI Conversations/Temporary Chat.md",
     "001 Dashboard/Dashboard/Trackers/Dashboard.md",
+    "004 Files/003 AI Conversations/Default Conversation.md",
+    "004 Files/003 AI Conversations/Temporary Chat (4).md",
+    "004 Files/003 AI Conversations/Temporary Chat (3).md",
+    "004 Files/003 AI Conversations/Temporary Chat (2).md",
+    "004 Files/003 AI Conversations/Temporary Chat (1).md",
+    "004 Files/003 AI Conversations/Default Conversation (2).md",
+    "004 Files/003 AI Conversations/Default Conversation (1).md",
     "003 Daily/001 Active Diaries/2026-02-24.md",
+    "004 Files/003 AI Conversations/الدالة - رياضيات.md",
+    "004 Files/003 AI Conversations/To Learn.md",
+    "004 Files/003 AI Conversations/How.md",
+    "004 Files/003 AI Conversations/Learn.md",
     "001 Dashboard/My tools.md",
+    "002 Notes/001 Notes/Q.md",
     "002 Notes/001 Notes/Test.md",
     "002 Notes/001 Notes/Ai.md",
     "002 Notes/001 Notes/Translate.md",
-    "004 Files/003 AI Conversations/Temporary Chat.md",
     "001 Dashboard/Dashboard/Bases/005 Diaries.md",
     "003 Daily/001 Active Diaries/2026-02-23.md",
     "001 Dashboard/Dashboard/Trackers/Tracker A.md",

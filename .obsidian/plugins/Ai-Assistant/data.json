@@ -15,12 +15,12 @@
     "saveConversation": "Ctrl+S"
   },
   "conversationsFolder": "004 Files/003 AI Conversations",
-  "currentMode": "cloud",
-  "cloudApiType": "openai",
+  "currentMode": "local",
+  "cloudApiType": "gemini",
   "openaiApiKey": "",
   "openaiModel": "gpt-3.5-turbo",
   "openaiEndpoint": "https://api.openai.com/v1/chat/completions",
-  "geminiApiKey": "",
+  "geminiApiKey": "AIzaSyD-tUvhndKYquJiZjMs_IihUCiWywZvd9w",
   "geminiModel": "gemini-2.5-flash",
   "geminiEndpoint": "https://generativelanguage.googleapis.com/v1beta/models",
   "anthropicApiKey": "",
@@ -34,5 +34,13 @@
   "quickSettingsEnabled": true,
   "quickConversationsEnabled": true,
   "autoSaveConversations": false,
-  "sessions": []
+  "sessions": [
+    {
+      "id": "1771952313020",
+      "name": "Default Conversation",
+      "systemPrompt": "",
+      "messages": [],
+      "isTemporary": false
+    }
+  ]
 }
