@@ -20,7 +20,7 @@
   "openaiApiKey": "",
   "openaiModel": "gpt-3.5-turbo",
   "openaiEndpoint": "https://api.openai.com/v1/chat/completions",
-  "geminiApiKey": "AIzaSyD-tUvhndKYquJiZjMs_IihUCiWywZvd9w",
+  "geminiApiKey": "",
   "geminiModel": "gemini-2.5-flash",
   "geminiEndpoint": "https://generativelanguage.googleapis.com/v1beta/models",
   "anthropicApiKey": "",
