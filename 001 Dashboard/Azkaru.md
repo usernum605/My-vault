@@ -10,7 +10,7 @@ banner_y: 50
 tags:
   - Islamic/Dine
 links pages:
-  - "[[Athkar & Adia|Athkar & Adia]]"
+  - "[[Athkar & Adia|أذكار وأدعية]]"
   - "[[أذكار الصباح]]"
   - "[[أذكار المساء]]"
   - "[[أذكار النوم]]"

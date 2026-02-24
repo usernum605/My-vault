@@ -44,7 +44,7 @@
   "cacheExpiryDays": 1000000,
   "hideScrollbars": true,
   "showPropertiesOnCreate": true,
-  "showPropertiesOnCreateDuration": 60,
+  "showPropertiesOnCreateDuration": 9,
   "propertyVisibilityDuration": 30,
   "bannerInvert": false,
   "bannerInvertDarkMode": "never",

@@ -10,51 +10,81 @@ div.side-dock-ribbon-action[aria-label="AI Assistant"] {
     display: none !important;
 }
 
-.rtl-title h1,
-.rtl-title h2,
-.rtl-title h3,
-.rtl-title h4,
-.rtl-title h5,
-.rtl-title h6,
-.rtl-title {
+/* Reading View */
+.markdown-rendered.rtl-title h1,
+.markdown-rendered.rtl-title h2,
+.markdown-rendered.rtl-title h3,
+.markdown-rendered.rtl-title h4,
+.markdown-rendered.rtl-title h5,
+.markdown-rendered.rtl-title h6 {
     direction: rtl;
     text-align: right;
 }
 
-.rtl-paragraph p,
-.rtl-paragraph {
+/* Reading View */
+.markdown-rendered.rtl-paragraph p {
     direction: rtl;
     text-align: right;
 }
 
-.rtl-list ul,
-.rtl-list ol,
-.rtl-list {
+/* Live Preview */
+.cm-content.rtl-paragraph .cm-line:not(.cm-header):not(.cm-list-item) {
+    direction: rtl;
+    text-align: right;
+}
+
+/* ================= RTL LIST ================= */
+
+/* Reading View */
+.markdown-rendered.rtl-list ul,
+.markdown-rendered.rtl-list ol,
+.markdown-rendered.rtl-list li {
     direction: rtl;
     text-align: right;
     padding-right: 20px;
     padding-left: 0;
 }
-
-/* SIMPLE RTL CHECKLIST FIX */
-.rtl-checklist ul,
-.rtl-checklist ol {
-    direction: rtl !important;
-    text-align: right !important;
-    padding-right: 20px !important;
+.markdown-rendered.rtl-list ul,
+.markdown-rendered.rtl-list ol {
+    direction: rtl;
+    text-align: right;
+    padding-right: 1.5em;
+    padding-left: 0;
+}
+/* Live Preview */
+.cm-content.rtl-list .cm-list-item {
+    direction: rtl;
+    text-align: right;
 }
 
-.rtl-checklist li {
-    direction: rtl !important;
-    text-align: right !important;
+/* move bullet visually */
+.cm-content.rtl-list .cm-formatting-list {
+    margin-left: 0;
+    margin-right: 6px;
+}
+/* ================= RTL CHECKLIST ================= */
+
+/* Reading View */
+.markdown-rendered.rtl-checklist .task-list-item {
+    direction: rtl;
+    text-align: right;
 }
 
-.rtl-checklist input[type="checkbox"] {
-    margin-right: 0 !important;
-    margin-left: 8px !important;
-    float: right !important;
+.markdown-rendered.rtl-checklist .task-list-item-checkbox {
+    margin-right: 0;
+    margin-left: 8px;
 }
 
+/* Live Preview */
+.cm-content.rtl-checklist .cm-list-item {
+    direction: rtl;
+    text-align: right;
+}
+
+.cm-content.rtl-checklist input[type="checkbox"] {
+    margin-right: 0;
+    margin-left: 8px;
+}
 /* Comprehensive RTL Class */
 .rtl-everything,
 .rtl-everything * {

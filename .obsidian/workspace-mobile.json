@@ -6,7 +6,6 @@
       {
         "id": "8b4f862c20832a6d",
         "type": "tabs",
-        "dimension": 50,
         "children": [
           {
             "id": "19c003a36a5455dc",
@@ -24,7 +23,7 @@
             }
           },
           {
-            "id": "f38238cf910c55c5",
+            "id": "8ef702dc016378c8",
             "type": "leaf",
             "state": {
               "type": "graph",
@@ -36,54 +35,25 @@
         ]
       },
       {
-        "id": "e6404edc7f422a1b",
+        "id": "85dfe0a0e611a622",
         "type": "tabs",
-        "dimension": 50,
         "children": [
           {
-            "id": "2ec43f95d50e2e13",
+            "id": "f448887c037ad075",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "003 Daily/001 Active Diaries/2026-02-23.md",
+                "file": "003 Daily/001 Active Diaries/2026-02-24.md",
                 "mode": "preview",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "2026-02-23"
-            }
-          },
-          {
-            "id": "47f5688e792ff486",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "002 Notes/003 Saved Notes/Mawaidh.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "Mawaidh"
-            }
-          },
-          {
-            "id": "2f596c28f71818ad",
-            "type": "leaf",
-            "state": {
-              "type": "pdf",
-              "state": {
-                "file": "004 Files/001 Attach/warsh.pdf"
-              },
-              "icon": "lucide-file-text",
-              "title": "warsh"
+              "title": "2026-02-24"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -112,10 +82,10 @@
           "type": "search",
           "state": {
             "query": "",
-            "matchingCase": true,
-            "explainSearch": true,
-            "collapseAll": true,
-            "extraContext": true,
+            "matchingCase": false,
+            "explainSearch": false,
+            "collapseAll": false,
+            "extraContext": false,
             "sortOrder": "alphabetical"
           },
           "icon": "lucide-search",
@@ -174,7 +144,7 @@
         "state": {
           "type": "outline",
           "state": {
-            "file": "001 Dashboard/Dashboard/Dashboard.md",
+            "file": "003 Daily/001 Active Diaries/2026-02-23.md",
             "followCursor": false,
             "showSearch": false,
             "searchQuery": ""
@@ -209,7 +179,7 @@
         "state": {
           "type": "localgraph",
           "state": {
-            "file": "001 Dashboard/Dashboard/Dashboard.md",
+            "file": "003 Daily/001 Active Diaries/2026-02-24.md",
             "options": {
               "collapse-filter": true,
               "search": "",
@@ -270,10 +240,10 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "19c003a36a5455dc",
+  "active": "f448887c037ad075",
   "lastOpenFiles": [
-    "001 Dashboard/Athkar & Adia.md",
     "001 Dashboard/Dashboard/Dashboard.md",
-    "002 Notes/003 Saved Notes/Mawaidh.md"
+    "003 Daily/001 Active Diaries/2026-02-24.md",
+    "001 Dashboard/Self Education.md"
   ]
 }

@@ -9,10 +9,11 @@
     "Coller",
     "Cardlink",
     "Cards",
-    "Arabic"
+    "Arabic",
+    "ibm-note"
   ],
-  "interfaceFontFamily": "Noto Naskh Arabic",
-  "monospaceFontFamily": "Noto Naskh Arabic",
+  "interfaceFontFamily": "Noto Naskh Arabic,IBM Plex Sans Arabic",
+  "monospaceFontFamily": "IBM Plex Mono",
   "textFontFamily": "Noto Naskh Arabic",
   "baseFontSize": 16.5,
   "theme": "system",

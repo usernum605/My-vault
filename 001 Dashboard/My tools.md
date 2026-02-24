@@ -11,6 +11,8 @@ tags:
   - Self↑up
 node_size: 19
 ui: preview
+links pages:
+  - "[[My YouTube Channels]]"
 ---
 #### أدوات مفيدة
 
