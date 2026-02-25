@@ -52,7 +52,7 @@ The Topic:
 ![[Takwa.mp3]]
 
 ###### أحداث بعد الموت
-![[تذكر]]
+![[Tathakar]]
 
 ###### موعظة
 ![](https://youtu.be/PnHKBDdmRrA?si=xqsIlIvtEw5_bVt9)
