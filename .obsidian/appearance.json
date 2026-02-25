@@ -2,14 +2,10 @@
   "accentColor": "#235f8c",
   "cssTheme": "Minimalist",
   "enabledCssSnippets": [
-    "Callout",
-    "Aligner",
-    "Cardlink",
-    "ibm-note",
-    "Cards",
-    "Coller",
     "Arrange",
     "Arabic",
+    "Cards",
+    "Coller",
     "dashboard"
   ],
   "interfaceFontFamily": "Noto Naskh Arabic,IBM Plex Sans Arabic",

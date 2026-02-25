@@ -426,17 +426,54 @@ body {
      color: var(--list-marker-color);
      text-shadow: 0 0 0.4em var(--list-marker-color);
 }
- /* ========================= EMBED CLEAN MODE Hide left border + title ========================= */ /* hide left border embed*/ .markdown-embed  {
-     border-left: none !important;
-     border-right: none !important;
-     padding-left: 0 !important;
-     padding-right: 0 !important;
+
+ /* =========================
+   EMBED CLEAN MODE
+   Remove borders & fix spacing
+========================= */
+
+.markdown-embed {
+    border-left: none !important;
+    border-right: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
- /* hideembed title*/ .markdown-embed-title  {
-     display: none !important;
+
+.markdown-embed .markdown-embed-content {
+    padding: 0 !important;
+    margin: 0 !important;
 }
- .markdown-embed-link  {
-     display: none !important;
+
+.markdown-embed > .mod-header,
+.markdown-embed .embed-header,
+.markdown-embed .embed-header-container {
+    display: none !important;
+}
+
+.markdown-embed-title,
+.markdown-embed-link {
+    display: none !important;
+}
+
+.markdown-embed .markdown-preview-view {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.markdown-embed .markdown-preview-view .markdown-preview-sizer {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+.markdown-embed hr:first-child {
+    margin-top: 0 !important;
+}
+
+.markdown-embed .cm-sizer {
+    padding: 0 !important;
+    margin: 0 !important;
 }
  .theme-dark,
 .theme-light,

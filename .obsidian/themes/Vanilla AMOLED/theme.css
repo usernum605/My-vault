@@ -136,21 +136,48 @@
    Hide left border + title
 ========================= */
 
-/* hide left border embed*/
 .markdown-embed {
-	border-left: none !important;
-	border-right: none !important;
-	padding-left: 0 !important;
-	padding-right: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
-/* hideembed title*/
-.markdown-embed-title {
-	display: none !important;
+.markdown-embed .markdown-embed-content {
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
+.markdown-embed > .mod-header,
+.markdown-embed .embed-header,
+.markdown-embed .embed-header-container {
+    display: none !important;
+}
+
+.markdown-embed-title,
 .markdown-embed-link {
-	display: none !important;
+    display: none !important;
+}
+
+.markdown-embed .markdown-preview-view {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.markdown-embed .markdown-preview-view .markdown-preview-sizer {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+.markdown-embed hr:first-child {
+    margin-top: 0 !important;
+}
+
+.markdown-embed .cm-sizer {
+    padding: 0 !important;
+    margin: 0 !important;
 }
 /* Mobile sidebars (when pinned) */
 .is-mobile .workspace-drawer.mod-left.is-pinned {

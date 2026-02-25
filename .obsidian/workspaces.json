@@ -44,15 +44,10 @@
                 "id": "8854d8e20b0712ed",
                 "type": "leaf",
                 "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "002 Notes/002 lessons/Learn Something.md",
-                    "mode": "source",
-                    "source": false,
-                    "backlinks": false
-                  },
+                  "type": "empty",
+                  "state": {},
                   "icon": "lucide-file",
-                  "title": "Learn Something"
+                  "title": "New tab"
                 }
               }
             ]
@@ -117,7 +112,7 @@
               "state": {
                 "sortOrder": "frequency",
                 "showSearch": true,
-                "searchQuery": "Tag"
+                "searchQuery": ""
               },
               "icon": "lucide-archive",
               "title": "All properties"
@@ -181,7 +176,6 @@
             "state": {
               "type": "localgraph",
               "state": {
-                "file": "002 Notes/002 lessons/Learn Something.md",
                 "options": {
                   "collapse-filter": true,
                   "search": "",
@@ -242,8 +236,8 @@
           "workspaces:Manage workspace layouts": false
         }
       },
-      "active": "19c003a36a5455dc",
-      "mtime": "2026-02-22T22:45:00+01:00"
+      "active": "8854d8e20b0712ed",
+      "mtime": "2026-02-25T19:44:22+01:00"
     },
     "Diarie": {
       "main": {
@@ -392,7 +386,7 @@
               "state": {
                 "sortOrder": "frequency",
                 "showSearch": true,
-                "searchQuery": "Tag"
+                "searchQuery": ""
               },
               "icon": "lucide-archive",
               "title": "All properties"
@@ -446,7 +440,7 @@
             "state": {
               "type": "localgraph",
               "state": {
-                "file": "003 Daily/001 Active Diaries/2026-02-25.md",
+                "file": "001 Dashboard/Dashboard/Dashboard.md",
                 "options": {
                   "collapse-filter": true,
                   "search": "",
@@ -507,8 +501,8 @@
           "workspaces:Manage workspace layouts": false
         }
       },
-      "active": "f448887c037ad075",
-      "mtime": "2026-02-25T18:45:55+01:00"
+      "active": "19c003a36a5455dc",
+      "mtime": "2026-02-25T19:23:27+01:00"
     }
   },
   "active": "Diarie"

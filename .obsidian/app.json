@@ -23,5 +23,6 @@
     "004 Files/004 Temple/"
   ],
   "tabSize": 4,
-  "uriCallbacks": false
+  "uriCallbacks": false,
+  "livePreview": true
 }
