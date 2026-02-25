@@ -397,16 +397,6 @@
               "icon": "lucide-archive",
               "title": "All properties"
             }
-          },
-          {
-            "id": "fa9f950e3e00860e",
-            "type": "leaf",
-            "state": {
-              "type": "bookmarks",
-              "state": {},
-              "icon": "lucide-bookmark",
-              "title": "Bookmarks"
-            }
           }
         ],
         "currentTab": 0
@@ -518,7 +508,7 @@
         }
       },
       "active": "f448887c037ad075",
-      "mtime": "2026-02-25T15:52:04+01:00"
+      "mtime": "2026-02-25T18:45:55+01:00"
     }
   },
   "active": "Diarie"

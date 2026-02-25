@@ -9,8 +9,34 @@ const DEFAULT_SETTINGS = {
 };
 
 class OptimizedCombinedGraphPlugin extends Plugin {
+  // أضف هذه الدالة في نهاية الكلاس StyleshVault
+hideBacklinksOnStartup() {
+    // انتظر حتى يكتمل تحميل التطبيق
+    setTimeout(() => {
+        this.closeBacklinksLeaf();
+    }, 1000);
+    
+    // راقب أي محاولة لفتح backlinks وأغلقه فوراً
+    this.registerEvent(
+        this.app.workspace.on('layout-change', () => {
+            this.closeBacklinksLeaf();
+        })
+    );
+}
+
+closeBacklinksLeaf() {
+    // ابحث عن أي leaf من نوع backlink
+    this.app.workspace.iterateAllLeaves((leaf) => {
+        if (leaf.view?.getViewType?.() === 'backlink') {
+            leaf.detach();
+            console.log('Closed backlinks leaf'); // للتتبع
+        }
+    });
+}
 
 	async onload() {
+    this.hideBacklinksOnStartup();
+    
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 
 		this.folderCache = new Map();          // cache folder file lists
