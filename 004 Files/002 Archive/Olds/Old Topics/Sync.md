@@ -16,9 +16,7 @@ icon: sync-small
 ```bash
 proot-distro login ubuntu
 cd shared/obsidian/obsidian\ N
-git add .gitattributes
-git add .obsidian/plugins/Ai-Assistant/data.json
-git commit -m "sync"
+git pull origin main --rebase
 sync
 
 ```

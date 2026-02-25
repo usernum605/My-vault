@@ -29,13 +29,15 @@
     "cssclasses",
     "banner_y",
     "node_size",
-    "banner"
+    "banner",
+    "hidely"
   ],
   "temporaryHiddenProperties": [
     "cssclasses",
     "tags",
     "ui",
-    "node_size"
+    "node_size",
+    "hidely"
   ],
   "temporaryViewTimeout": 30,
   "defaultNotePath": "",

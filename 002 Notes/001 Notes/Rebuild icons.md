@@ -9,7 +9,6 @@ tags:
   - Type/Quick-Notes
 The Topic:
   - Obsidian plugins
-  - Stylesh Vault plugin
 ---
 ### Note About Rebuild icons
 - يتم حذف ثم اعادة رندرة الأيقونة كلما تم التبديل من وضع البريفيو الى الاديت او العكس

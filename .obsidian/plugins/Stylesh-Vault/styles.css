@@ -1,3 +1,8 @@
+/* Hide properties heading when hidely is active - فقط في الحاوية المحلية */
+.metadata-container.metadata-heading-off .metadata-properties-heading {
+    display: none;
+}
+
 /* BANNER COLOR INVERSION FEATURE */
 .invert-banner .banner-image img {
     filter: invert(1) hue-rotate(180deg);

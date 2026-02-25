@@ -4,6 +4,7 @@ banner: https://images.unsplash.com/photo-1517842645767-c639042777db?w=500&auto=
 ui: edit
 cssclasses:
   - card
+  - IBM
 tags:
   - Type/Quick-Notes
 links pages:
@@ -11,10 +12,18 @@ links pages:
   - "[[Rebuild icons]]"
 The Topic:
   - Obsidian plugins
-  - Stylesh Vault plugin
 ---
 ### Note About Hide
-- جعل اخفاء البروبرتيز عبر css اذا كان هناك بروبرتيز اسمه hidely يعنل اذا كانت كل البروبرتيز مخفية -اذا تم اظهارها عبر انشاء ملف جديد او استخدام show temporary property تعود properties تظهر
+- جعل اخفاء البروبرتيز عبر css اذا كان هناك بروبرتيز اسمه hidely يساوي true فقط اذا كانت كل البروبرتيز مخفية -اذا تم اظهارها عبر انشاء ملف جديد او استخدام show temporary property تعود properties تظهر
+- طريقة الاخفاء (css)
+```css
+body.metadata-heading-off .metadata-properties-heading{display:none}.metadata-add-property-off .mod-root .metadata-add-button{display:none}
+```
+- ملاحظة: طريقة الربح هذه تعمل على اخفاء كل شيء الا انني اريد اخفاء الهيدين الخاص بالبروبرتيز فقط
+أي: 
+```css
+body.metadata-heading-off .metadata-properties-heading{display:none}
+```
 
 ##### Links
-- [[
+- [[Rebuild icons]]

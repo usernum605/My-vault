@@ -1,7 +1,8 @@
 ---
 ui: preview
-aliases: 
-    - Pomodoro
+aliases:
+  - Pomodoro
+hidely: true
 ---
 ```dataviewjs
 // Create main container

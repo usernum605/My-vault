@@ -16,6 +16,7 @@ links pages:
   - "[[أذكار النوم]]"
 ui: preview
 aliases:
+- الأذكار
 ---
 
 # 🌅 أذكار الصباح

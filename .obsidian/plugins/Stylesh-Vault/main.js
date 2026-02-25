@@ -26,6 +26,7 @@ const DEFAULT_SETTINGS = {
     enableCache: true,
     cacheExpiryDays: 30,
     hideScrollbars: true,
+    hidelyProperty: "hidely",
     showPropertiesOnCreate: true,
     showPropertiesOnCreateDuration: 60
 };
@@ -55,6 +56,17 @@ module.exports = class StyleshVault extends Plugin {
         this.addSettingTab(new StyleshVaultSettingTab(this.app, this));
         this.updateCssVariables();
         this.updateHiddenPropertiesCSS();
+        
+        this.registerEvent(this.app.workspace.on("file-open", (file) => {
+        setTimeout(() => {
+        this.handleViewMode(file);
+        this.cleanupDuplicates(file);
+        this.debouncedUpdate();
+        this.addShowFullPropertiesButtons();
+        this.checkNewlyCreatedFile(file);
+        this.updateHiddenPropertiesCSS(); // أضف هذا السطر
+    }, 100);
+}));
 
         await this.initCache();
 
@@ -405,55 +417,79 @@ module.exports = class StyleshVault extends Plugin {
             new Notice('Temporary properties have been hidden');
         }
     }
-
     updateHiddenPropertiesCSS() {
-        let styleEl = document.getElementById('pp-hidden-props') || document.head.createEl('style', { id: 'pp-hidden-props' });
+    let styleEl = document.getElementById('pp-hidden-props') || document.head.createEl('style', { id: 'pp-hidden-props' });
 
-        const rules = [];
-        const currentFile = this.app.workspace.getActiveFile();
-        const currentFilePath = currentFile ? currentFile.path : null;
+    const rules = [];
+    const currentFile = this.app.workspace.getActiveFile();
+    const currentFilePath = currentFile ? currentFile.path : null;
 
-        const isNewlyCreated = currentFilePath ? this.checkNewlyCreatedFile(currentFile) : false;
-
-        this.settings.hiddenProperties.forEach(prop => {
-            let shouldShow = false;
-
-            if (isNewlyCreated) {
-                shouldShow = true;
-            }
-            else if (this.editingProperties.has(prop)) {
-                shouldShow = true;
-            }
-            else if (currentFilePath && 
-                    this.temporaryVisibleProps.has(currentFilePath) && 
-                    this.temporaryVisibleProps.get(currentFilePath).props.has(prop)) {
-                shouldShow = true;
-            }
-
-            if (shouldShow) {
-                rules.push(`
-                    .metadata-property[data-property-key="${prop}"] { 
-                        opacity: 1 !important;
-                        display: block !important;
-                    }
-                `);
-            } else {
-                rules.push(`.metadata-property[data-property-key="${prop}"] { display: none !important; }`);
+    const isNewlyCreated = currentFilePath ? this.checkNewlyCreatedFile(currentFile) : false;
+    const hasTemporaryVisible = currentFilePath && this.temporaryVisibleProps.has(currentFilePath);
+    
+    // التحقق من وجود خاصية hidely في الملف الحالي
+    const fm = currentFile ? this.app.metadataCache.getFileCache(currentFile)?.frontmatter : null;
+    const hasHidely = fm?.[this.settings.hidelyProperty] === true;
+    
+    // إضافة أو إزالة class من metadata-container في الملف النشط فقط
+    // نستخدم setTimeout للتأكد من وجود العناصر في DOM
+    setTimeout(() => {
+        const metadataContainers = document.querySelectorAll('.metadata-container');
+        metadataContainers.forEach(container => {
+            // نتحقق من أن هذا الـ container يتبع الملف النشط
+            const isActiveFileContainer = container.closest('.workspace-leaf.mod-active');
+            if (isActiveFileContainer) {
+                if (hasHidely && !isNewlyCreated && !hasTemporaryVisible) {
+                    container.classList.add('metadata-heading-off');
+                    console.log('Added metadata-heading-off class to active container'); // للتتبع
+                } else {
+                    container.classList.remove('metadata-heading-off');
+                    console.log('Removed metadata-heading-off class from active container'); // للتتبع
+                }
             }
         });
+    }, 100);
+
+    this.settings.hiddenProperties.forEach(prop => {
+        let shouldShow = false;
 
         if (isNewlyCreated) {
-            rules.push(`
-                .new-file-notice {
-                    display: flex !important;
-                }
-            `);
+            shouldShow = true;
+        }
+        else if (this.editingProperties.has(prop)) {
+            shouldShow = true;
+        }
+        else if (currentFilePath && 
+                this.temporaryVisibleProps.has(currentFilePath) && 
+                this.temporaryVisibleProps.get(currentFilePath).props.has(prop)) {
+            shouldShow = true;
         }
 
-        styleEl.innerText = rules.join("\n");
+        if (shouldShow) {
+            rules.push(`
+                .metadata-property[data-property-key="${prop}"] { 
+                    opacity: 1 !important;
+                    display: block !important;
+                }
+            `);
+        } else {
+            rules.push(`.metadata-property[data-property-key="${prop}"] { display: none !important; }`);
+        }
+    });
 
-        this.toggleNewFileNotice(currentFile, isNewlyCreated);
+    if (isNewlyCreated) {
+        rules.push(`
+            .new-file-notice {
+                display: flex !important;
+            }
+        `);
     }
+
+    styleEl.innerText = rules.join("\n");
+
+    this.toggleNewFileNotice(currentFile, isNewlyCreated);
+}
+    
 
     addShowFullPropertiesButtons() {
         const propertiesContainers = document.querySelectorAll('.metadata-container');
@@ -1524,20 +1560,24 @@ module.exports = class StyleshVault extends Plugin {
     }
 
     async loadSettings() { 
-        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData()); 
-        if (!this.settings.temporaryHiddenProperties) {
-            this.settings.temporaryHiddenProperties = [];
-        }
-        if (!this.settings.temporaryViewTimeout) {
-            this.settings.temporaryViewTimeout = 60;
-        }
-        if (this.settings.showPropertiesOnCreate === undefined) {
-            this.settings.showPropertiesOnCreate = true;
-        }
-        if (!this.settings.showPropertiesOnCreateDuration) {
-            this.settings.showPropertiesOnCreateDuration = 60;
-        }
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData()); 
+    if (!this.settings.temporaryHiddenProperties) {
+        this.settings.temporaryHiddenProperties = [];
     }
+    if (!this.settings.temporaryViewTimeout) {
+        this.settings.temporaryViewTimeout = 60;
+    }
+    if (this.settings.showPropertiesOnCreate === undefined) {
+        this.settings.showPropertiesOnCreate = true;
+    }
+    if (!this.settings.showPropertiesOnCreateDuration) {
+        this.settings.showPropertiesOnCreateDuration = 60;
+    }
+    
+    if (this.settings.hidelyProperty === undefined) {
+        this.settings.hidelyProperty = "hidely";
+    }
+  }
 
     async saveSettings() { 
         await this.saveData(this.settings); 
