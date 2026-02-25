@@ -209,7 +209,7 @@
         "state": {
           "type": "localgraph",
           "state": {
-            "file": "003 Daily/001 Active Diaries/2026-02-25.md",
+            "file": "001 Dashboard/points of my knowledge.md",
             "options": {
               "collapse-filter": true,
               "search": "",
@@ -270,10 +270,10 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "f448887c037ad075",
+  "active": "19c003a36a5455dc",
   "lastOpenFiles": [
-    "001 Dashboard/points of my knowledge.md",
     "003 Daily/001 Active Diaries/2026-02-25.md",
+    "001 Dashboard/points of my knowledge.md",
     "001 Dashboard/Dashboard/Dashboard.md",
     "004 Files/004 Temple/Log Tem.md",
     "004 Files/004 Temple/Today Tem.md",
