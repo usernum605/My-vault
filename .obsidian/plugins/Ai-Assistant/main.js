@@ -34,7 +34,8 @@ const DEFAULT_SETTINGS = {
   customModel: "",
   customEndpoint: "",
   customHeaders: "{}",
-  customBodyTemplate: '{"messages": {{messages}}, "model": "{{model}}"}'
+  customBodyTemplate: '{"messages": {{messages}}, "model": "{{model}}"}',
+  inputPosition: "bottom"
 };
 
 // ==================== UTILITY FUNCTIONS ====================
@@ -1228,75 +1229,205 @@ class PromptModal extends Modal {
     this.onSubmit = onSubmit;
   }
   
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.empty();
-    
-    contentEl.createEl('h3', { text: this.title, cls: 'ai-modal-title' });
-    
-    this.ta = contentEl.createEl('textarea', {
-      cls: 'ai-modal-textarea',
-      attr: {
-        placeholder: 'Type your prompt here...'
-      }
-    });
-    this.ta.style.width = '100%';
-    this.ta.style.height = '160px';
-    this.ta.style.padding = '12px';
-    this.ta.style.borderRadius = '8px';
-    this.ta.style.border = '1px solid var(--background-modifier-border)';
-    this.ta.style.backgroundColor = 'var(--background-primary)';
-    this.ta.style.color = 'var(--text-normal)';
-    this.ta.style.fontSize = '14px';
-    this.ta.style.fontFamily = 'inherit';
-    this.ta.style.resize = 'vertical';
-    this.ta.value = this.initial;
-    
-    const row = contentEl.createEl('div', { cls: 'ai-modal-btn-row' });
-    row.style.display = 'flex';
-    row.style.justifyContent = 'flex-end';
-    row.style.gap = '10px';
-    row.style.marginTop = '16px';
-    
-    const send = row.createEl('button', { 
-      text: 'Send',
-      cls: 'ai-modal-send-btn'
-    });
-    send.style.padding = '8px 24px';
-    send.style.borderRadius = '6px';
-    send.style.border = 'none';
-    send.style.backgroundColor = 'var(--interactive-accent)';
-    send.style.color = 'var(--text-on-accent)';
-    send.style.cursor = 'pointer';
-    send.style.fontSize = '14px';
-    send.style.fontWeight = '600';
-    
-    const cancel = row.createEl('button', { 
-      text: 'Cancel',
-      cls: 'ai-modal-cancel-btn'
-    });
-    cancel.style.padding = '8px 24px';
-    cancel.style.borderRadius = '6px';
-    cancel.style.border = '1px solid var(--background-modifier-border)';
-    cancel.style.backgroundColor = 'transparent';
-    cancel.style.color = 'var(--text-normal)';
-    cancel.style.cursor = 'pointer';
-    cancel.style.fontSize = '14px';
-    
-    send.addEventListener('click', () => {
-      const v = this.ta.value.trim();
-      if (!v) { 
-        new Notice("Prompt cannot be empty"); 
-        return; 
-      }
-      this.onSubmit(v);
-      this.close();
-    });
-    
-    cancel.addEventListener('click', () => this.close());
-    
-    this.ta.focus();
+  async onOpen() {  // <-- هذا خطأ، هذه دالة PromptModal وليست ChatView
+  this.containerEl.empty();
+  this.containerEl.addClass('ai-sidebar');
+  this.containerEl.style.direction = 'ltr';
+  this.containerEl.style.textAlign = 'left';
+  this.containerEl.style.display = 'flex';
+  this.containerEl.style.flexDirection = 'column';
+  this.containerEl.style.height = '100%';
+  this.containerEl.style.padding = '8px';
+  this.containerEl.style.gap = '8px';
+  this.containerEl.style.boxSizing = 'border-box';
+
+  const topBar = this.containerEl.createDiv({ cls: 'ai-top-bar' });
+  topBar.style.display = 'flex';
+  topBar.style.justifyContent = 'flex-start';
+  topBar.style.alignItems = 'center';
+  topBar.style.height = '36px';
+  topBar.style.width = '100%';
+  topBar.style.gap = '8px';
+
+  this.shortcutsBtn = topBar.createEl('button', {
+    cls: 'ai-shortcuts-btn'
+  });
+  setIcon(this.shortcutsBtn, 'command');
+  this.styleButton(this.shortcutsBtn);
+  this.shortcutsBtn.title = 'Shortcuts';
+
+  this.modeToggleBtn = topBar.createEl('button', {
+    cls: 'ai-mode-toggle'
+  });
+  setIcon(this.modeToggleBtn, this.getProviderIcon());
+  this.styleButton(this.modeToggleBtn);
+  this.modeToggleBtn.title = this.getProviderInfo();
+
+  // زر المحادثة المؤقتة
+  this.tempChatBtn = topBar.createEl('button', {
+    cls: 'ai-temp-chat-btn'
+  });
+  setIcon(this.tempChatBtn, 'message-square-dashed');
+  this.styleButton(this.tempChatBtn);
+  this.tempChatBtn.title = 'New Temporary Chat (unsaved)';
+
+  this.tokenCounter = topBar.createDiv({ 
+    cls: 'ai-token-counter'
+  });
+  this.tokenCounter.style.fontSize = '11px';
+  this.tokenCounter.style.padding = '4px 8px';
+  this.tokenCounter.style.borderRadius = '12px';
+  this.tokenCounter.style.background = 'transparent';
+  this.tokenCounter.style.color = 'var(--text-muted)';
+  this.tokenCounter.style.border = '1px solid var(--background-modifier-border)';
+  this.tokenCounter.style.display = 'flex';
+  this.tokenCounter.style.alignItems = 'center';
+  this.tokenCounter.style.justifyContent = 'center';
+  this.tokenCounter.style.gap = '4px';
+  this.tokenCounter.style.minWidth = '70px';
+  this.tokenCounter.style.height = '24px';
+  
+  const tokenIcon = this.tokenCounter.createSpan();
+  setIcon(tokenIcon, 'binary');
+  tokenIcon.style.display = 'flex';
+  
+  const tokenText = this.tokenCounter.createSpan();
+  tokenText.textContent = '0/8192';
+  
+  this.updateTokenCounterVisibility();
+
+  const spacer = topBar.createDiv({ cls: 'ai-top-spacer' });
+  spacer.style.flex = '1';
+
+  this.settingsBtn = topBar.createEl('button', { 
+    cls: 'ai-settings-btn'
+  });
+  setIcon(this.settingsBtn, 'settings');
+  this.styleButton(this.settingsBtn);
+  this.settingsBtn.title = 'Settings';
+
+  // الأحداث
+  this.modeToggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    this.toggleAIMode();
+  });
+
+  this.settingsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const settingsModal = new SettingsModal(this.app, this.plugin);
+    settingsModal.open();
+  });
+
+  this.shortcutsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    this.showShortcutsMenu();
+  });
+
+  this.tempChatBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    this.createTemporaryChat();
+  });
+
+  // التحقق من موقع الإدخال المفضل
+  const inputPosition = this.plugin.settings.inputPosition || 'bottom';
+  
+  if (inputPosition === 'bottom') {
+    // الترتيب الافتراضي: المحادثة في الأعلى، الإدخال في الأسفل
+    await this.createChatArea();
+    await this.createInputArea();
+  } else {
+    // الترتيب المعكوس: الإدخال في الأعلى، المحادثة في الأسفل
+    await this.createInputArea();
+    await this.createChatArea();
   }
+
+  this._renderMessages();
+  this._streaming = true;
+  
+  if (this.plugin.settings.showTokenCounter) {
+    this.inputEl.addEventListener('input', () => this._updateTokenCounter());   
+    setTimeout(() => this._updateTokenCounter(), 100);
+  }
+}
+
+// دالة جديدة لإنشاء منطقة المحادثة
+async createChatArea() {
+  this.chatEl = this.containerEl.createDiv({ cls: 'ai-chat' });
+  this.chatEl.style.flex = '1';
+  this.chatEl.style.overflowY = 'auto';
+  this.chatEl.style.padding = '16px';
+  this.chatEl.style.borderRadius = '8px';
+  this.chatEl.style.background = 'var(--background-primary)';
+  this.chatEl.style.border = '1px solid var(--background-modifier-border)';
+  this.chatEl.style.margin = '4px 0';
+  this.chatEl.style.display = 'flex';
+  this.chatEl.style.flexDirection = 'column';
+}
+
+// دالة جديدة لإنشاء منطقة الإدخال
+async createInputArea() {
+  const inputWrap = this.containerEl.createDiv({ cls: 'ai-input-wrap' });
+  inputWrap.style.position = 'relative';
+  inputWrap.style.width = '100%';
+  inputWrap.style.marginTop = 'auto';
+  inputWrap.style.paddingTop = '8px';
+  inputWrap.style.borderTop = '1px solid var(--background-modifier-border)';
+  
+  this.inputEl = inputWrap.createEl('textarea', { 
+    cls: 'ai-input',
+    attr: { 
+      placeholder: 'Type a message... (Shift+Enter send)',
+      rows: '2'
+    }
+  });
+  this.inputEl.style.width = '100%';
+  this.inputEl.style.resize = 'vertical';
+  this.inputEl.style.padding = '12px';
+  this.inputEl.style.paddingBottom = '60px';
+  this.inputEl.style.borderRadius = '8px';
+  this.inputEl.style.border = '1px solid var(--background-modifier-border)';
+  this.inputEl.style.background = 'var(--background-secondary)';
+  this.inputEl.style.color = 'var(--text-normal)';
+  this.inputEl.style.fontSize = '15px';
+  this.inputEl.style.minHeight = '120px';
+  this.inputEl.style.maxHeight = '300px';
+  this.inputEl.style.lineHeight = '1.5';
+
+  this.attachBtn = inputWrap.createEl('button', { 
+    text: '+', 
+    cls: 'ai-attach-btn floating-btn'
+  });
+  this.styleFloatingButton(this.attachBtn);
+  this.attachBtn.style.bottom = '60px';
+  this.attachBtn.title = 'Attach files';
+
+  this.sendBtn = inputWrap.createEl('button', { 
+    text: '➤', 
+    cls: 'ai-send-btn floating-btn' 
+  });
+  this.styleFloatingButton(this.sendBtn);
+  this.sendBtn.style.bottom = '15px';
+  this.sendBtn.title = 'Send';
+
+  this.sendBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    this._onSend();
+  });
+  
+  this.attachBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    this._onAttach();
+  });
+  
+  this.inputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.shiftKey) {
+      e.preventDefault();
+      this._onSend();
+    }
+    // Enter alone creates a new line (default)
+  });
+}
   
   onClose() { 
     this.contentEl.empty(); 
@@ -2022,184 +2153,226 @@ class ChatView extends ItemView {
   getIcon() { return 'brain'; }
 
   async onOpen() {
-    this.containerEl.empty();
-    this.containerEl.addClass('ai-sidebar');
-    this.containerEl.style.direction = 'ltr';
-    this.containerEl.style.textAlign = 'left';
-    this.containerEl.style.display = 'flex';
-    this.containerEl.style.flexDirection = 'column';
-    this.containerEl.style.height = '100%';
-    this.containerEl.style.padding = '8px';
-    this.containerEl.style.gap = '8px';
-    this.containerEl.style.boxSizing = 'border-box';
+  this.containerEl.empty();
+  this.containerEl.addClass('ai-sidebar');
+  this.containerEl.style.direction = 'ltr';
+  this.containerEl.style.textAlign = 'left';
+  this.containerEl.style.display = 'flex';
+  this.containerEl.style.flexDirection = 'column';
+  this.containerEl.style.height = '100%';
+  this.containerEl.style.padding = '8px';
+  this.containerEl.style.gap = '8px';
+  this.containerEl.style.boxSizing = 'border-box';
 
-    const topBar = this.containerEl.createDiv({ cls: 'ai-top-bar' });
-    topBar.style.display = 'flex';
-    topBar.style.justifyContent = 'flex-start';
-    topBar.style.alignItems = 'center';
-    topBar.style.height = '36px';
-    topBar.style.width = '100%';
-    topBar.style.gap = '8px';
+  const topBar = this.containerEl.createDiv({ cls: 'ai-top-bar' });
+  topBar.style.display = 'flex';
+  topBar.style.justifyContent = 'flex-start';
+  topBar.style.alignItems = 'center';
+  topBar.style.height = '36px';
+  topBar.style.width = '100%';
+  topBar.style.gap = '8px';
 
-    this.shortcutsBtn = topBar.createEl('button', {
-      cls: 'ai-shortcuts-btn'
-    });
-    setIcon(this.shortcutsBtn, 'command');
-    this.styleButton(this.shortcutsBtn);
-    this.shortcutsBtn.title = 'Shortcuts';
+  // أزرار الهيدر (كما هي)
+  this.shortcutsBtn = topBar.createEl('button', {
+    cls: 'ai-shortcuts-btn'
+  });
+  setIcon(this.shortcutsBtn, 'command');
+  this.styleButton(this.shortcutsBtn);
+  this.shortcutsBtn.title = 'Shortcuts';
 
-    this.modeToggleBtn = topBar.createEl('button', {
-      cls: 'ai-mode-toggle'
-    });
-    setIcon(this.modeToggleBtn, this.getProviderIcon());
-    this.styleButton(this.modeToggleBtn);
-    this.modeToggleBtn.title = this.getProviderInfo();
+  this.modeToggleBtn = topBar.createEl('button', {
+    cls: 'ai-mode-toggle'
+  });
+  setIcon(this.modeToggleBtn, this.getProviderIcon());
+  this.styleButton(this.modeToggleBtn);
+  this.modeToggleBtn.title = this.getProviderInfo();
 
-    // زر المحادثة المؤقتة
-    this.tempChatBtn = topBar.createEl('button', {
-      cls: 'ai-temp-chat-btn'
-    });
-    setIcon(this.tempChatBtn, 'message-square-dashed');
-    this.styleButton(this.tempChatBtn);
-    this.tempChatBtn.title = 'New Temporary Chat (unsaved)';
+  this.tempChatBtn = topBar.createEl('button', {
+    cls: 'ai-temp-chat-btn'
+  });
+  setIcon(this.tempChatBtn, 'message-square-dashed');
+  this.styleButton(this.tempChatBtn);
+  this.tempChatBtn.title = 'New Temporary Chat (unsaved)';
 
-    this.tokenCounter = topBar.createDiv({ 
-      cls: 'ai-token-counter'
-    });
-    this.tokenCounter.style.fontSize = '11px';
-    this.tokenCounter.style.padding = '4px 8px';
-    this.tokenCounter.style.borderRadius = '12px';
-    this.tokenCounter.style.background = 'transparent';
-    this.tokenCounter.style.color = 'var(--text-muted)';
-    this.tokenCounter.style.border = '1px solid var(--background-modifier-border)';
-    this.tokenCounter.style.display = 'flex';
-    this.tokenCounter.style.alignItems = 'center';
-    this.tokenCounter.style.justifyContent = 'center';
-    this.tokenCounter.style.gap = '4px';
-    this.tokenCounter.style.minWidth = '70px';
-    this.tokenCounter.style.height = '24px';
-    
-    const tokenIcon = this.tokenCounter.createSpan();
-    setIcon(tokenIcon, 'binary');
-    tokenIcon.style.display = 'flex';
-    
-    const tokenText = this.tokenCounter.createSpan();
-    tokenText.textContent = '0/8192';
-    
-    this.updateTokenCounterVisibility();
+  this.tokenCounter = topBar.createDiv({ 
+    cls: 'ai-token-counter'
+  });
+  this.tokenCounter.style.fontSize = '11px';
+  this.tokenCounter.style.padding = '4px 8px';
+  this.tokenCounter.style.borderRadius = '12px';
+  this.tokenCounter.style.background = 'transparent';
+  this.tokenCounter.style.color = 'var(--text-muted)';
+  this.tokenCounter.style.border = '1px solid var(--background-modifier-border)';
+  this.tokenCounter.style.display = 'flex';
+  this.tokenCounter.style.alignItems = 'center';
+  this.tokenCounter.style.justifyContent = 'center';
+  this.tokenCounter.style.gap = '4px';
+  this.tokenCounter.style.minWidth = '70px';
+  this.tokenCounter.style.height = '24px';
+  
+  const tokenIcon = this.tokenCounter.createSpan();
+  setIcon(tokenIcon, 'binary');
+  tokenIcon.style.display = 'flex';
+  
+  const tokenText = this.tokenCounter.createSpan();
+  tokenText.textContent = '0/8192';
+  
+  this.updateTokenCounterVisibility();
 
-    const spacer = topBar.createDiv({ cls: 'ai-top-spacer' });
-    spacer.style.flex = '1';
+  const spacer = topBar.createDiv({ cls: 'ai-top-spacer' });
+  spacer.style.flex = '1';
 
-    this.settingsBtn = topBar.createEl('button', { 
-      cls: 'ai-settings-btn'
-    });
-    setIcon(this.settingsBtn, 'settings');
-    this.styleButton(this.settingsBtn);
-    this.settingsBtn.title = 'Settings';
+  this.settingsBtn = topBar.createEl('button', { 
+    cls: 'ai-settings-btn'
+  });
+  setIcon(this.settingsBtn, 'settings');
+  this.styleButton(this.settingsBtn);
+  this.settingsBtn.title = 'Settings';
 
-    // الأحداث
-    this.modeToggleBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.toggleAIMode();
-    });
+  // الأحداث
+  this.modeToggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    this.toggleAIMode();
+  });
 
-    this.settingsBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      const settingsModal = new SettingsModal(this.app, this.plugin);
-      settingsModal.open();
-    });
+  this.settingsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const settingsModal = new SettingsModal(this.app, this.plugin);
+    settingsModal.open();
+  });
 
-    this.shortcutsBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.showShortcutsMenu();
-    });
+  this.shortcutsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    this.showShortcutsMenu();
+  });
 
-    this.tempChatBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.createTemporaryChat();
-    });
+  this.tempChatBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    this.createTemporaryChat();
+  });
 
-    this.chatEl = this.containerEl.createDiv({ cls: 'ai-chat' });
-    this.chatEl.style.flex = '1';
-    this.chatEl.style.overflowY = 'auto';
-    this.chatEl.style.padding = '16px';
-    this.chatEl.style.borderRadius = '8px';
-    this.chatEl.style.background = 'var(--background-primary)';
-    this.chatEl.style.border = '1px solid var(--background-modifier-border)';
-    this.chatEl.style.margin = '4px 0';
-    this.chatEl.style.display = 'flex';
-    this.chatEl.style.flexDirection = 'column';
+  // التحقق من موقع الإدخال المفضل
+  const inputPosition = this.plugin.settings.inputPosition || 'bottom';
+  
+  if (inputPosition === 'bottom') {
+    // الترتيب الافتراضي: المحادثة في الأعلى، الإدخال في الأسفل
+    await this.createChatArea();
+    await this.createInputArea();
+  } else {
+    // الترتيب المعكوس: الإدخال في الأعلى، المحادثة في الأسفل
+    await this.createInputArea();
+    await this.createChatArea();
+  }
 
-    const inputWrap = this.containerEl.createDiv({ cls: 'ai-input-wrap' });
-    inputWrap.style.position = 'relative';
-    inputWrap.style.width = '100%';
-    inputWrap.style.marginTop = 'auto';
-    inputWrap.style.paddingTop = '8px';
-    inputWrap.style.borderTop = '1px solid var(--background-modifier-border)';
-    
-    this.inputEl = inputWrap.createEl('textarea', { 
-      cls: 'ai-input',
-      attr: { 
-        placeholder: 'Type a message... (Shift+Enter send)',
-        rows: '2'
-      }
-    });
-    this.inputEl.style.width = '100%';
-    this.inputEl.style.resize = 'vertical';
-    this.inputEl.style.padding = '12px';
-    this.inputEl.style.paddingBottom = '60px';
-    this.inputEl.style.borderRadius = '8px';
-    this.inputEl.style.border = '1px solid var(--background-modifier-border)';
-    this.inputEl.style.background = 'var(--background-secondary)';
-    this.inputEl.style.color = 'var(--text-normal)';
-    this.inputEl.style.fontSize = '15px';
-    this.inputEl.style.minHeight = '120px';
-    this.inputEl.style.maxHeight = '300px';
-    this.inputEl.style.lineHeight = '1.5';
+  this._renderMessages();
+  this._streaming = true;
+  
+  if (this.plugin.settings.showTokenCounter) {
+    this.inputEl.addEventListener('input', () => this._updateTokenCounter());   
+    setTimeout(() => this._updateTokenCounter(), 100);
+  }
+}
 
-    this.attachBtn = inputWrap.createEl('button', { 
-      text: '+', 
-      cls: 'ai-attach-btn floating-btn'
-    });
-    this.styleFloatingButton(this.attachBtn);
-    this.attachBtn.style.bottom = '60px';
-    this.attachBtn.title = 'Attach files';
+// دالة جديدة لإنشاء منطقة المحادثة
+async createChatArea() {
+  this.chatEl = this.containerEl.createDiv({ cls: 'ai-chat' });
+  this.chatEl.style.flex = '1';
+  this.chatEl.style.overflowY = 'auto';
+  this.chatEl.style.padding = '16px';
+  this.chatEl.style.borderRadius = '8px';
+  this.chatEl.style.background = 'var(--background-primary)';
+  this.chatEl.style.border = '1px solid var(--background-modifier-border)';
+  this.chatEl.style.margin = '4px 0';
+  this.chatEl.style.display = 'flex';
+  this.chatEl.style.flexDirection = 'column';
+}
 
-    this.sendBtn = inputWrap.createEl('button', { 
-      text: '➤', 
-      cls: 'ai-send-btn floating-btn' 
-    });
-    this.styleFloatingButton(this.sendBtn);
-    this.sendBtn.style.bottom = '15px';
-    this.sendBtn.title = 'Send';
+// دالة جديدة لإنشاء منطقة الإدخال
+async createInputArea() {
+  const inputWrap = this.containerEl.createDiv({ cls: 'ai-input-wrap' });
+  inputWrap.style.position = 'relative';
+  inputWrap.style.width = '100%';
+  inputWrap.style.marginTop = 'auto';
+  inputWrap.style.paddingTop = '8px';
+  inputWrap.style.borderTop = '1px solid var(--background-modifier-border)';
+  
+  this.inputEl = inputWrap.createEl('textarea', { 
+    cls: 'ai-input',
+    attr: { 
+      placeholder: 'Type a message... (Shift+Enter send)',
+      rows: '2'
+    }
+  });
+  this.inputEl.style.width = '100%';
+  this.inputEl.style.resize = 'vertical';
+  this.inputEl.style.padding = '12px';
+  this.inputEl.style.paddingBottom = '60px';
+  this.inputEl.style.borderRadius = '8px';
+  this.inputEl.style.border = '1px solid var(--background-modifier-border)';
+  this.inputEl.style.background = 'var(--background-secondary)';
+  this.inputEl.style.color = 'var(--text-normal)';
+  this.inputEl.style.fontSize = '15px';
+  this.inputEl.style.minHeight = '120px';
+  this.inputEl.style.maxHeight = '300px';
+  this.inputEl.style.lineHeight = '1.5';
 
-    this.sendBtn.addEventListener('click', (e) => {
+  this.attachBtn = inputWrap.createEl('button', { 
+    text: '+', 
+    cls: 'ai-attach-btn floating-btn'
+  });
+  this.styleFloatingButton(this.attachBtn);
+  this.attachBtn.style.bottom = '60px';
+  this.attachBtn.title = 'Attach files';
+
+  this.sendBtn = inputWrap.createEl('button', { 
+    text: '➤', 
+    cls: 'ai-send-btn floating-btn' 
+  });
+  this.styleFloatingButton(this.sendBtn);
+  this.sendBtn.style.bottom = '15px';
+  this.sendBtn.title = 'Send';
+
+  this.sendBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    this._onSend();
+  });
+  
+  this.attachBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    this._onAttach();
+  });
+  
+  this.inputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.shiftKey) {
       e.preventDefault();
       this._onSend();
-    });
-    
-    this.attachBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      this._onAttach();
-    });
-    
-    this.inputEl.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && e.shiftKey) {
-        e.preventDefault();
-        this._onSend();
-      }
-      // Enter alone creates a new line (default)
-    });
-
-    this._renderMessages();
-    this._streaming = true;
-    
-    if (this.plugin.settings.showTokenCounter) {
-      this.inputEl.addEventListener('input', () => this._updateTokenCounter());   
-      setTimeout(() => this._updateTokenCounter(), 100);
     }
+  });
+}
+  
+  async refreshLayout() {
+  // حفظ المرجع للعناصر الحالية
+  const oldChatEl = this.chatEl;
+  const oldInputWrap = this.inputEl?.parentElement;
+  
+  // إزالة العناصر القديمة
+  if (oldChatEl) oldChatEl.remove();
+  if (oldInputWrap) oldInputWrap.remove();
+  
+  // إعادة إنشاء حسب الإعداد الجديد
+  const inputPosition = this.plugin.settings.inputPosition || 'bottom';
+  
+  if (inputPosition === 'bottom') {
+    await this.createChatArea();
+    await this.createInputArea();
+  } else {
+    await this.createInputArea();
+    await this.createChatArea();
+  }
+  
+  // إعادة عرض الرسائل
+  this._renderMessages();
   }
 
   // دوال مساعدة لتنسيق الأزرار
@@ -3340,6 +3513,7 @@ class SettingsModal extends Modal {
     this.createInputField(section, 'Timeout (ms):', 'timeoutMs', this.plugin.settings.timeoutMs, 'number', '120000');
     this.createCheckboxField(section, 'Auto-check health on startup:', 'autoCheckHealth', this.plugin.settings.autoCheckHealth);
     this.createCheckboxField(section, 'Show token counter:', 'showTokenCounter', this.plugin.settings.showTokenCounter);
+    this.createInputPositionSelector(section);
   }
 
   showShortcutsSettings(container) {
@@ -3790,6 +3964,68 @@ class SettingsModal extends Modal {
     return checkbox;
   }
   
+  createInputPositionSelector(container) {
+  const row = container.createDiv({ cls: 'ai-settings-row' });
+  row.style.marginBottom = '16px';
+  row.style.padding = '12px';
+  row.style.background = 'var(--background-primary)';
+  row.style.borderRadius = '8px';
+  row.style.border = '1px solid var(--background-modifier-border)';
+  
+  const label = row.createEl('label', { text: 'Input Field Position:' });
+  label.style.display = 'block';
+  label.style.marginBottom = '8px';
+  label.style.fontWeight = '600';
+  
+  const optionsRow = row.createDiv({ style: 'display: flex; gap: 20px;' });
+  
+  // خيار الأسفل (افتراضي)
+  const bottomOption = optionsRow.createDiv({ style: 'display: flex; align-items: center; gap: 6px;' });
+  const bottomRadio = bottomOption.createEl('input', {
+    type: 'radio',
+    name: 'inputPosition',
+    value: 'bottom',
+    attr: { id: 'input-bottom' }
+  });
+  bottomRadio.checked = this.plugin.settings.inputPosition === 'bottom';
+  bottomRadio.addEventListener('change', (e) => {
+    if (e.target.checked) {
+      this.plugin.settings.inputPosition = 'bottom';
+    }
+  });
+  
+  const bottomLabel = bottomOption.createEl('label', { 
+    text: 'Bottom',
+    attr: { for: 'input-bottom' }
+  });
+  bottomLabel.style.cursor = 'pointer';
+  
+  // خيار الأعلى
+  const topOption = optionsRow.createDiv({ style: 'display: flex; align-items: center; gap: 6px;' });
+  const topRadio = topOption.createEl('input', {
+    type: 'radio',
+    name: 'inputPosition',
+    value: 'top',
+    attr: { id: 'input-top' }
+  });
+  topRadio.checked = this.plugin.settings.inputPosition === 'top';
+  topRadio.addEventListener('change', (e) => {
+    if (e.target.checked) {
+      this.plugin.settings.inputPosition = 'top';
+    }
+  });
+  
+  const topLabel = topOption.createEl('label', { 
+    text: 'Top',
+    attr: { for: 'input-top' }
+  });
+  topLabel.style.cursor = 'pointer';
+  
+  const previewDiv = row.createDiv({ 
+    style: 'margin-top: 12px; padding: 8px; background: var(--background-secondary); border-radius: 6px; font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 8px;' 
+  });
+  }
+  
   onClose() {
     this.contentEl.empty();
   }
@@ -3998,13 +4234,13 @@ module.exports = class AIPlugin extends Plugin {
   }
   
   async saveSettings() { 
-    await this.saveData(this.settings);
-    this.app.workspace.getLeavesOfType(VIEW_TYPE).forEach(leaf => {
-      if (leaf.view instanceof ChatView) {
-        leaf.view.updateTokenCounterVisibility();
-        leaf.view._renderMessages();
-      }
-    });
+  await this.saveData(this.settings);
+  this.app.workspace.getLeavesOfType(VIEW_TYPE).forEach(leaf => {
+    if (leaf.view instanceof ChatView) {
+      leaf.view.updateTokenCounterVisibility();
+      leaf.view.refreshLayout(); 
+    }
+  });
   }
 
   onunload() {

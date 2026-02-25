@@ -1,191 +1,6 @@
-/* Updated 2025-03-31 - Deep nested embeds support */
-
-.dashboard {
-    font-family: inherit;
-    padding-left: 25px !important;
-    padding-right: 25px !important;
-    padding-top: 20px !important;
-}
-
-.dashboard .markdown-preview-section {
-    max-width: 100%;
-}
-
-/* Title at top of the document */
-.dashboard .markdown-preview-section .title {
-    top: 60px;
-    position: absolute;
-    font-size: 26pt !important;
-    font-weight: bolder;
-    letter-spacing: 8px;
-}
-
-.dashboard h1 {
-    border-bottom-style: dotted !important;
-    border-width: 1px !important;
-    padding-bottom: 3px !important;
-}
-
-/* إخفاء النقاط للقوائم */
-.dashboard .markdown-preview-section ul {
-    list-style: none !important;
-}
-
-.dashboard .markdown-preview-section li {
-    list-style: none !important;
-}
-
-.dashboard .markdown-preview-section .list-bullet {
-    display: none !important;
-}
-
-/* إخفاء خطوط الإرشاد */
-.dashboard.markdown-rendered.show-indentation-guide li > ul::before,
-.dashboard.markdown-rendered.show-indentation-guide li > ol::before {
-    display: none !important;
-}
-
-/* إلغاء المسافات البادئة */
-.dashboard .markdown-preview-section ul,
-.dashboard .markdown-preview-section ol {
-    padding-left: 0 !important;
-    margin-left: 0 !important;
-}
-
-.dashboard .markdown-preview-section li {
-    padding-left: 0 !important;
-    margin-left: 0 !important;
-}
-
-/* ===== الحل الرئيسي للـ flex layout في جميع المستويات ===== */
-/* استهداف جميع القوائم في جميع مستويات التداخل */
-.dashboard .markdown-preview-section ul:not(.dataview),
-.dashboard .markdown-preview-section .internal-embed .markdown-preview-section ul:not(.dataview),
-.dashboard .markdown-preview-section .internal-embed .internal-embed .markdown-preview-section ul:not(.dataview) {
-    display: flex !important;
-    flex-flow: row wrap !important;
-    column-gap: 20px !important;
-    row-gap: 8px !important;
-}
-
-/* استهداف عناصر القائمة في جميع المستويات */
-.dashboard .markdown-preview-section ul:not(.dataview) > li,
-.dashboard .markdown-preview-section .internal-embed .markdown-preview-section ul:not(.dataview) > li,
-.dashboard .markdown-preview-section .internal-embed .internal-embed .markdown-preview-section ul:not(.dataview) > li {
-    min-width: 250px !important;
-    width: 15% !important;
-    flex: 1 1 auto !important;
-}
-
-/* Dataview support - استثناء dataview من الـ flex */
-.dashboard ul.dataview,
-.dashboard .internal-embed .markdown-preview-section ul.dataview {
-    display: block !important;
-    list-style-type: disc !important;
-    padding-left: 40px !important;
-}
-
-/* ===== معالجة خاصة للملفات المتداخلة ===== */
-/* ملف تذكر.md يحتوي على تضمينين */
-.dashboard .internal-embed:has(.markdown-preview-section) {
-    display: block !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* ضبط عرض المحتوى المضمن ليكون مثل الأصلي */
-.dashboard .internal-embed .markdown-preview-section {
-    max-width: 100% !important;
-    width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-}
-
-/* ===== معالجة عناصر القائمة التي تحتوي على روابط YouTube ===== */
-/* إزالة المسافات حول روابط الفيديو */
-.dashboard .internal-embed .markdown-preview-section li:has(a[href*="youtube"]),
-.dashboard li:has(a[href*="youtube"]) {
-    list-style: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* ===== معالجة الـ Headers داخل الملفات المضمنة ===== */
-.dashboard .internal-embed .markdown-preview-section h3 {
-    margin-top: 0 !important;
-    margin-bottom: 10px !important;
-    font-size: 1.2em !important;
-    color: var(--text-accent) !important;
-}
-
-/* ===== معالجة الفواصل بين الأقسام ===== */
-.dashboard .internal-embed .markdown-preview-section hr {
-    margin: 20px 0 !important;
-    opacity: 0.3 !important;
-}
-
-.dashboard-list {
-    font-family: inherit;
-    padding-left: 25px !important;
-    padding-right: 25px !important;
-    padding-top: 20px !important;
-}
-
-.dashboard-list .markdown-preview-section {
-    max-width: 100%;
-}
-
-/* Title at top of the document */
-.dashboard-list .markdown-preview-section .title {
-    top: 60px;
-    position: absolute;
-    font-size: 26pt !important;
-    font-weight: bolder;
-    letter-spacing: 8px;
-}
-
-.dashboard-list h1 {
-    border-bottom-style: dotted !important;
-    border-width: 1px !important;
-    padding-bottom: 3px !important;
-}
-
-
-/* Get rid of the parent bullet */
-.dashboard-list div.markdown-preview-section>div>ul>li>.list-bullet {
-    display: none !important;
-}
-
-/* Remove the indentation guide lines */
-.dashboard-list.markdown-rendered.show-indentation-guide li>ul::before,
-.dashboard-list.markdown-rendered.show-indentation-guide li>ol::before {
-    display: none;
-}
-
-div.markdown-preview-section>div>ul.has-list-bullet>li {
-    padding-left: 0p !important;
-}
-
-.dashboard-list div>ul {
-    list-style: none;
-    display: flex;
-    column-gap: 50px;
-    flex-flow: row wrap;
-}
-
-.dashboard-list div>ul>li {
-    min-width: 250px;
-    width: 15%;
-}
-
-/* Dataview support */
-.dashboard-list ul.dataview {
-    row-gap: 0px !important;
-    list-style-type: disc !important;
-}
-
-/* Cards Feature - Extracted from Minimal Theme */
+/* --------------
+CARDS - FROM MINIMAL
+-----------------*/
 
 body {
   --cards-min-width: 180px;
@@ -649,4 +464,128 @@ body {
   .cards table.dataview tbody>tr>td:not(:first-child) {
     font-size: 80%;
   }
+}
+
+/* --------------
+ATHKAR CALLOUT FEATURE
+-----------------*/
+
+.markdown-reading-view,
+.markdown-preview-view {
+    overflow-y: auto;
+    overflow-x: hidden !important; 
+}
+
+.callout[data-callout="adhkar"] {
+    --callout-color: 0, 128, 128;
+    --callout-icon: lucide-sun;
+
+    border-radius: 15px;
+    background-color: var(--background-secondary-alt);
+    border: 1px solid rgba(var(--callout-color), 0.3);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+
+    padding: 20px;
+    margin-bottom: 20px;
+
+    direction: rtl;
+
+    overflow: visible;
+    overscroll-behavior: auto;
+}
+
+.callout[data-callout="adhkar"] .callout-title {
+    font-family: 'Amiri', 'Traditional Arabic', serif;
+    font-weight: bold;
+    font-size: 1.25em;
+    color: rgb(var(--callout-color));
+
+    border-bottom: 1px solid rgba(var(--callout-color), 0.3);
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+}
+
+.callout[data-callout="adhkar"] .callout-content {
+    font-family: 'Amiri', 'Traditional Arabic', serif;
+    font-size: 1.4em;
+    line-height: 1.8;
+
+    color: var(--text-normal);
+    text-align: justify;
+}
+
+.callout[data-callout="adhkar"] .callout-content em,
+.callout[data-callout="adhkar"] .callout-content strong {
+    color: #d97706;
+    font-size: 0.9em;
+}
+
+
+.callout[data-callout="adhkar"] .callout-content {
+    color: var(--text-normal);
+}
+
+/* --------------
+CARDLINKS FEATURE
+-----------------*/
+
+.markdown-reading-view .block-language-cardlink {
+  margin: var(--p-spacing) 0;
+}
+
+.auto-card-link-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.auto-card-link-card {
+  display: flex;
+  flex-direction: row-reverse;
+  height: 8em;
+  text-decoration: none;
+  color: var(--link-external-color);
+  background: var(--background-primary-alt);
+  border: solid var(--border-width) var(--divider-color);
+  border-radius: var(--radius-s);
+}
+
+.auto-card-link-card:hover {
+  background: var(--background-modifier-hover);
+}
+
+.auto-card-link-main {
+  flex: 1;
+  padding: 0.5em 0.6em;
+  overflow: hidden;
+}
+
+.auto-card-link-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.auto-card-link-description {
+  font-size: var(--font-smallest);
+  color: var(--text-muted);
+  line-height: 1.4em;
+  max-height: 4.2em;
+  overflow: hidden;
+}
+
+.auto-card-link-host {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-smallest);
+}
+
+.auto-card-link-favicon {
+  width: 16px;
+  margin-right: 0.5em;
+}
+
+.auto-card-link-thumbnail {
+  height: 100%;
+  object-fit: cover;
+  max-width: 50% !important;
 }

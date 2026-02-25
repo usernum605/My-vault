@@ -66,3 +66,4 @@ The Topic:
 
 - https://youtube.com/@introvert_programmer
 
+- https://youtube.com/@pythonarab?si=QokksNxyjnOUYHWH

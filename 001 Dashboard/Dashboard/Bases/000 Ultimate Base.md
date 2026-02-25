@@ -3,7 +3,6 @@ ui: edit
 cssclasses:
   - center-everything
   - list-cards
-  - cards-cols-2
   - card
 links pages:
   - "path: 001 Dashboard"

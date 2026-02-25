@@ -16,9 +16,9 @@ cssclasses:
 
 #### 🔗 Sources
 
-- [ ] [[How]]
-- [ ] [[Learn]]
-- [ ] [[To Learn]]
+- [x] [[How]]
+- [x] [[Learn]]
+- [x] [[To Learn]]
 
 #### 📝 Notes
 
