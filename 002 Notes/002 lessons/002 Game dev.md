@@ -8,7 +8,7 @@ hidely: true
 ```base
 filters:
   or:
-    - note["The Topic"] == ["Game Dev"]
+    - note["The Topic"].contains("Games")
 views:
   - type: table
     name: Table

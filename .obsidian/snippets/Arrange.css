@@ -2,13 +2,17 @@
 /* RTL Text Direction Classes */
 /* =============================================== */
 
-/* Individual RTL Classes */
 div.side-dock-ribbon-action[aria-label="AI Assistant"] {
     display: none !important;
 }
 .side-dock-ribbon-action[aria-label="Internet"] {
     display: none !important;
 }
+.side-dock-ribbon-action[aria-label="Manage workspace layouts"] {
+    display: none !important;
+}
+
+/* Individual RTL Classes */
 
 /* Reading View */
 .markdown-rendered.rtl-title h1,

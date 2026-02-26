@@ -29,5 +29,7 @@ views:
     summaries: {}
     rowHeight: medium
     markers: bullet
+    columnSize:
+      file.links: 199
 
 ```

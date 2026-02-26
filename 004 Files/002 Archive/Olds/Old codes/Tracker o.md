@@ -1,12 +1,3 @@
----
-banner: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT04Qfg17fYOhAm0JdPEKF75zJAlvXtBwENt_MzslXpSw&s=10
-icon: lucide-line-chart
-cssclasses:
-  - card
-  - dashboard
-links pages:
-  - "[[Tracker B]]"
----
 # Tracker Read Quran 
 
 - ```tracker

@@ -183,470 +183,309 @@ div.markdown-preview-section>div>ul.has-list-bullet>li {
 .dashboard-list ul.dataview {
     row-gap: 0px !important;
     list-style-type: disc !important;
+}/* ========================================
+   TRACKER DASHBOARD STYLES - تخطيط مخصص
+   ======================================== */
+
+/* الحاوية الرئيسية للصفحة - تجعل العناصر في عمودين */
+.markdown-preview-section:has(.tracker-dashboard) {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important; /* عمودين متساويين */
+    gap: 20px !important;
+    align-items: start !important;
 }
 
-/* Cards Feature - Extracted from Minimal Theme */
-
-body {
-  --cards-min-width: 180px;
-  --cards-max-width: 1fr;
-  --cards-mobile-width: 120px;
-  --cards-image-height: 400px;
-  --cards-padding: 1.2em;
-  --cards-image-fit: contain;
-  --cards-background: transparent;
-  --cards-background-hover: transparent;
-  --cards-border-width: 1px;
-  --cards-aspect-ratio: auto;
-  --cards-columns: repeat(auto-fit, minmax(var(--cards-min-width), var(--cards-max-width)));
+/* ===== العمود الأيسر: Month View ===== */
+.tracker-dashboard.month-view {
+    grid-column: 1 !important; /* العمود الأول */
+    width: 100% !important;
+    margin: 0 !important;
 }
 
-@media(max-width:400pt) {
-  body {
-    --cards-min-width: var(--cards-mobile-width);
-  }
+/* ===== العمود الأيمن: للحاوية التي تحتوي على chart و bullet ===== */
+.tracker-dashboard.right-column {
+    grid-column: 2 !important; /* العمود الثاني */
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+    width: 100% !important;
+    margin: 0 !important;
 }
 
-.cards.table-100 table.dataview tbody,
-.table-100 .cards table.dataview tbody {
-  padding: .25rem .75rem;
+/* ===== أنماط الحاويات الداخلية ===== */
+.tracker-dashboard .quran-month-view,
+.tracker-dashboard .quran-chart-container,
+.tracker-dashboard .quran-bullet-container {
+    background: var(--background-primary);
+    border-radius: 8px;
+    padding: 15px;
+    border: 1px solid var(--background-modifier-border);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    width: 100% !important;
+    box-sizing: border-box !important;
 }
 
-.cards table.dataview {
-  --table-width: 100%;
-  --table-edge-cell-padding-first: calc(var(--cards-padding)/2);
-  --table-edge-cell-padding-last: calc(var(--cards-padding)/2);
-  --table-cell-padding: calc(var(--cards-padding)/3) calc(var(--cards-padding)/2);
-  line-height: 1.3;
+/* ===== أنماط الرسم البياني ===== */
+.tracker-dashboard .quran-chart-container {
+    direction: rtl;
 }
 
-.cards table.dataview tbody {
-  clear: both;
-  padding: .5rem 0;
-  display: grid;
-  grid-template-columns: var(--cards-columns);
-  grid-column-gap: .75rem;
-  grid-row-gap: .75rem;
+.tracker-dashboard .quran-chart-title {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: var(--text-normal);
+    font-size: 0.95em;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--background-modifier-border);
 }
 
-.cards table.dataview>tbody>tr {
-  background-color: var(--cards-background);
-  border: var(--cards-border-width) solid var(--background-modifier-border);
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0 0 calc(var(--cards-padding)/3) 0;
-  border-radius: 6px;
-  overflow: hidden;
-  transition: box-shadow .15s linear;
-  max-width: var(--cards-max-width);
-  height: auto;
+.tracker-dashboard .quran-dots-container {
+    position: relative;
+    height: 180px;
+    margin: 5px 0 10px 0;
+    border-bottom: 1px solid var(--background-modifier-border);
+    border-left: 1px solid var(--background-modifier-border);
 }
 
-.cards table.dataview>tbody>tr:hover {
-  background-color: var(--cards-background-hover) !important;
-  border: var(--cards-border-width) solid var(--background-modifier-border-hover);
-  box-shadow: 0 4px 6px 0 rgba(0,0,0,.05), 0 1px 3px 1px rgba(0,0,0,.025);
-  transition: box-shadow .15s linear;
+.tracker-dashboard .quran-dots-grid {
+    position: relative;
+    width: 100%;
+    height: 100%;
 }
 
-.cards table.dataview tbody>tr>td:first-child {
-  font-weight: var(--bold-weight);
-  border: none;
+.tracker-dashboard .quran-line-connector {
+    position: absolute;
+    height: 2px;
+    background: steelblue;
+    transform-origin: 0 0;
+    z-index: 1;
+    opacity: 0.6;
+    pointer-events: none;
 }
 
-.cards table.dataview tbody>tr>td:first-child a {
-  display: block;
+.tracker-dashboard .quran-dot {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: steelblue;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    z-index: 2;
+    transition: all 0.15s ease;
 }
 
-.cards table.dataview tbody>tr>td:last-child {
-  border: none;
+.tracker-dashboard .quran-dot:hover {
+    width: 12px;
+    height: 12px;
+    background: #ff6b6b;
+    z-index: 100;
 }
 
-.cards table.dataview tbody>tr>td:not(:first-child) {
-  font-size: calc(var(--table-text-size)*.9);
-  color: var(--text-muted);
+.tracker-dashboard .quran-dot:hover::after {
+    content: attr(data-date) ": " attr(data-value) " صفحة";
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--background-secondary);
+    color: var(--text-normal);
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    white-space: nowrap;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    z-index: 101;
+    border: 1px solid var(--background-modifier-border);
 }
 
-.cards table.dataview tbody>tr>td>* {
-  padding: calc(var(--cards-padding)/3) 0;
+.tracker-dashboard .quran-axis-y {
+    position: absolute;
+    left: -35px;
+    top: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: var(--text-muted);
+    font-size: 9px;
+    width: 30px;
+    text-align: right;
 }
 
-.cards table.dataview tbody>tr>td:not(:last-child):not(:first-child) {
-  padding: 4px 0;
-  border-bottom: 1px solid var(--background-modifier-border);
-  width: calc(100% - var(--cards-padding));
-  margin: 0 calc(var(--cards-padding)/2);
+.tracker-dashboard .quran-axis-x {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 5px;
+    color: var(--text-muted);
+    font-size: 9px;
+    padding-right: 20px;
 }
 
-.cards table.dataview tbody>tr>td a {
-  text-decoration: none;
+.tracker-dashboard .quran-line {
+    position: absolute;
+    height: 1px;
+    background: var(--background-modifier-border);
+    width: 100%;
+    pointer-events: none;
+    opacity: 0.5;
 }
 
-.cards table.dataview tbody>tr>td>button {
-  width: 100%;
-  margin: calc(var(--cards-padding)/2) 0;
+.tracker-dashboard .quran-stats {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid var(--background-modifier-border);
+    gap: 8px;
+    background: var(--background-secondary);
+    border-radius: 6px;
+    padding: 10px;
 }
 
-.cards table.dataview tbody>tr>td:last-child>button {
-  margin-bottom: calc(var(--cards-padding)/6);
+.tracker-dashboard .quran-stat-item {
+    text-align: center;
+    flex: 1;
 }
 
-.cards table.dataview tbody>tr>td>ul {
-  width: 100%;
-  padding: .25em 0 !important;
-  margin: 0 auto !important;
+.tracker-dashboard .quran-stat-value {
+    font-weight: bold;
+    color: steelblue;
+    font-size: 1.1em;
 }
 
-.cards table.dataview tbody>tr>td img {
-  aspect-ratio: var(--cards-aspect-ratio);
-  width: 100%;
-  object-fit: var(--cards-image-fit);
-  max-height: var(--cards-image-height);
-  background-color: var(--background-secondary);
-  vertical-align: bottom;
+.tracker-dashboard .quran-stat-label {
+    font-size: 0.75em;
+    color: var(--text-muted);
 }
 
-.markdown-source-view.mod-cm6.cards .dataview.table-view-table>tbody>tr>td,
-.trim-cols .cards table.dataview tbody>tr>td {
-  white-space: normal;
+/* ===== أنماط Bullet Chart ===== */
+.tracker-dashboard .quran-bullet-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
-.links-int-on .cards table {
-  --link-decoration: none;
+.tracker-dashboard .quran-bullet-value {
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-muted);
+    font-size: 0.85em;
 }
 
-.markdown-source-view.mod-cm6.cards .edit-block-button {
-  top: -1px;
-  right: 28px;
-  opacity: 1;
+.tracker-dashboard .quran-bullet-bar-container {
+    position: relative;
+    height: 24px;
+    background: #17202A;
+    border-radius: 4px;
+    overflow: hidden;
 }
 
-.cards.table-100 table.dataview thead>tr,
-.table-100 .cards table.dataview thead>tr {
-  right: .75rem;
+.tracker-dashboard .quran-bullet-bar {
+    position: absolute;
+    height: 100%;
+    background: steelblue;
+    top: 0;
+    left: 0;
+    transition: width 0.2s ease;
 }
 
-.cards.table-100 table.dataview thead:before,
-.table-100 .cards table.dataview thead:before {
-  margin-right: .75rem;
+.tracker-dashboard .quran-bullet-marker {
+    position: absolute;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    background: white;
+    z-index: 2;
 }
 
-.cards table.dataview thead {
-  user-select: none;
-  width: 180px;
-  display: block;
-  float: right;
-  position: relative;
-  text-align: right;
-  height: 24px;
-  padding-bottom: 0;
+.tracker-dashboard .quran-bullet-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    gap: 8px;
+    background: var(--background-secondary);
+    border-radius: 6px;
+    padding: 8px;
 }
 
-.cards table.dataview thead:hover:after {
-  background-color: var(--background-modifier-hover);
+.tracker-dashboard .quran-bullet-stat {
+    text-align: center;
+    flex: 1;
 }
 
-.cards table.dataview thead:hover:before {
-  background-color: var(--text-muted);
+/* ===== أنماط Month View ===== */
+.tracker-dashboard .quran-month-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: steelblue;
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 10px;
 }
 
-.cards table.dataview thead:after,
-.cards table.dataview thead:before {
-  content: "";
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 10px;
-  height: 16px;
-  cursor: var(--cursor);
-  text-align: right;
-  padding: var(--size-4-1) var(--size-4-2);
-  margin-bottom: 2px;
-  border-radius: var(--radius-s);
-  font-weight: 500;
-  font-size: var(--font-adaptive-small);
+.tracker-dashboard .quran-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.75em;
+    margin-bottom: 8px;
 }
 
-.cards table.dataview thead:before {
-  background-color: var(--text-faint);
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-size: 16px;
-  -webkit-mask-position: center center;
-  -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 100 100"><path fill="currentColor" d="M49.792 33.125l-5.892 5.892L33.333 28.45V83.333H25V28.45L14.438 39.017L8.542 33.125L29.167 12.5l20.625 20.625zm41.667 33.75L70.833 87.5l-20.625 -20.625l5.892 -5.892l10.571 10.567L66.667 16.667h8.333v54.883l10.567 -10.567l5.892 5.892z"></path></svg>');
+.tracker-dashboard .quran-days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
 }
 
-.cards table.dataview thead>tr {
-  top: -1px;
-  position: absolute;
-  display: none;
-  z-index: 9;
-  border: 1px solid var(--background-modifier-border-hover);
-  background-color: var(--background-secondary);
-  box-shadow: var(--shadow-s);
-  padding: 6px;
-  border-radius: var(--radius-m);
-  flex-direction: column;
-  margin: 24px 0 0 0;
-  width: 100%;
+.tracker-dashboard .quran-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--background-secondary);
+    border-radius: 50%;
+    font-size: 0.8em;
+    position: relative;
 }
 
-.cards table.dataview thead:hover>tr {
-  display: flex;
-  height: auto;
+.tracker-dashboard .quran-day.read {
+    background: steelblue;
+    color: white;
 }
 
-.cards table.dataview thead>tr>th {
-  display: block;
-  padding: 3px 30px 3px 6px !important;
-  border-radius: var(--radius-s);
-  width: 100%;
-  font-weight: 400;
-  color: var(--text-normal);
-  cursor: var(--cursor);
-  border: none;
-  font-size: var(--font-ui-small);
+.tracker-dashboard .quran-day.read::after {
+    content: "✓";
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #27ae60;
+    color: white;
+    border-radius: 50%;
+    width: 14px;
+    height: 14px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid white;
 }
 
-.cards table.dataview thead>tr>th[sortable-style=sortable-asc],
-.cards table.dataview thead>tr>th[sortable-style=sortable-desc] {
-  color: var(--text-normal);
+.tracker-dashboard .quran-day.out-of-month {
+    opacity: 0.3;
 }
 
-.cards table.dataview thead>tr>th:hover {
-  color: var(--text-normal);
-  background-color: var(--background-modifier-hover);
-}
-
-/* List Cards (for regular markdown lists) */
-/* Complete Cards Fix - Add this to your cards snippet */
-
-/* Fix the main cards container */
-.list-cards.markdown-preview-view div>ul {
-  display: grid !important;
-  gap: 1rem !important;
-  grid-template-columns: var(--cards-columns, repeat(2, 1fr)) !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  width: 99% !important;
-  box-sizing: border-box !important;
-}
-
-/* Fix individual cards */
-.list-cards.markdown-preview-view div>ul>li {
-  background-color: var(--cards-background, var(--background-primary)) !important;
-  padding: 1rem !important;
-  border-radius: 8px !important;
-  border: 1px solid var(--background-modifier-border) !important;
-  margin: 0 !important;
-  width: 100% !important;
-  min-width: 0 !important; /* Prevents flexbox overflow */
-  box-sizing: border-box !important;
-  overflow: visible !important; /* Changed from hidden to visible */
-  list-style: none !important;
-  word-wrap: break-word !important;
-  overflow-wrap: break-word !important;
-  white-space: normal !important;
-}
-
-/* Fix all content inside cards */
-.list-cards.markdown-preview-view div>ul>li * {
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  white-space: normal !important;
-  word-wrap: break-word !important;
-  overflow-wrap: break-word !important;
-}
-
-/* Fix links */
-.list-cards.markdown-preview-view div>ul>li a {
-  display: inline-block !important;
-  max-width: 100% !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  white-space: normal !important;
-  word-break: break-word !important;
-}
-
-/* Fix paragraphs */
-.list-cards.markdown-preview-view div>ul>li p {
-  margin: 0.25rem 0 !important;
-  padding: 0 !important;
-  white-space: normal !important;
-}
-
-/* Fix headings inside cards */
-.list-cards.markdown-preview-view div>ul>li h1,
-.list-cards.markdown-preview-view div>ul>li h2,
-.list-cards.markdown-preview-view div>ul>li h3,
-.list-cards.markdown-preview-view div>ul>li h4,
-.list-cards.markdown-preview-view div>ul>li h5,
-.list-cards.markdown-preview-view div>ul>li h6 {
-  margin: 0.5rem 0 0.25rem 0 !important;
-  padding: 0 !important;
-  white-space: normal !important;
-}
-
-/* Fix lists inside cards */
-.list-cards.markdown-preview-view div>ul>li ul,
-.list-cards.markdown-preview-view div>ul>li ol {
-  margin: 0rem 0rem 0rem !important;
-  padding: 0 !important;
-  white-space: normal !important;
-}
-
-.list-cards.markdown-preview-view div>ul>li li {
-  padding: 0 !important;
-  margin: 0 !important;
-  border: none !important;
-  background: none !important;
-  width: auto !important;
-}
-
-.list-cards.markdown-preview-view .list-bullet,
-.list-cards.markdown-preview-view .list-collapse-indicator,
-.list-cards.markdown-preview-view.markdown-rendered.show-indentation-guide li>ul::before {
-  display: none !important;
-}
-
-/* Fix images inside cards */
-.list-cards.markdown-preview-view div>ul .internal-embed.image-embed {
-  display: block !important;
-  max-width: 100% !important;
-  margin: 0.5rem 0 !important;
-}
-
-.list-cards.markdown-preview-view div>ul .internal-embed.image-embed img {
-  max-width: 100% !important;
-  height: auto !important;
-  border-radius: 4px !important;
-}
-
-
-/* 2. تحسين مظهر الروابط الخارجية تحديداً */
-.list-cards.markdown-preview-view div>ul>li a.external-link {
-  padding-right: 0.9rem !important;
-}
-/* Ensure two-column layout works properly */
-.cards-cols-2 .list-cards.markdown-preview-view div>ul {
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-}
-
-/* Mobile responsiveness */
+/* تحسينات للموبايل */
 @media (max-width: 768px) {
-  .cards-cols-2 .list-cards.markdown-preview-view div>ul {
-    grid-template-columns: 2fr !important;
-  }
-  
-  .list-cards.markdown-preview-view div>ul>li {
-    padding: 0.75rem !important;
-  }
-}
-
-/* Fix the "Empty" text and number displays */
-.list-cards.markdown-preview-view div>ul>li:has(div:contains("Empty")) {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  min-height: 100px !important;
-}
-
-/* Ensure no content is cut off */
-.markdown-preview-view.list-cards {
-  overflow-x: hidden !important;
-  padding-right: 0 !important;
-}
-
-/* Fix the container to prevent overflow */
-.markdown-preview-view.list-cards .markdown-preview-sizer {
-  max-width: 100% !important;
-  padding: 0 !important;
-  overflow-x: hidden !important;
-}
-
-/* Card aspect ratio variants */
-.cards.cards-16-9,
-.list-cards.cards-16-9 {
-  --cards-aspect-ratio: 16/9;
-}
-
-.cards.cards-1-1,
-.list-cards.cards-1-1 {
-  --cards-aspect-ratio: 1/1;
-}
-
-.cards.cards-2-1,
-.list-cards.cards-2-1 {
-  --cards-aspect-ratio: 2/1;
-}
-
-.cards.cards-2-3,
-.list-cards.cards-2-3 {
-  --cards-aspect-ratio: 2/3;
-}
-
-/* Card column count variants */
-.cards.cards-cols-1,
-.list-cards.cards-cols-1 {
-  --cards-columns: repeat(1, minmax(0, 1fr));
-}
-
-.cards.cards-cols-2,
-.list-cards.cards-cols-2 {
-  --cards-columns: repeat(2, minmax(0, 1fr));
-}
-
-@media(min-width:400pt) {
-  .cards-cols-3 {
-    --cards-columns: repeat(3, minmax(0, 1fr));
-  }
-  .cards-cols-4 {
-    --cards-columns: repeat(4, minmax(0, 1fr));
-  }
-  .cards-cols-5 {
-    --cards-columns: repeat(5, minmax(0, 1fr));
-  }
-  .cards-cols-6 {
-    --cards-columns: repeat(6, minmax(0, 1fr));
-  }
-  .cards-cols-7 {
-    --cards-columns: repeat(7, minmax(0, 1fr));
-  }
-  .cards-cols-8 {
-    --cards-columns: repeat(8, minmax(0, 1fr));
-  }
-}
-
-/* Card cover mode (image covers full width) */
-.cards.cards-cover,
-.list-cards.cards-cover {
-  --cards-image-fit: cover;
-}
-
-.cards.cards-cover tbody>tr>td:first-child,
-.list-cards.cards-cover tbody>tr>td:first-child {
-  padding: 0 !important;
-  background-color: var(--background-secondary);
-  display: block;
-  margin: 0;
-  width: 100%;
-}
-
-.cards.cards-cover tbody>tr>td:first-child img,
-.list-cards.cards-cover tbody>tr>td:first-child img {
-  border-radius: 0;
-}
-
-/* Card alignment */
-.cards.cards-align-bottom table.dataview tbody>tr>td:last-child,
-.list-cards.cards-align-bottom table.dataview tbody>tr>td:last-child {
-  margin-top: auto;
-}
-
-/* Mobile adjustments */
-@media(max-width:400pt) {
-  .cards table.dataview tbody>tr>td:not(:first-child) {
-    font-size: 80%;
-  }
+    .markdown-preview-section:has(.tracker-dashboard) {
+        grid-template-columns: 1fr !important; /* عمود واحد على الموبايل */
+    }
+    
+    .tracker-dashboard.month-view,
+    .tracker-dashboard.right-column {
+        grid-column: 1 !important;
+    }
 }
