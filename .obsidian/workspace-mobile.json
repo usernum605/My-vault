@@ -15,7 +15,7 @@
               "state": {
                 "file": "001 Dashboard/Dashboard/Dashboard.md",
                 "mode": "preview",
-                "source": false,
+                "source": true,
                 "backlinks": true,
                 "backlinkOpts": {
                   "collapseAll": false,
@@ -275,7 +275,7 @@
         }
       }
     ],
-    "currentTab": 2,
+    "currentTab": 4,
     "pinned": true
   },
   "left-ribbon": {
@@ -297,10 +297,29 @@
   "active": "4025747625f6a582",
   "lastOpenFiles": [
     "003 Daily/001 Active Diaries/2026-02-27.md",
+    "004 Files/004 Temple/Today Tem.md",
     "001 Dashboard/Dashboard/Dashboard.md",
-    "001 Dashboard/My tools.md",
-    "002 Notes/003 Saved Notes/My YouTube Channels.md",
+    "001 Dashboard/Azkaru.md",
     "004 Files/001 Attach/warsh.pdf",
+    "004 Files/004 Temple/Log Tem.md",
+    "004 Files/003 AI Conversations/How.md",
+    "002 Notes/003 Saved Notes/Log - How to learn.md",
+    "001 Dashboard/Self Education.md",
+    "002 Notes/002 lessons/Ai course.md",
+    "002 Notes/003 Saved Notes/Mawaidh.md",
+    "002 Notes/002 lessons/Logs/log - 2026-02-27.md",
+    "001 Dashboard/learn English.md",
+    "001 Dashboard/My tools.md",
+    "004 Files/002 Archive/Attach Embedded/RandomAya.md",
+    "004 Files/002 Archive/Attach Embedded/Pomodoro.md",
+    "004 Files/002 Archive/Attach Embedded/أذكار الصباح.md",
+    "003 Daily/002 Archived Diaries/2026-01-25.md",
+    "004 Files/002 Archive/Attach Embedded/أذكار النوم.md",
+    "001 Dashboard/Athkar & Adia.md",
+    "004 Files/003 AI Conversations/القرآن.md",
+    "004 Files/001 Attach/Recording 20260227140329.m4a",
+    "004 Files/001 Attach/Recording 20260227140255.m4a",
+    "002 Notes/003 Saved Notes/My YouTube Channels.md",
     "001 Dashboard/Dashboard/Trackers/Tracker A.md"
   ]
 }

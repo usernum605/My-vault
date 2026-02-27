@@ -25,7 +25,7 @@ icon: lucide-calendar-minus-2
 
 ![[RandomAya]]
 
-- [ ] العمل على مشروع [[log - {{date}}]]
+- [ ] العمل على [[log - {{date}}]]
 ## مهام هذا اليوم 
 
 ### ==مهام الصباح==

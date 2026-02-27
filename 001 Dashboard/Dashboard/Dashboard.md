@@ -4,6 +4,7 @@ cssclasses:
   - center-title
   - card
   - cards-cols-2
+  - Focus
 banner: https://www.litmus.com/wp-content/uploads/2023/09/template_hero.svg
 icon: lucide-layout-grid
 links pages:
@@ -14,7 +15,7 @@ banner_y: 33
 const tasks = dv.pages('"003 Daily/001 Active Diaries"')
   .where(p => p.file.day && dv.date(p.file.day).equals(dv.date("today")))
   .file.tasks
-  .where(t => !t.completed && t.text.includes("العمل على مشروع"));
+  .where(t => !t.completed && t.text.includes("العمل على"));
 
 if (tasks.length > 0) {
   // تغليف المهام بـ div يدعم الـ RTL

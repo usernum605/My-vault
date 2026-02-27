@@ -4,6 +4,7 @@ banner: https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=1472
 cssclasses:
   - card
   - rtl-paragraph
+  - Focus
 tags:
   - Self↑up
 links pages:

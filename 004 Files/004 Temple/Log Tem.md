@@ -5,6 +5,8 @@ cssclasses:
   - invert-dark
   - invert-banner
 The Topic:
+  - Learning
+  - Skill
 ---
 ### 📚 Learning Log - {{DATE:YYYY-MM-DD}}
 
@@ -30,6 +32,8 @@ The Topic:
 
 #### 🔗 Reference
 
-- ![[Pomodoro]]
 - [link](
 - [[
+
+———
+**Links**:
