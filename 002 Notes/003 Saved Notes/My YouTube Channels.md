@@ -17,8 +17,9 @@ hidely: true
 - ![](https://youtu.be/VV1Vp-BBBTg?si=HTjrn6cvn3akxHHI)
 - ![](https://youtu.be/AKn-vUAqVcY?si=y63suDeMX5VhLtBl)
 
-###### قنوات دينية
-- https://m.youtube.com/@tabseira
+###### 
+قنوات دينية
+-  https://m.youtube.com/@tabseira
 
 - https://m.youtube.com/@MyChannel-c3d
 
@@ -32,6 +33,15 @@ hidely: true
 
 - https://m.youtube.com/@عابر-999
 
+- https://youtube.com/@fedaaadeen
+
+- https://youtube.com/@yassermamdouh
+
+- https://youtube.com/@anasaction
+
+- https://youtube.com/@amirmounirofficial
+
+- https://youtube.com/@eh_el_moshkla?si=R1K3_orzCrDRxRp1
 ###### قنوات الأمن السبراني
 
 - https://m.youtube.com/@MohamadAJ-b9r

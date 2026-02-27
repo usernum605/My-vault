@@ -14,7 +14,7 @@
               "type": "markdown",
               "state": {
                 "file": "001 Dashboard/Dashboard/Dashboard.md",
-                "mode": "source",
+                "mode": "preview",
                 "source": false,
                 "backlinks": true,
                 "backlinkOpts": {
@@ -55,7 +55,7 @@
               "state": {
                 "file": "003 Daily/001 Active Diaries/2026-02-27.md",
                 "mode": "preview",
-                "source": true,
+                "source": false,
                 "backlinks": true,
                 "backlinkOpts": {
                   "collapseAll": false,
@@ -96,7 +96,7 @@
             }
           },
           {
-            "id": "2bc9b56009360e5c",
+            "id": "d87ed5ae9b860fa9",
             "type": "leaf",
             "state": {
               "type": "pdf",
@@ -198,7 +198,7 @@
         "state": {
           "type": "outline",
           "state": {
-            "file": "003 Daily/001 Active Diaries/2026-02-27.md",
+            "file": "001 Dashboard/Dashboard/Trackers/Tracker A.md",
             "followCursor": false,
             "showSearch": false,
             "searchQuery": ""
@@ -289,35 +289,14 @@
       "graph:Open graph view": false,
       "daily-notes:Open today's daily note": false,
       "zk-prefixer:Create new unique note": false,
-      "workspaces:Manage workspace layouts": false,
       "Ai-Assistant:AI Assistant": false,
-      "browse-internet:Internet": false
+      "browse-internet:Internet": false,
+      "workspaces:Manage workspace layouts": false
     }
   },
   "active": "4025747625f6a582",
   "lastOpenFiles": [
-    "003 Daily/001 Active Diaries/2026-02-27.md",
-    "001 Dashboard/Dashboard/Dashboard.md",
     "004 Files/001 Attach/warsh.pdf",
-    "002 Notes/002 lessons/Logs/log - 2026-02-27.md",
-    "002 Notes/003 Saved Notes/سلسلة أحداث يوم الحساب.md",
-    "001 Dashboard/Azkaru.md",
-    "001 Dashboard/My tools.md",
-    "004 Files/004 Temple/Log Tem.md",
-    "004 Files/004 Temple/Quick Notes tem.md",
-    "004 Files/004 Temple/Save Note Tem.md",
-    "004 Files/004 Temple/Today Tem.md",
-    "002 Notes/001 Notes/log - {{date}}.md",
-    "001 Dashboard/Self Education.md",
-    "002 Notes/003 Saved Notes/Log - How to learn.md",
-    "002 Notes/003 Saved Notes/Tathakar.md",
-    "004 Files/002 Archive/Attach Embedded/RandomAya.md",
-    "002 Notes/003 Saved Notes/كيف نستثمر اوقاتنا.md",
-    "002 Notes/003 Saved Notes/My YouTube Channels.md",
-    "004 Files/002 Archive/Olds/Old Topics/Termux commands Ai.md",
-    "004 Files/002 Archive/Olds/Old codes/Tracker 0.md",
-    "002 Notes/002 Lessons/Learn Something.md",
-    "002 Notes/002 Lessons/Logs",
-    "003 Daily/001 Active Diaries/2026-02-26.md"
+    "001 Dashboard/Dashboard/Trackers/Tracker A.md"
   ]
 }

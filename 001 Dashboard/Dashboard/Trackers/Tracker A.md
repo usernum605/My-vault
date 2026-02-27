@@ -274,13 +274,13 @@ renderMonth();
 
 const folder = '"003 Daily/001 Active Diaries"';
 const pages = dv.pages(folder)
-  .where(p=>p["The number of pages you finished reading from the Quran"]!=null)
+  .where(p=>p["Number of Pages (reading)"]!=null)
   .sort(p=>p.file.name);
 
 let dates=[], values=[];
 pages.forEach(p=>{
   dates.push(p.file.name);
-  values.push(p["The number of pages you finished reading from the Quran"]);
+  values.push(p["Number of Pages (reading)"]);
 });
 
 let chartBox=dashboard.createDiv({cls:"q-box"});
@@ -402,7 +402,7 @@ let monthPages2=pages.where(p=>
 
 let total=0;
 monthPages2.forEach(p=>{
-  total+=p["The number of pages you finished reading from the Quran"]||0;
+  total+=p["Number of Pages (reading)"]||0;
 });
 
 let target=604;
@@ -686,13 +686,13 @@ renderMonth();
 
 const folder = '"003 Daily/001 Active Diaries"';
 const pages = dv.pages(folder)
-  .where(p=>p["The number of pages you have memorized from the Quran"]!=null)
+  .where(p=>p["Number of Pages (Memorizing)"]!=null)
   .sort(p=>p.file.name);
 
 let dates=[], values=[];
 pages.forEach(p=>{
   dates.push(p.file.name);
-  values.push(p["The number of pages you have memorized from the Quran"]);
+  values.push(p["Number of Pages (Memorizing)"]);
 });
 
 let chartBox=dashboard.createDiv({cls:"q-box"});
@@ -801,20 +801,26 @@ if(dates.length){
    3️⃣ BULLET CHART
 ================================================= */
 
+const bfolder = '"003 Daily"';
+
+const bpages = dv.pages(bfolder)
+  .where(p=>p["Number of Pages (Memorizing)"]!=null)
+  .sort(p=>p.file.name);
+
 let bulletBox=dashboard.createDiv({cls:"q-box"});
 bulletBox.createDiv({cls:"q-bullet-title",text:"التقدم في حفظ كلام ربي"});
 
 let monthStart=currentMonth.startOf("month");
 let monthEnd=currentMonth.endOf("month");
 
-let monthPages2=pages.where(p=>
+let monthPages2=bpages.where(p=>
   p.file.name>=monthStart.toFormat("yyyy-MM-dd") &&
   p.file.name<=monthEnd.toFormat("yyyy-MM-dd")
 );
 
 let total=0;
 monthPages2.forEach(p=>{
-  total+=p["The number of pages you have memorized from the Quran"]||0;
+  total+=p["Number of Pages (Memorizing)"]||0;
 });
 
 let target=604;

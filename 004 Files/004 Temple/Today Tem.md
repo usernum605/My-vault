@@ -5,9 +5,9 @@ tags:
 cssclasses:
   - card
   - rtl-everything
-The number of pages you finished reading from the Quran:
+Number of Pages (reading):
 Read Quran:
-The number of pages you have memorized from the Quran:
+Number of Pages (Memorizing):
 Memorizing the Quran:
 links pages:
   - "[[warsh.pdf]]"
