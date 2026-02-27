@@ -54,12 +54,12 @@
         "type": "tabs",
         "children": [
           {
-            "id": "c755b825d27c1155",
+            "id": "4779c648e70da9ed",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "003 Daily/001 Active Diaries/2026-02-26.md",
+                "file": "003 Daily/001 Active Diaries/2026-02-27.md",
                 "mode": "preview",
                 "source": false,
                 "backlinks": true,
@@ -74,7 +74,7 @@
                 }
               },
               "icon": "lucide-file",
-              "title": "2026-02-26"
+              "title": "2026-02-27"
             }
           },
           {
@@ -218,7 +218,7 @@
         "state": {
           "type": "localgraph",
           "state": {
-            "file": "003 Daily/001 Active Diaries/2026-02-26.md",
+            "file": "003 Daily/001 Active Diaries/2026-02-27.md",
             "options": {
               "collapse-filter": true,
               "search": "",
@@ -260,7 +260,8 @@
         }
       }
     ],
-    "currentTab": 3
+    "currentTab": 3,
+    "pinned": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -278,11 +279,12 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "c755b825d27c1155",
+  "active": "4779c648e70da9ed",
   "lastOpenFiles": [
     "001 Dashboard/Dashboard/Dashboard.md",
-    "001 Dashboard/My tools.md",
+    "003 Daily/001 Active Diaries/2026-02-27.md",
     "003 Daily/001 Active Diaries/2026-02-26.md",
+    "001 Dashboard/My tools.md",
     "001 Dashboard/Azkaru.md"
   ]
 }
