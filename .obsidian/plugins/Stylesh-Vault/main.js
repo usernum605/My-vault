@@ -84,6 +84,19 @@ module.exports = class StyleshVault extends Plugin {
         });
 
         this.addCommand({
+            id: 'select-banner',
+            name: 'Select Banner',
+            checkCallback: (checking) => {
+                const file = this.app.workspace.getActiveFile();
+                if (file instanceof TFile) {
+                    if (!checking) new BannerSuggestModal(this.app, this, file).open();
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        this.addCommand({
             id: 'force-refresh-icons',
             name: 'Force Refresh Icons',
             callback: async () => {
@@ -220,15 +233,6 @@ module.exports = class StyleshVault extends Plugin {
                     this.checkNewlyCreatedFile(leaf.view.file);
                 }
             }, 100)));
-        });
-
-        this.addCommand({
-            id: 'clear-image-cache',
-            name: 'Clear Image Cache',
-            callback: async () => {
-                await this.clearImageCache();
-                new Notice('Image cache cleared.');
-            }
         });
 
         this.addCommand({

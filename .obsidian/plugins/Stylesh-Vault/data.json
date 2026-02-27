@@ -45,6 +45,7 @@
   "enableCache": true,
   "cacheExpiryDays": 1000000,
   "hideScrollbars": true,
+  "hidelyProperty": "hidely",
   "showPropertiesOnCreate": false,
   "showPropertiesOnCreateDuration": 20,
   "propertyVisibilityDuration": 30,
