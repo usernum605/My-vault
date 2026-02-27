@@ -8,7 +8,7 @@ tags:
   - Self↑up/Programing
   - Type/Quick-Notes
 The Topic:
-  - Obsidian plugins
+  - Obsidian projects 
 ---
 ### Note About Rebuild icons
 - يتم حذف ثم اعادة رندرة الأيقونة كلما تم التبديل من وضع البريفيو الى الاديت او العكس

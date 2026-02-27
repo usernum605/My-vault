@@ -10,6 +10,7 @@ tags:
 links pages:
   - "[[003 Notes]]"
 The Topic:
+  - Obsidian projects
 ---
 ### Note About For pdf
 - hide tabs and... When i open pdf or there's property full: equil true

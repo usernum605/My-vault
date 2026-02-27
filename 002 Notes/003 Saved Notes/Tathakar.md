@@ -12,6 +12,7 @@ tags:
   - Islamic/Dine
 node_size: 20
 icon: lucide-flame
+hidely: true
 ---
 ### انس
 ![[سلسلة أحداث يوم الحساب]]

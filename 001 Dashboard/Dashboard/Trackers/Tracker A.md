@@ -7,1110 +7,829 @@ cssclasses:
 links pages:
   - "[[Tracker B]]"
 ---
-# Tracker Read Quran 
+# Tracker Read Quran
+
 ```dataviewjs
-// بيانات أيام قراءة القرآن
-let container = dv.el("div", "");
-container.className = "tracker-dashboard";
-const folder = '"003 Daily"';
-const pages = dv.pages(folder).where(p => p["Read Quran"] != null);
+/******************************************************************
+  QURAN DASHBOARD – FULL FINAL VERSION
+******************************************************************/
 
-// تجميع البيانات
-let data = {};
-pages.forEach(page => {
-    let date = page.file.name; // اسم الملف هو التاريخ
-    let value = page["Read Quran"] === true ? 1 : 0;
-    data[date] = value;
-});
+let dashboard = dv.el("div","");
+dashboard.className = "quran-dashboard-layout";
 
-// CSS للعرض
-container.innerHTML = `
+/* ========================= CSS ========================= */
+
+dashboard.innerHTML = `
 <style>
-    .quran-month-view {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        padding: 10px;
-        background: var(--background-primary);
-        border-radius: 8px;
-    }
-    .quran-month-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        color: steelblue;
-        font-weight: bold;
-        font-size: 1.2em;
-    }
-    .quran-weekdays {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        text-align: center;
-        color: var(--text-muted);
-        font-size: 0.8em;
-    }
-    .quran-days-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 5px;
-    }
-    .quran-day {
-        aspect-ratio: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--background-secondary);
-        border-radius: 50%;
-        font-size: 0.8em;
-        position: relative;
-    }
-    .quran-day.read {
-        background: steelblue;
-        color: white;
-    }
-    .quran-day.read::after {
-        content: "✓";
-        position: absolute;
-        top: -5px;
-        right: -5px;
-        background: steelblue;
-        color: white;
-        border-radius: 50%;
-        width: 15px;
-        height: 15px;
-        font-size: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .quran-day.out-of-month {
-        opacity: 0.3;
-    }
+.quran-dashboard-layout{
+  width:100%;
+  max-width:100%;
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap:20px;
+  align-items:start;
+}
+
+.quran-dashboard-layout > .q-box{
+  min-width:0; /* مهم جداً لمنع كسر grid */
+}
+
+/* Responsive حقيقي */
+@media (max-width:1200px){
+  .quran-dashboard-layout{
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ===== COMMON BOX ===== */
+.q-box{
+  padding:15px;
+  background:var(--background-primary);
+  border-radius:12px;
+}
+
+/* ================= MONTH TRACKER ================= */
+
+.q-month-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  color:steelblue;
+  font-weight:bold;
+  font-size:1.1em;
+  margin-bottom:10px;
+}
+
+.q-month-header span{
+  cursor:pointer;
+  user-select:none;
+}
+
+.q-weekdays{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  text-align:center;
+  font-size:.75em;
+  color:var(--text-muted);
+}
+
+.q-days-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:5px;
+}
+
+.q-day{
+  aspect-ratio:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--background-secondary);
+  border-radius:50%;
+  font-size:.75em;
+  position:relative;
+}
+
+.q-day.read{
+  background:steelblue;
+  color:white;
+}
+
+
+/* ================= DOTS CHART ================= */
+
+.q-chart-title{
+  text-align:center;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.q-dots-wrapper{
+  position:relative;
+  height:240px;
+  border-left:1px solid var(--background-modifier-border);
+  border-bottom:1px solid var(--background-modifier-border);
+}
+
+.q-y-axis{
+  position:absolute;
+  left:-35px;
+  top:0;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  font-size:10px;
+  color:var(--text-muted);
+}
+
+.q-grid-line{
+  position:absolute;
+  width:100%;
+  height:1px;
+  background:var(--background-modifier-border);
+}
+
+.q-dots-grid{
+  position:relative;
+  width:100%;
+  height:100%;
+}
+
+.q-line{
+  position:absolute;
+  height:2px;
+  background:steelblue;
+  transform-origin:0 0;
+  opacity:.6;
+  pointer-events:none;
+}
+
+.q-dot{
+  position:absolute;
+  width:8px;
+  height:8px;
+  background:steelblue;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  cursor:pointer;
+  transition:.15s;
+  box-shadow:0 0 5px rgba(70,130,180,.5);
+}
+
+.q-dot:hover{
+  transform:translate(-50%,-50%) scale(1.3);
+}
+
+.q-dot.active{
+  background:#e74c3c;
+  transform:translate(-50%,-50%) scale(1.4);
+  box-shadow:0 0 10px rgba(231,76,60,.7);
+  z-index:5;
+}
+
+.q-tooltip{
+  position:absolute;
+  background:var(--background-secondary);
+  padding:4px 8px;
+  border-radius:4px;
+  font-size:11px;
+  white-space:nowrap;
+  box-shadow:0 2px 8px rgba(0,0,0,.25);
+  z-index:10;
+}
+
+.q-axis-x{
+  display:flex;
+  justify-content:space-between;
+  margin-top:6px;
+  font-size:10px;
+  color:var(--text-muted);
+}
+
+/* ================= BULLET ================= */
+
+.q-bullet-title{
+  text-align:center;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.q-bullet-container{
+  height:25px;
+  background:#17202A;
+  border-radius:6px;
+  overflow:hidden;
+}
+
+.q-bullet-bar{
+  height:100%;
+  background:steelblue;
+}
+
+.q-bullet-stats{
+  display:flex;
+  justify-content:space-between;
+  margin-top:10px;
+  font-size:.8em;
+  color:var(--text-muted);
+}
 </style>
 `;
 
-// الحصول على الشهر الحالي
-let today = dv.date("today");
-let monthStart = today.startOf("month");
-let monthEnd = today.endOf("month");
-let startDay = monthStart.startOf("week"); // يبدأ من الأحد
+/* =================================================
+   1️⃣ MONTH TRACKER
+================================================= */
 
-let weeks = [];
-let currentDay = startDay;
+const monthFolder = '"003 Daily"';
+const monthPages = dv.pages(monthFolder).where(p=>p["Read Quran"]!=null);
 
-while (currentDay <= monthEnd || weeks.length < 6) {
-    let week = [];
-    for (let i = 0; i < 7; i++) {
-        week.push(currentDay);
-        currentDay = currentDay.plus({ days: 1 });
-    }
-    weeks.push(week);
+let readData={};
+monthPages.forEach(p=>{
+  readData[p.file.name]=p["Read Quran"]===true?1:0;
+});
+
+let currentMonth=dv.date("today");
+let monthBox=dashboard.createDiv({cls:"q-box"});
+
+let header=monthBox.createDiv({cls:"q-month-header"});
+let prev=header.createSpan({text:"←"});
+let title=header.createSpan({});
+let next=header.createSpan({text:"→"});
+
+let weekdays=monthBox.createDiv({cls:"q-weekdays"});
+["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(d=>weekdays.createSpan({text:d}));
+
+let grid=monthBox.createDiv({cls:"q-days-grid"});
+
+function renderMonth(){
+  grid.innerHTML="";
+  title.textContent=currentMonth.toFormat("MMMM yyyy");
+
+  let start=currentMonth.startOf("month");
+  let end=currentMonth.endOf("month");
+  let day=start.startOf("week");
+
+  while(day<=end || grid.children.length<42){
+    let dateStr=day.toFormat("yyyy-MM-dd");
+    let isRead=readData[dateStr]===1;
+    let inMonth=day.month===currentMonth.month;
+
+    grid.createDiv({
+      cls:`q-day ${isRead?"read":""} ${!inMonth?"out-of-month":""}`,
+      text:day.day.toString()
+    });
+
+    day=day.plus({days:1});
+  }
 }
 
-let monthDiv = container.createDiv({ cls: "quran-month-view" });
+prev.onclick=()=>{currentMonth=currentMonth.minus({months:1});renderMonth();}
+next.onclick=()=>{currentMonth=currentMonth.plus({months:1});renderMonth();}
+renderMonth();
 
-// عنوان الشهر
-let header = monthDiv.createDiv({ cls: "quran-month-header" });
-header.innerHTML = `
-    <span>←</span>
-    <span>${today.toFormat("MMMM yyyy")}</span>
-    <span>→</span>
-`;
+/* =================================================
+   2️⃣ DOTS CHART
+================================================= */
 
-// أيام الأسبوع
-let weekdays = monthDiv.createDiv({ cls: "quran-weekdays" });
-["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach(day => {
-    weekdays.createSpan({ text: day });
-});
-
-// أيام الشهر
-let grid = monthDiv.createDiv({ cls: "quran-days-grid" });
-
-weeks.forEach(week => {
-    week.forEach(date => {
-        let dateStr = date.toFormat("yyyy-MM-dd");
-        let isInMonth = date.month === today.month;
-        let isRead = data[dateStr] === 1;
-        
-        let dayDiv = grid.createDiv({ 
-            cls: `quran-day ${isRead ? "read" : ""} ${!isInMonth ? "out-of-month" : ""}`,
-            text: date.day.toString()
-        });
-        
-        if (isRead) {
-            dayDiv.setAttribute("title", `قرأت القرآن في ${date.toFormat("yyyy-MM-dd")}`);
-        }
-    });
-});
-```
-```dataviewjs
-// بيانات عدد الصفحات
 const folder = '"003 Daily/001 Active Diaries"';
 const pages = dv.pages(folder)
-    .where(p => p["The number of pages you finished reading from the Quran"] != null)
-    .sort(p => p.file.name);
+  .where(p=>p["The number of pages you finished reading from the Quran"]!=null)
+  .sort(p=>p.file.name);
 
-// تجميع البيانات
-let dates = [];
-let values = [];
-
-pages.forEach(page => {
-    dates.push(page.file.name);
-    values.push(page["The number of pages you finished reading from the Quran"]);
+let dates=[], values=[];
+pages.forEach(p=>{
+  dates.push(p.file.name);
+  values.push(p["The number of pages you finished reading from the Quran"]);
 });
 
-// إنشاء الحاوية الرئيسية
-let container = dv.el("div", "");
-container.className = "tracker-dashboard";
-container.innerHTML = `
-<style>
-    .quran-chart-container {
-        padding: 15px;
-        background: var(--background-primary);
-        border-radius: 8px;
-        direction: rtl;
-    }
-    .quran-chart-title {
-        text-align: center;
-        color: var(--text-normal);
-        font-weight: bold;
-        margin-bottom: 15px;
-    }
-    .quran-dots-container {
-        position: relative;
-        height: 220px;
-        margin: 10px 0;
-        border-bottom: 1px solid var(--background-modifier-border);
-        border-left: 1px solid var(--background-modifier-border);
-    }
-    .quran-dots-grid {
-        position: relative;
-        width: 100%;
-        height: 100%;
-    }
-    .quran-line-connector {
-        position: absolute;
-        height: 2px;
-        background: steelblue;
-        transform-origin: 0 0;
-        z-index: 1;
-        opacity: 0.6;
-        box-shadow: 0 1px 3px rgba(70, 130, 180, 0.3);
-        pointer-events: none;
-    }
-    .quran-dot {
-        position: absolute;
-        width: 8px;
-        height: 8px;
-        background: steelblue;
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-        cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: 0 0 5px rgba(70, 130, 180, 0.5);
-        z-index: 2;
-    }
-    .quran-dot:hover {
-        width: 12px;
-        height: 12px;
-        background: #ff6b6b;
-        box-shadow: 0 0 10px rgba(255, 107, 107, 0.8);
-        z-index: 100;
-    }
-    .quran-dot:hover::after {
-        content: attr(data-date) ": " attr(data-value) " صفحة";
-        position: absolute;
-        top: -30px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--background-secondary);
-        color: var(--text-normal);
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 11px;
-        white-space: nowrap;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        z-index: 101;
-    }
-    .quran-axis-y {
-        position: absolute;
-        left: -30px;
-        top: 0;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        color: var(--text-muted);
-        font-size: 10px;
-    }
-    .quran-axis-x {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 5px;
-        color: var(--text-muted);
-        font-size: 10px;
-        padding-right: 20px;
-    }
-    .quran-line {
-        position: absolute;
-        height: 1px;
-        background: var(--background-modifier-border);
-        width: 100%;
-        pointer-events: none;
-    }
-    .quran-stats {
-        display: flex;
-        justify-content: space-around;
-        margin-top: 15px;
-        padding-top: 10px;
-        border-top: 1px solid var(--background-modifier-border);
-    }
-    .quran-stat-item {
-        text-align: center;
-    }
-    .quran-stat-value {
-        font-weight: bold;
-        color: steelblue;
-        font-size: 1.2em;
-    }
-    .quran-stat-label {
-        font-size: 0.8em;
-        color: var(--text-muted);
-    }
-</style>
-`;
+let chartBox=dashboard.createDiv({cls:"q-box"});
+chartBox.createDiv({cls:"q-chart-title",text:"مسيرتي في ختم القرآن"});
 
-let chartDiv = container.createDiv({ cls: "quran-chart-container" });
+let dotsWrapper=chartBox.createDiv({cls:"q-dots-wrapper"});
+let gridDots=dotsWrapper.createDiv({cls:"q-dots-grid"});
 
-// العنوان
-chartDiv.createDiv({ 
-    cls: "quran-chart-title",
-    text: "مخطط عدد الصفحات التي أقرأها يوميا من القرآن"
-});
+let maxValue=Math.max(...values,1);
 
-// حاوية النقاط
-let dotsContainer = chartDiv.createDiv({ cls: "quran-dots-container" });
-
-// خطوط الشبكة الأفقية (قيم Y)
-let maxValue = Math.max(...values, 1);
-for (let i = 0; i <= 5; i++) {
-    let yLine = dotsContainer.createDiv({ 
-        cls: "quran-line",
-        attr: { style: `top: ${(i/5) * 100}%;` }
-    });
+for(let i=0;i<=5;i++){
+  dotsWrapper.createDiv({cls:"q-grid-line",attr:{style:`top:${(i/5)*100}%`}});
 }
 
-// محور Y
-let yAxis = dotsContainer.createDiv({ cls: "quran-axis-y" });
-for (let i = 5; i >= 0; i--) {
-    let value = Math.round((i/5) * maxValue);
-    yAxis.createSpan({ text: value.toString() });
+let yAxis=dotsWrapper.createDiv({cls:"q-y-axis"});
+for(let i=5;i>=0;i--){
+  yAxis.createSpan({text:Math.round((i/5)*maxValue)});
 }
 
-// شبكة النقاط (ستحتوي على الخطوط والنقاط)
-let grid = dotsContainer.createDiv({ cls: "quran-dots-grid" });
+let minDate=dates.length?new Date(dates[0]):new Date();
+let maxDate=dates.length?new Date(dates[dates.length-1]):new Date();
+let range=maxDate-minDate||1;
 
-// حساب المواقع النسبية للنقاط (كنسب مئوية)
-let points = [];
-let minDate = dates.length > 0 ? new Date(dates[0]) : new Date();
-let maxDate = dates.length > 0 ? new Date(dates[dates.length - 1]) : new Date();
-let timeRange = maxDate - minDate || 1;
+let selected=null, tooltip=null;
 
-values.forEach((val, i) => {
-    let date = new Date(dates[i]);
-    let xPercent = ((date - minDate) / timeRange) * 100; // نسبة أفقية من 0 إلى 100
-    let yPercent = 100 - (val / maxValue) * 100; // نسبة رأسية (0 في الأعلى، 100 في الأسفل)
-    
-    points.push({ x: xPercent, y: yPercent, val, date: dates[i] });
-});
+function renderChart(){
+  const rect=dotsWrapper.getBoundingClientRect();
+  const w=rect.width;
+  const h=rect.height;
 
-// دالة لرسم الخطوط والنقاط بعد حساب الأبعاد الفعلية بالبكسل
-function renderChart() {
-    // أبعاد الحاوية
-    const rect = dotsContainer.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
+  gridDots.innerHTML="";
+  if(tooltip){tooltip.remove(); tooltip=null;}
+  selected=null;
 
-    // تنظيف الشبكة
-    grid.innerHTML = '';
+  let pts=values.map((v,i)=>{
+    let d=new Date(dates[i]);
+    return{
+      x:((d-minDate)/range)*w,
+      y:h-(v/maxValue)*h,
+      val:v,
+      date:dates[i]
+    };
+  });
 
-    // تحويل النقاط إلى إحداثيات بكسل داخل grid
-    const pixelPoints = points.map(p => ({
-        x: (p.x / 100) * width,
-        y: (p.y / 100) * height,
-        val: p.val,
-        date: p.date
-    }));
+  for(let i=0;i<pts.length-1;i++){
+    let p1=pts[i], p2=pts[i+1];
+    let dx=p2.x-p1.x;
+    let dy=p2.y-p1.y;
+    let dist=Math.sqrt(dx*dx+dy*dy);
+    let angle=Math.atan2(dy,dx)*180/Math.PI;
 
-    // رسم الخطوط أولاً (بحيث تكون خلف النقاط)
-    for (let i = 0; i < pixelPoints.length - 1; i++) {
-        const p1 = pixelPoints[i];
-        const p2 = pixelPoints[i + 1];
+    let line=document.createElement("div");
+    line.className="q-line";
+    line.style.left=p1.x+"px";
+    line.style.top=p1.y+"px";
+    line.style.width=dist+"px";
+    line.style.transform="rotate("+angle+"deg)";
+    gridDots.appendChild(line);
+  }
 
-        const dx = p2.x - p1.x;
-        const dy = p2.y - p1.y; // dy موجب إذا كانت p2 أسفل p1 (لأن y تزيد للأسفل)
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        const angle = Math.atan2(dy, dx) * 180 / Math.PI; // الزاوية بالدرجات
+  pts.forEach(p=>{
+    let dot=document.createElement("div");
+    dot.className="q-dot";
+    dot.style.left=p.x+"px";
+    dot.style.top=p.y+"px";
 
-        const line = document.createElement('div');
-        line.className = 'quran-line-connector';
-        line.style.cssText = `
-            left: ${p1.x}px;
-            top: ${p1.y}px;
-            width: ${distance}px;
-            transform: rotate(${angle}deg);
-        `;
-        grid.appendChild(line);
-    }
+    dot.onclick=()=>{
+      if(selected===dot){
+        dot.classList.remove("active");
+        if(tooltip){tooltip.remove();tooltip=null;}
+        selected=null;
+        return;
+      }
 
-    // رسم النقاط
-    pixelPoints.forEach(p => {
-        const dot = document.createElement('div');
-        dot.className = 'quran-dot';
-        dot.style.cssText = `
-            left: ${p.x}px;
-            top: ${p.y}px;
-        `;
-        dot.setAttribute('data-value', p.val);
-        dot.setAttribute('data-date', p.date);
-        grid.appendChild(dot);
-    });
+      if(selected)selected.classList.remove("active");
+      if(tooltip)tooltip.remove();
+
+      dot.classList.add("active");
+      selected=dot;
+
+      tooltip=document.createElement("div");
+      tooltip.className="q-tooltip";
+      tooltip.innerText=`${p.date} : ${p.val} صفحة`;
+      tooltip.style.left=(p.x+10)+"px";
+      tooltip.style.top=(p.y-28)+"px";
+      gridDots.appendChild(tooltip);
+    };
+
+    gridDots.appendChild(dot);
+  });
 }
 
-// ننتظر حتى يتم إدراج العناصر في DOM ثم نرسم
-// استخدام requestAnimationFrame للتأكد من اكتمال التخطيط
-requestAnimationFrame(() => {
-    renderChart();
-});
+requestAnimationFrame(renderChart);
+new ResizeObserver(()=>renderChart()).observe(dotsWrapper);
 
-// إعادة الرسم عند تغيير حجم النافذة (اختياري)
-window.addEventListener('resize', () => {
-    renderChart();
-});
-
-// محور X (نص عادي)
-let xAxis = chartDiv.createDiv({ cls: "quran-axis-x" });
-if (dates.length > 0) {
-    xAxis.createSpan({ text: dates[0] });
-    if (dates.length > 2) {
-        xAxis.createSpan({ text: dates[Math.floor(dates.length / 2)] });
-    }
-    xAxis.createSpan({ text: dates[dates.length - 1] });
+/* محور X */
+let xAxis=chartBox.createDiv({cls:"q-axis-x"});
+if(dates.length){
+  xAxis.createSpan({text:dates[0]});
+  if(dates.length>2)
+    xAxis.createSpan({text:dates[Math.floor(dates.length/2)]});
+  xAxis.createSpan({text:dates[dates.length-1]});
 }
 
-// الإحصائيات
-let max = Math.max(...values);
-let min = Math.min(...values);
-let sum = values.reduce((a, b) => a + b, 0);
-let avg = (sum / values.length).toFixed(1);
+/* =================================================
+   3️⃣ BULLET CHART
+================================================= */
 
-let stats = chartDiv.createDiv({ cls: "quran-stats" });
+let bulletBox=dashboard.createDiv({cls:"q-box"});
+bulletBox.createDiv({cls:"q-bullet-title",text:"التقدم في ختم كتاب ربي"});
 
-stats.createDiv({ cls: "quran-stat-item", html: `
-    <div class="quran-stat-value">${max}</div>
-    <div class="quran-stat-label">أقصى عدد</div>
-`});
+let monthStart=currentMonth.startOf("month");
+let monthEnd=currentMonth.endOf("month");
 
-stats.createDiv({ cls: "quran-stat-item", html: `
-    <div class="quran-stat-value">${avg}</div>
-    <div class="quran-stat-label">المتوسط</div>
-`});
+let monthPages2=pages.where(p=>
+  p.file.name>=monthStart.toFormat("yyyy-MM-dd") &&
+  p.file.name<=monthEnd.toFormat("yyyy-MM-dd")
+);
 
-stats.createDiv({ cls: "quran-stat-item", html: `
-    <div class="quran-stat-value">${min}</div>
-    <div class="quran-stat-label">أصغر عدد</div>
-`});
-
-stats.createDiv({ cls: "quran-stat-item", html: `
-    <div class="quran-stat-value">${sum}</div>
-    <div class="quran-stat-label">المجموع</div>
-`});
-```
-```dataviewjs
-// بيانات هذا الشهر
-const folder = '"003 Daily/001 Active Diaries"';
-let today = dv.date("today");
-let monthStart = today.startOf("month");
-let monthEnd = today.endOf("month");
-
-let pages = dv.pages(folder)
-    .where(p => p["The number of pages you finished reading from the Quran"] != null &&
-                p.file.name >= monthStart.toFormat("yyyy-MM-dd") &&
-                p.file.name <= monthEnd.toFormat("yyyy-MM-dd"));
-
-let total = 0;
-pages.forEach(page => {
-    total += page["The number of pages you finished reading from the Quran"] || 0;
+let total=0;
+monthPages2.forEach(p=>{
+  total+=p["The number of pages you finished reading from the Quran"]||0;
 });
 
-let target = 604; // عدد صفحات القرآن
+let target=604;
+let percent=Math.min((total/target)*100,100);
 
-// إنشاء Bullet Chart
-let container = dv.el("div", "");
-container.className = "tracker-dashboard";
-container.innerHTML = `
-<style>
-    .quran-bullet-container {
-        padding: 15px;
-        background: var(--background-primary);
-        border-radius: 8px;
-        font-family: var(--font-interface);
-    }
-    .quran-bullet-title {
-        text-align: center;
-        color: var(--text-normal);
-        font-weight: bold;
-        margin-bottom: 15px;
-    }
-    .quran-bullet-chart {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-    .quran-bullet-value {
-        display: flex;
-        justify-content: space-between;
-        color: var(--text-muted);
-        font-size: 0.9em;
-    }
-    .quran-bullet-bar-container {
-        position: relative;
-        height: 30px;
-        background: #17202A;
-        border-radius: 4px;
-        overflow: hidden;
-    }
-    .quran-bullet-bar {
-        height: 100%;
-        background: steelblue;
-        width: ${(total / target) * 100}%;
-        transition: width 0.3s;
-    }
-    .quran-bullet-marker {
-        position: absolute;
-        top: 0;
-        left: ${(1 / target) * 100}%;
-        width: 2px;
-        height: 100%;
-        background: white;
-    }
-    .quran-bullet-stats {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 10px;
-        color: var(--text-normal);
-    }
-    .quran-bullet-stat {
-        text-align: center;
-    }
-    .quran-bullet-stat-value {
-        font-weight: bold;
-        color: steelblue;
-        font-size: 1.2em;
-    }
-    .quran-bullet-stat-label {
-        font-size: 0.8em;
-        color: var(--text-muted);
-    }
-</style>
-`;
-
-let bulletDiv = container.createDiv({ cls: "quran-bullet-container" });
-
-// العنوان
-bulletDiv.createDiv({ 
-    cls: "quran-bullet-title",
-    text: "عدد الصفحات التي قرأتها من القرآن هذا الشهر"
+let barContainer=bulletBox.createDiv({cls:"q-bullet-container"});
+barContainer.createDiv({
+  cls:"q-bullet-bar",
+  attr:{style:`width:${percent}%`}
 });
 
-let chart = bulletDiv.createDiv({ cls: "quran-bullet-chart" });
-
-// القيمة الحالية والهدف
-let valueDiv = chart.createDiv({ cls: "quran-bullet-value" });
-valueDiv.createSpan({ text: `المجموع: ${total} صفحة` });
-valueDiv.createSpan({ text: `الهدف: ${target} صفحة` });
-
-// شريط التقدم
-let barContainer = chart.createDiv({ cls: "quran-bullet-bar-container" });
-barContainer.createDiv({ cls: "quran-bullet-bar" });
-
-if (total < target) {
-    barContainer.createDiv({ cls: "quran-bullet-marker" });
-}
-
-// إحصائيات إضافية
-let stats = bulletDiv.createDiv({ cls: "quran-bullet-stats" });
-let remaining = Math.max(0, target - total);
-let percentage = ((total / target) * 100).toFixed(1);
-
-stats.createDiv({ cls: "quran-bullet-stat", html: `
-    <div class="quran-bullet-stat-value">${remaining}</div>
-    <div class="quran-bullet-stat-label">المتبقي</div>
-`});
-
-stats.createDiv({ cls: "quran-bullet-stat", html: `
-    <div class="quran-bullet-stat-value">${percentage}%</div>
-    <div class="quran-bullet-stat-label">الإنجاز</div>
-`});
+let stats=bulletBox.createDiv({cls:"q-bullet-stats"});
+stats.createSpan({text:`المجموع: ${total}`});
+stats.createSpan({text:`${percent.toFixed(1)}%`});
 ```
 
 # Tracker Memorizing the Quran
 
 ```dataviewjs
-// بيانات أيام قراءة القرآن
-const folder = '"003 Daily"';
-const pages = dv.pages(folder).where(p => p["Memorizing the Quran"] != null);
+/******************************************************************
+  QURAN DASHBOARD – FULL FINAL VERSION
+******************************************************************/
 
-// تجميع البيانات
-let data = {};
-pages.forEach(page => {
-    let date = page.file.name; // اسم الملف هو التاريخ
-    let value = page["Memorizing the Quran"] === true ? 1 : 0;
-    data[date] = value;
-});
+let dashboard = dv.el("div","");
+dashboard.className = "quran-dashboard-layout";
 
-// إنشاء عنصر HTML للعرض
-let container = dv.el("div", "");
-container.className = "tracker-dashboard";
-// CSS للعرض
-container.innerHTML = `
+/* ========================= CSS ========================= */
+
+dashboard.innerHTML = `
 <style>
-    .quran-month-view {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        padding: 10px;
-        background: var(--background-primary);
-        border-radius: 8px;
-    }
-    .quran-month-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        color: steelblue;
-        font-weight: bold;
-        font-size: 1.2em;
-    }
-    .quran-weekdays {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        text-align: center;
-        color: var(--text-muted);
-        font-size: 0.8em;
-    }
-    .quran-days-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 5px;
-    }
-    .quran-day {
-        aspect-ratio: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--background-secondary);
-        border-radius: 50%;
-        font-size: 0.8em;
-        position: relative;
-    }
-    .quran-day.read {
-        background: steelblue;
-        color: white;
-    }
-    .quran-day.read::after {
-        content: "✓";
-        position: absolute;
-        top: -5px;
-        right: -5px;
-        background: steelblue;
-        color: white;
-        border-radius: 50%;
-        width: 15px;
-        height: 15px;
-        font-size: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .quran-day.out-of-month {
-        opacity: 0.3;
-    }
+.quran-dashboard-layout{
+  width:100%;
+  max-width:100%;
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap:20px;
+  align-items:start;
+}
+
+.quran-dashboard-layout > .q-box{
+  min-width:0; /* مهم جداً لمنع كسر grid */
+}
+
+/* Responsive حقيقي */
+@media (max-width:1200px){
+  .quran-dashboard-layout{
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ===== COMMON BOX ===== */
+.q-box{
+  padding:15px;
+  background:var(--background-primary);
+  border-radius:12px;
+}
+
+/* ================= MONTH TRACKER ================= */
+
+.q-month-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  color:steelblue;
+  font-weight:bold;
+  font-size:1.1em;
+  margin-bottom:10px;
+}
+
+.q-month-header span{
+  cursor:pointer;
+  user-select:none;
+}
+
+.q-weekdays{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  text-align:center;
+  font-size:.75em;
+  color:var(--text-muted);
+}
+
+.q-days-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:5px;
+}
+
+.q-day{
+  aspect-ratio:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--background-secondary);
+  border-radius:50%;
+  font-size:.75em;
+  position:relative;
+}
+
+.q-day.read{
+  background:steelblue;
+  color:white;
+}
+
+
+/* ================= DOTS CHART ================= */
+
+.q-chart-title{
+  text-align:center;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.q-dots-wrapper{
+  position:relative;
+  height:240px;
+  border-left:1px solid var(--background-modifier-border);
+  border-bottom:1px solid var(--background-modifier-border);
+}
+
+.q-y-axis{
+  position:absolute;
+  left:-35px;
+  top:0;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  font-size:10px;
+  color:var(--text-muted);
+}
+
+.q-grid-line{
+  position:absolute;
+  width:100%;
+  height:1px;
+  background:var(--background-modifier-border);
+}
+
+.q-dots-grid{
+  position:relative;
+  width:100%;
+  height:100%;
+}
+
+.q-line{
+  position:absolute;
+  height:2px;
+  background:steelblue;
+  transform-origin:0 0;
+  opacity:.6;
+  pointer-events:none;
+}
+
+.q-dot{
+  position:absolute;
+  width:8px;
+  height:8px;
+  background:steelblue;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  cursor:pointer;
+  transition:.15s;
+  box-shadow:0 0 5px rgba(70,130,180,.5);
+}
+
+.q-dot:hover{
+  transform:translate(-50%,-50%) scale(1.3);
+}
+
+.q-dot.active{
+  background:#e74c3c;
+  transform:translate(-50%,-50%) scale(1.4);
+  box-shadow:0 0 10px rgba(231,76,60,.7);
+  z-index:5;
+}
+
+.q-tooltip{
+  position:absolute;
+  background:var(--background-secondary);
+  padding:4px 8px;
+  border-radius:4px;
+  font-size:11px;
+  white-space:nowrap;
+  box-shadow:0 2px 8px rgba(0,0,0,.25);
+  z-index:10;
+}
+
+.q-axis-x{
+  display:flex;
+  justify-content:space-between;
+  margin-top:6px;
+  font-size:10px;
+  color:var(--text-muted);
+}
+
+/* ================= BULLET ================= */
+
+.q-bullet-title{
+  text-align:center;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.q-bullet-container{
+  height:25px;
+  background:#17202A;
+  border-radius:6px;
+  overflow:hidden;
+}
+
+.q-bullet-bar{
+  height:100%;
+  background:steelblue;
+}
+
+.q-bullet-stats{
+  display:flex;
+  justify-content:space-between;
+  margin-top:10px;
+  font-size:.8em;
+  color:var(--text-muted);
+}
 </style>
 `;
 
-// الحصول على الشهر الحالي
-let today = dv.date("today");
-let monthStart = today.startOf("month");
-let monthEnd = today.endOf("month");
-let startDay = monthStart.startOf("week"); // يبدأ من الأحد
+/* =================================================
+   1️⃣ MONTH TRACKER
+================================================= */
 
-let weeks = [];
-let currentDay = startDay;
+const monthFolder = '"003 Daily"';
+const monthPages = dv.pages(monthFolder).where(p=>p["Memorizing the Quran"]!=null);
 
-while (currentDay <= monthEnd || weeks.length < 6) {
-    let week = [];
-    for (let i = 0; i < 7; i++) {
-        week.push(currentDay);
-        currentDay = currentDay.plus({ days: 1 });
-    }
-    weeks.push(week);
+let readData={};
+monthPages.forEach(p=>{
+  readData[p.file.name]=p["Memorizing the Quran"]===true?1:0;
+});
+
+let currentMonth=dv.date("today");
+let monthBox=dashboard.createDiv({cls:"q-box"});
+
+let header=monthBox.createDiv({cls:"q-month-header"});
+let prev=header.createSpan({text:"←"});
+let title=header.createSpan({});
+let next=header.createSpan({text:"→"});
+
+let weekdays=monthBox.createDiv({cls:"q-weekdays"});
+["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(d=>weekdays.createSpan({text:d}));
+
+let grid=monthBox.createDiv({cls:"q-days-grid"});
+
+function renderMonth(){
+  grid.innerHTML="";
+  title.textContent=currentMonth.toFormat("MMMM yyyy");
+
+  let start=currentMonth.startOf("month");
+  let end=currentMonth.endOf("month");
+  let day=start.startOf("week");
+
+  while(day<=end || grid.children.length<42){
+    let dateStr=day.toFormat("yyyy-MM-dd");
+    let isRead=readData[dateStr]===1;
+    let inMonth=day.month===currentMonth.month;
+
+    grid.createDiv({
+      cls:`q-day ${isRead?"read":""} ${!inMonth?"out-of-month":""}`,
+      text:day.day.toString()
+    });
+
+    day=day.plus({days:1});
+  }
 }
 
-let monthDiv = container.createDiv({ cls: "quran-month-view" });
+prev.onclick=()=>{currentMonth=currentMonth.minus({months:1});renderMonth();}
+next.onclick=()=>{currentMonth=currentMonth.plus({months:1});renderMonth();}
+renderMonth();
 
-// عنوان الشهر
-let header = monthDiv.createDiv({ cls: "quran-month-header" });
-header.innerHTML = `
-    <span>←</span>
-    <span>${today.toFormat("MMMM yyyy")}</span>
-    <span>→</span>
-`;
+/* =================================================
+   2️⃣ DOTS CHART
+================================================= */
 
-// أيام الأسبوع
-let weekdays = monthDiv.createDiv({ cls: "quran-weekdays" });
-["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach(day => {
-    weekdays.createSpan({ text: day });
-});
-
-// أيام الشهر
-let grid = monthDiv.createDiv({ cls: "quran-days-grid" });
-
-weeks.forEach(week => {
-    week.forEach(date => {
-        let dateStr = date.toFormat("yyyy-MM-dd");
-        let isInMonth = date.month === today.month;
-        let isRead = data[dateStr] === 1;
-        
-        let dayDiv = grid.createDiv({ 
-            cls: `quran-day ${isRead ? "read" : ""} ${!isInMonth ? "out-of-month" : ""}`,
-            text: date.day.toString()
-        });
-        
-        if (isRead) {
-            dayDiv.setAttribute("title", `قرأت القرآن في ${date.toFormat("yyyy-MM-dd")}`);
-        }
-    });
-});
-```
-```dataviewjs
-// بيانات عدد الصفحات
 const folder = '"003 Daily/001 Active Diaries"';
 const pages = dv.pages(folder)
-    .where(p => p["The number of pages you have memorized from the Quran"] != null)
-    .sort(p => p.file.name);
+  .where(p=>p["The number of pages you have memorized from the Quran"]!=null)
+  .sort(p=>p.file.name);
 
-// تجميع البيانات
-let dates = [];
-let values = [];
-
-pages.forEach(page => {
-    dates.push(page.file.name);
-    values.push(page["The number of pages you have memorized from the Quran"]);
+let dates=[], values=[];
+pages.forEach(p=>{
+  dates.push(p.file.name);
+  values.push(p["The number of pages you have memorized from the Quran"]);
 });
 
-// إنشاء الحاوية الرئيسية
-let container = dv.el("div", "");
-container.className = "tracker-dashboard";
-container.innerHTML = `
-<style>
-    .quran-chart-container {
-        padding: 15px;
-        background: var(--background-primary);
-        border-radius: 8px;
-        direction: rtl;
-    }
-    .quran-chart-title {
-        text-align: center;
-        color: var(--text-normal);
-        font-weight: bold;
-        margin-bottom: 15px;
-    }
-    .quran-dots-container {
-        position: relative;
-        height: 220px;
-        margin: 10px 0;
-        border-bottom: 1px solid var(--background-modifier-border);
-        border-left: 1px solid var(--background-modifier-border);
-    }
-    .quran-dots-grid {
-        position: relative;
-        width: 100%;
-        height: 100%;
-    }
-    .quran-line-connector {
-        position: absolute;
-        height: 2px;
-        background: steelblue;
-        transform-origin: 0 0;
-        z-index: 1;
-        opacity: 0.6;
-        box-shadow: 0 1px 3px rgba(70, 130, 180, 0.3);
-        pointer-events: none;
-    }
-    .quran-dot {
-        position: absolute;
-        width: 8px;
-        height: 8px;
-        background: steelblue;
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-        cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: 0 0 5px rgba(70, 130, 180, 0.5);
-        z-index: 2;
-    }
-    .quran-dot:hover {
-        width: 12px;
-        height: 12px;
-        background: #ff6b6b;
-        box-shadow: 0 0 10px rgba(255, 107, 107, 0.8);
-        z-index: 100;
-    }
-    .quran-dot:hover::after {
-        content: attr(data-date) ": " attr(data-value) " صفحة";
-        position: absolute;
-        top: -30px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--background-secondary);
-        color: var(--text-normal);
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 11px;
-        white-space: nowrap;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        z-index: 101;
-    }
-    .quran-axis-y {
-        position: absolute;
-        left: -40px;
-        top: 0;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        color: var(--text-muted);
-        font-size: 10px;
-        width: 30px;
-        text-align: right;
-        z-index: 5;
-    }
-    .quran-axis-y span {
-        background: var(--background-primary);
-        padding: 0 2px;
-        line-height: 1;
-    }
-    .quran-axis-x {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 5px;
-        color: var(--text-muted);
-        font-size: 10px;
-        padding-right: 20px;
-    }
-    .quran-line {
-        position: absolute;
-        height: 1px;
-        background: var(--background-modifier-border);
-        width: 100%;
-        pointer-events: none;
-        z-index: 0;
-    }
-    .quran-stats {
-        display: flex;
-        justify-content: space-around;
-        margin-top: 15px;
-        padding-top: 10px;
-        border-top: 1px solid var(--background-modifier-border);
-    }
-    .quran-stat-item {
-        text-align: center;
-    }
-    .quran-stat-value {
-        font-weight: bold;
-        color: steelblue;
-        font-size: 1.2em;
-    }
-    .quran-stat-label {
-        font-size: 0.8em;
-        color: var(--text-muted);
-    }
-</style>
-`;
+let chartBox=dashboard.createDiv({cls:"q-box"});
+chartBox.createDiv({cls:"q-chart-title",text:"مسيرتي في حفظ كلام ربي"});
 
-let chartDiv = container.createDiv({ cls: "quran-chart-container" });
+let dotsWrapper=chartBox.createDiv({cls:"q-dots-wrapper"});
+let gridDots=dotsWrapper.createDiv({cls:"q-dots-grid"});
 
-// العنوان
-chartDiv.createDiv({ 
-    cls: "quran-chart-title",
-    text: "مخطط عدد الصفحات التي أقرأها يوميا من القرآن"
-});
+let maxValue=Math.max(...values,1);
 
-// حاوية النقاط
-let dotsContainer = chartDiv.createDiv({ cls: "quran-dots-container" });
-
-// محور Y (يضاف أولاً ليبقى خلف الشبكة)
-let yAxis = dotsContainer.createDiv({ cls: "quran-axis-y" });
-
-// خطوط الشبكة الأفقية (قيم Y)
-let maxValue = Math.max(...values, 1);
-let steps = 5;
-for (let i = 0; i <= steps; i++) {
-    let yLine = dotsContainer.createDiv({ 
-        cls: "quran-line",
-        attr: { style: `top: ${(i/steps) * 100}%;` }
-    });
-    
-    // قيمة النسبة
-    let value = Math.round((steps - i) / steps * maxValue);
-    yAxis.createSpan({ text: value.toString() });
+for(let i=0;i<=5;i++){
+  dotsWrapper.createDiv({cls:"q-grid-line",attr:{style:`top:${(i/5)*100}%`}});
 }
 
-// شبكة النقاط (ستحتوي على الخطوط والنقاط)
-let grid = dotsContainer.createDiv({ cls: "quran-dots-grid" });
-
-// حساب المواقع النسبية للنقاط (كنسب مئوية)
-let points = [];
-let minDate = dates.length > 0 ? new Date(dates[0]) : new Date();
-let maxDate = dates.length > 0 ? new Date(dates[dates.length - 1]) : new Date();
-let timeRange = maxDate - minDate || 1;
-
-values.forEach((val, i) => {
-    let date = new Date(dates[i]);
-    let xPercent = ((date - minDate) / timeRange) * 100; // نسبة أفقية من 0 إلى 100
-    let yPercent = 100 - (val / maxValue) * 100; // نسبة رأسية (0 في الأعلى، 100 في الأسفل)
-    
-    points.push({ x: xPercent, y: yPercent, val, date: dates[i] });
-});
-
-// دالة لرسم الخطوط والنقاط بعد حساب الأبعاد الفعلية بالبكسل
-function renderChart() {
-    // أبعاد الحاوية
-    const rect = dotsContainer.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-
-    // تنظيف الشبكة
-    grid.innerHTML = '';
-
-    // تحويل النقاط إلى إحداثيات بكسل داخل grid
-    const pixelPoints = points.map(p => ({
-        x: (p.x / 100) * width,
-        y: (p.y / 100) * height,
-        val: p.val,
-        date: p.date
-    }));
-
-    // رسم الخطوط أولاً (بحيث تكون خلف النقاط)
-    for (let i = 0; i < pixelPoints.length - 1; i++) {
-        const p1 = pixelPoints[i];
-        const p2 = pixelPoints[i + 1];
-
-        const dx = p2.x - p1.x;
-        const dy = p2.y - p1.y; // dy موجب إذا كانت p2 أسفل p1 (لأن y تزيد للأسفل)
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        const angle = Math.atan2(dy, dx) * 180 / Math.PI; // الزاوية بالدرجات
-
-        const line = document.createElement('div');
-        line.className = 'quran-line-connector';
-        line.style.cssText = `
-            left: ${p1.x}px;
-            top: ${p1.y}px;
-            width: ${distance}px;
-            transform: rotate(${angle}deg);
-        `;
-        grid.appendChild(line);
-    }
-
-    // رسم النقاط
-    pixelPoints.forEach(p => {
-        const dot = document.createElement('div');
-        dot.className = 'quran-dot';
-        dot.style.cssText = `
-            left: ${p.x}px;
-            top: ${p.y}px;
-        `;
-        dot.setAttribute('data-value', p.val);
-        dot.setAttribute('data-date', p.date);
-        grid.appendChild(dot);
-    });
+let yAxis=dotsWrapper.createDiv({cls:"q-y-axis"});
+for(let i=5;i>=0;i--){
+  yAxis.createSpan({text:Math.round((i/5)*maxValue)});
 }
 
-// ننتظر حتى يتم إدراج العناصر في DOM ثم نرسم
-requestAnimationFrame(() => {
-    renderChart();
-});
+let minDate=dates.length?new Date(dates[0]):new Date();
+let maxDate=dates.length?new Date(dates[dates.length-1]):new Date();
+let range=maxDate-minDate||1;
 
-// إعادة الرسم عند تغيير حجم النافذة (اختياري)
-window.addEventListener('resize', () => {
-    renderChart();
-});
+let selected=null, tooltip=null;
 
-// محور X (نص عادي)
-let xAxis = chartDiv.createDiv({ cls: "quran-axis-x" });
-if (dates.length > 0) {
-    xAxis.createSpan({ text: dates[0] });
-    if (dates.length > 2) {
-        xAxis.createSpan({ text: dates[Math.floor(dates.length / 2)] });
-    }
-    xAxis.createSpan({ text: dates[dates.length - 1] });
+function renderChart(){
+  const rect=dotsWrapper.getBoundingClientRect();
+  const w=rect.width;
+  const h=rect.height;
+
+  gridDots.innerHTML="";
+  if(tooltip){tooltip.remove(); tooltip=null;}
+  selected=null;
+
+  let pts=values.map((v,i)=>{
+    let d=new Date(dates[i]);
+    return{
+      x:((d-minDate)/range)*w,
+      y:h-(v/maxValue)*h,
+      val:v,
+      date:dates[i]
+    };
+  });
+
+  for(let i=0;i<pts.length-1;i++){
+    let p1=pts[i], p2=pts[i+1];
+    let dx=p2.x-p1.x;
+    let dy=p2.y-p1.y;
+    let dist=Math.sqrt(dx*dx+dy*dy);
+    let angle=Math.atan2(dy,dx)*180/Math.PI;
+
+    let line=document.createElement("div");
+    line.className="q-line";
+    line.style.left=p1.x+"px";
+    line.style.top=p1.y+"px";
+    line.style.width=dist+"px";
+    line.style.transform="rotate("+angle+"deg)";
+    gridDots.appendChild(line);
+  }
+
+  pts.forEach(p=>{
+    let dot=document.createElement("div");
+    dot.className="q-dot";
+    dot.style.left=p.x+"px";
+    dot.style.top=p.y+"px";
+
+    dot.onclick=()=>{
+      if(selected===dot){
+        dot.classList.remove("active");
+        if(tooltip){tooltip.remove();tooltip=null;}
+        selected=null;
+        return;
+      }
+
+      if(selected)selected.classList.remove("active");
+      if(tooltip)tooltip.remove();
+
+      dot.classList.add("active");
+      selected=dot;
+
+      tooltip=document.createElement("div");
+      tooltip.className="q-tooltip";
+      tooltip.innerText=`${p.date} : ${p.val} صفحة`;
+      tooltip.style.left=(p.x+10)+"px";
+      tooltip.style.top=(p.y-28)+"px";
+      gridDots.appendChild(tooltip);
+    };
+
+    gridDots.appendChild(dot);
+  });
 }
 
-// الإحصائيات
-let max = Math.max(...values);
-let min = Math.min(...values);
-let sum = values.reduce((a, b) => a + b, 0);
-let avg = (sum / values.length).toFixed(1);
+requestAnimationFrame(renderChart);
+new ResizeObserver(()=>renderChart()).observe(dotsWrapper);
 
-let stats = chartDiv.createDiv({ cls: "quran-stats" });
+/* محور X */
+let xAxis=chartBox.createDiv({cls:"q-axis-x"});
+if(dates.length){
+  xAxis.createSpan({text:dates[0]});
+  if(dates.length>2)
+    xAxis.createSpan({text:dates[Math.floor(dates.length/2)]});
+  xAxis.createSpan({text:dates[dates.length-1]});
+}
 
-stats.createDiv({ cls: "quran-stat-item", html: `
-    <div class="quran-stat-value">${max}</div>
-    <div class="quran-stat-label">أقصى عدد</div>
-`});
+/* =================================================
+   3️⃣ BULLET CHART
+================================================= */
 
-stats.createDiv({ cls: "quran-stat-item", html: `
-    <div class="quran-stat-value">${avg}</div>
-    <div class="quran-stat-label">المتوسط</div>
-`});
+let bulletBox=dashboard.createDiv({cls:"q-box"});
+bulletBox.createDiv({cls:"q-bullet-title",text:"التقدم في حفظ كلام ربي"});
 
-stats.createDiv({ cls: "quran-stat-item", html: `
-    <div class="quran-stat-value">${min}</div>
-    <div class="quran-stat-label">أصغر عدد</div>
-`});
+let monthStart=currentMonth.startOf("month");
+let monthEnd=currentMonth.endOf("month");
 
-stats.createDiv({ cls: "quran-stat-item", html: `
-    <div class="quran-stat-value">${sum}</div>
-    <div class="quran-stat-label">المجموع</div>
-`});
+let monthPages2=pages.where(p=>
+  p.file.name>=monthStart.toFormat("yyyy-MM-dd") &&
+  p.file.name<=monthEnd.toFormat("yyyy-MM-dd")
+);
+
+let total=0;
+monthPages2.forEach(p=>{
+  total+=p["The number of pages you have memorized from the Quran"]||0;
+});
+
+let target=604;
+let percent=Math.min((total/target)*100,100);
+
+let barContainer=bulletBox.createDiv({cls:"q-bullet-container"});
+barContainer.createDiv({
+  cls:"q-bullet-bar",
+  attr:{style:`width:${percent}%`}
+});
+
+let stats=bulletBox.createDiv({cls:"q-bullet-stats"});
+stats.createSpan({text:`المجموع: ${total}`});
+stats.createSpan({text:`${percent.toFixed(1)}%`});
 ```
-```dataviewjs
-// بيانات هذا الشهر
-const folder = '"003 Daily/001 Active Diaries"';
-let today = dv.date("today");
-let monthStart = today.startOf("month");
-let monthEnd = today.endOf("month");
 
-let pages = dv.pages(folder)
-    .where(p => p["The number of pages you have memorized from the Quran"] != null &&
-                p.file.name >= monthStart.toFormat("yyyy-MM-dd") &&
-                p.file.name <= monthEnd.toFormat("yyyy-MM-dd"));
-
-let total = 0;
-pages.forEach(page => {
-    total += page["The number of pages you have memorized from the Quran"] || 0;
-});
-
-let target = 604; // عدد صفحات القرآن
-
-// إنشاء Bullet Chart
-let container = dv.el("div", "");
-container.className = "tracker-dashboard";
-
-container.innerHTML = `
-<style>
-    .quran-bullet-container {
-        padding: 15px;
-        background: var(--background-primary);
-        border-radius: 8px;
-        font-family: var(--font-interface);
-    }
-    .quran-bullet-title {
-        text-align: center;
-        color: var(--text-normal);
-        font-weight: bold;
-        margin-bottom: 15px;
-    }
-    .quran-bullet-chart {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-    .quran-bullet-value {
-        display: flex;
-        justify-content: space-between;
-        color: var(--text-muted);
-        font-size: 0.9em;
-    }
-    .quran-bullet-bar-container {
-        position: relative;
-        height: 30px;
-        background: #17202A;
-        border-radius: 4px;
-        overflow: hidden;
-    }
-    .quran-bullet-bar {
-        height: 100%;
-        background: steelblue;
-        width: ${(total / target) * 100}%;
-        transition: width 0.3s;
-    }
-    .quran-bullet-marker {
-        position: absolute;
-        top: 0;
-        left: ${(1 / target) * 100}%;
-        width: 2px;
-        height: 100%;
-        background: white;
-    }
-    .quran-bullet-stats {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 10px;
-        color: var(--text-normal);
-    }
-    .quran-bullet-stat {
-        text-align: center;
-    }
-    .quran-bullet-stat-value {
-        font-weight: bold;
-        color: steelblue;
-        font-size: 1.2em;
-    }
-    .quran-bullet-stat-label {
-        font-size: 0.8em;
-        color: var(--text-muted);
-    }
-</style>
-`;
-
-let bulletDiv = container.createDiv({ cls: "quran-bullet-container" });
-
-// العنوان
-bulletDiv.createDiv({ 
-    cls: "quran-bullet-title",
-    text: "عدد الصفحات التي قرأتها من القرآن هذا الشهر"
-});
-
-let chart = bulletDiv.createDiv({ cls: "quran-bullet-chart" });
-
-// القيمة الحالية والهدف
-let valueDiv = chart.createDiv({ cls: "quran-bullet-value" });
-valueDiv.createSpan({ text: `المجموع: ${total} صفحة` });
-valueDiv.createSpan({ text: `الهدف: ${target} صفحة` });
-
-// شريط التقدم
-let barContainer = chart.createDiv({ cls: "quran-bullet-bar-container" });
-barContainer.createDiv({ cls: "quran-bullet-bar" });
-
-if (total < target) {
-    barContainer.createDiv({ cls: "quran-bullet-marker" });
-}
-
-// إحصائيات إضافية
-let stats = bulletDiv.createDiv({ cls: "quran-bullet-stats" });
-let remaining = Math.max(0, target - total);
-let percentage = ((total / target) * 100).toFixed(1);
-
-stats.createDiv({ cls: "quran-bullet-stat", html: `
-    <div class="quran-bullet-stat-value">${remaining}</div>
-    <div class="quran-bullet-stat-label">المتبقي</div>
-`});
-
-stats.createDiv({ cls: "quran-bullet-stat", html: `
-    <div class="quran-bullet-stat-value">${percentage}%</div>
-    <div class="quran-bullet-stat-label">الإنجاز</div>
-`});
-```
 # Tracker Islamic
 ![[Tracker B]]

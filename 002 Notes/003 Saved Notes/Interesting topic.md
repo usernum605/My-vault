@@ -8,7 +8,7 @@ cssclasses:
   - invert-banner
   - recolor-images
 The Topic:
-  - Zin
+  - Learning
 ---
 ##### تذكر
 

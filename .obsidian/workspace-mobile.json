@@ -4,16 +4,62 @@
     "type": "split",
     "children": [
       {
-        "id": "64702f0dca785d55",
+        "id": "8b4f862c20832a6d",
         "type": "tabs",
         "children": [
           {
-            "id": "6e6d568ef24e4eed",
+            "id": "19c003a36a5455dc",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "003 Daily/001 Active Diaries/2026-02-21.md",
+                "file": "001 Dashboard/Dashboard/Dashboard.md",
+                "mode": "preview",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "Dashboard"
+            }
+          },
+          {
+            "id": "d940175c72d80582",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "001 Dashboard/My tools.md",
+                "mode": "preview",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "My tools"
+            }
+          },
+          {
+            "id": "8ef702dc016378c8",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
+            }
+          }
+        ]
+      },
+      {
+        "id": "85dfe0a0e611a622",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "c755b825d27c1155",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "003 Daily/001 Active Diaries/2026-02-26.md",
                 "mode": "preview",
                 "source": false,
                 "backlinks": true,
@@ -28,35 +74,25 @@
                 }
               },
               "icon": "lucide-file",
-              "title": "2026-02-21"
+              "title": "2026-02-26"
             }
           },
           {
-            "id": "6f994729ffff8506",
+            "id": "aa2e9a9ec973d425",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "002 Notes/004 Archived Notes/Learn.md",
+                "file": "001 Dashboard/Azkaru.md",
                 "mode": "preview",
-                "source": true,
-                "backlinks": true,
-                "backlinkOpts": {
-                  "collapseAll": false,
-                  "extraContext": false,
-                  "sortOrder": "alphabetical",
-                  "showSearch": false,
-                  "searchQuery": "",
-                  "backlinkCollapsed": false,
-                  "unlinkedCollapsed": true
-                }
+                "source": false,
+                "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "Learn"
+              "title": "Azkaru"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -84,7 +120,7 @@
         "state": {
           "type": "search",
           "state": {
-            "query": "Tracker ",
+            "query": "",
             "matchingCase": false,
             "explainSearch": false,
             "collapseAll": false,
@@ -125,7 +161,7 @@
         }
       },
       {
-        "id": "33a9b822a2405c08",
+        "id": "0b1fda29c87ea91f",
         "type": "leaf",
         "state": {
           "type": "bookmarks",
@@ -147,7 +183,7 @@
         "state": {
           "type": "outline",
           "state": {
-            "file": "003 Daily/001 Active Diaries/2026-02-21.md",
+            "file": "003 Daily/001 Active Diaries/2026-02-24.md",
             "followCursor": false,
             "showSearch": false,
             "searchQuery": ""
@@ -182,7 +218,7 @@
         "state": {
           "type": "localgraph",
           "state": {
-            "file": "002 Notes/004 Archived Notes/Learn.md",
+            "file": "003 Daily/001 Active Diaries/2026-02-26.md",
             "options": {
               "collapse-filter": true,
               "search": "",
@@ -224,8 +260,7 @@
         }
       }
     ],
-    "currentTab": 3,
-    "pinned": true
+    "currentTab": 3
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -243,36 +278,11 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "6f994729ffff8506",
+  "active": "c755b825d27c1155",
   "lastOpenFiles": [
-    "002 Notes/004 Archived Notes/Fully Ai Game.md",
-    "002 Notes/004 Archived Notes/Prompt.md",
-    "002 Notes/004 Archived Notes/Insta.md",
-    "001 Dashboard/Dashboard/Trackers/Tracker A.md",
-    "003 Daily/001 Active Diaries/2026-02-21.md",
-    "004 Files/002 Archive/Olds/Old codes/Tracker o.md",
-    "003 Daily/001 Active Diaries/2026-02-19.md",
-    "003 Daily/002 Archived Diaries/2026-02-03.md",
-    "001 Dashboard/Dashboard/Bases/000 Ultimate Base.md",
-    "003 Daily/001 Active Diaries/2026-02-26.md",
-    "004 Files/001 Attach/warsh.pdf",
-    "001 Dashboard/Dashboard/Trackers/Tracker B.md",
-    "001 Dashboard/Athkar & Adia.md",
-    "002 Notes/001 Notes/For pdf.md",
-    "002 Notes/001 Notes/Hi.md",
-    "002 Notes/001 Notes/Quran.md",
-    "002 Notes/001 Notes/Untitled.md",
     "001 Dashboard/Dashboard/Dashboard.md",
     "001 Dashboard/My tools.md",
-    "001 Dashboard/Azkaru.md",
-    "003 Daily/001 Active Diaries/2026-02-25.md",
-    "002 Notes/003 Saved Notes/My YouTube Channels.md",
-    "004 Files/002 Archive/Attach Embedded/أذكار المساء.md",
-    "002 Notes/002 Lessons/002 Game dev.md",
-    "002 Notes/002 Lessons/Noise in the games.md",
-    "002 Notes/003 Saved Notes/Log - How to learn.md",
-    "002 Notes/003 Saved Notes/Interesting topic.md",
-    "004 Files/001 Attach/Sounds/Takwa.mp3",
-    "004 Files/001 Attach/Learning"
+    "003 Daily/001 Active Diaries/2026-02-26.md",
+    "001 Dashboard/Azkaru.md"
   ]
 }

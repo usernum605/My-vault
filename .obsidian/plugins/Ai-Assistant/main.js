@@ -793,10 +793,10 @@ class LocalAIProvider extends BaseAIProvider {
             try {
               const data = await response.json();
               if (data && (data.status === 'ok' || data.status === 'healthy' || data.ready === true)) {
-                return { ok: true, message: '✔️ Service is healthy' };
+                return { ok: true, message: '✓ Service is healthy' };
               }
             } catch {
-              return { ok: true, message: '✔️ Service is reachable' };
+              return { ok: true, message: '✓ Service is reachable' };
             }
           }
         } catch {
@@ -812,15 +812,15 @@ class LocalAIProvider extends BaseAIProvider {
         }, { timeoutMs: 5000 });
         
         if (testResponse && testResponse.final) {
-          return { ok: true, message: '✔️ Service is responding' };
+          return { ok: true, message: '✓ Service is responding' };
         }
       } catch {
         // Ignore
       }
       
-      return { ok: false, message: '✖️ Local AI service is not reachable' };
+      return { ok: false, message: '✖ Local AI service is not reachable' };
     } catch (error) {
-      return { ok: false, message: `✖️ ${error.message}` };
+      return { ok: false, message: `✖ ${error.message}` };
     }
   }
 }
@@ -877,12 +877,12 @@ class OpenAIProvider extends BaseAIProvider {
       });
       
       if (response.status === 401) {
-        return { ok: false, message: '✖️ Invalid API key' };
+        return { ok: false, message: '✖ Invalid API key' };
       }
       
-      return { ok: response.ok, message: response.ok ? '✔️ Connected to OpenAI' : `✖️ Error ${response.status}` };
+      return { ok: response.ok, message: response.ok ? '✓ Connected to OpenAI' : `✖ Error ${response.status}` };
     } catch (e) {
-      return { ok: false, message: `✖️ ${e.message}` };
+      return { ok: false, message: `✖ ${e.message}` };
     }
   }
 }
@@ -985,16 +985,16 @@ class GeminiProvider extends BaseAIProvider {
       });
       
       if (response.status === 403 || response.status === 401) {
-        return { ok: false, message: '✖️ Invalid API key' };
+        return { ok: false, message: '✖ Invalid API key' };
       }
       
       if (response.status === 429) {
         return { ok: false, message: '⏳ Rate limit exceeded. Please wait.' };
       }
       
-      return { ok: response.ok, message: response.ok ? '✔️ Connected to Gemini' : `✖️ Error ${response.status}` };
+      return { ok: response.ok, message: response.ok ? '✓ Connected to Gemini' : `✖ Error ${response.status}` };
     } catch (e) {
-      return { ok: false, message: `✖️ ${e.message}` };
+      return { ok: false, message: `✖ ${e.message}` };
     }
   }
 }
@@ -1058,12 +1058,12 @@ class AnthropicProvider extends BaseAIProvider {
       });
       
       if (response.status === 401) {
-        return { ok: false, message: '✖️ Invalid API key' };
+        return { ok: false, message: '✖ Invalid API key' };
       }
       
-      return { ok: response.ok, message: response.ok ? '✔️ Connected to Anthropic' : `✖️ Error ${response.status}` };
+      return { ok: response.ok, message: response.ok ? '✓ Connected to Anthropic' : `✖ Error ${response.status}` };
     } catch (e) {
-      return { ok: false, message: `✖️ ${e.message}` };
+      return { ok: false, message: `✖ ${e.message}` };
     }
   }
 }
@@ -1150,12 +1150,12 @@ class CustomProvider extends BaseAIProvider {
       
       return { 
         ok: true, 
-        message: `✔️ Connection successful. Response: "${testResponse.final.substring(0, 50)}..."` 
+        message: `✓ Connection successful. Response: "${testResponse.final.substring(0, 50)}..."` 
       };
     } catch (error) {
       return { 
         ok: false, 
-        message: `✖️ ${error.message}` 
+        message: `✖ ${error.message}` 
       };
     }
   }
@@ -1873,7 +1873,7 @@ class InNoteAIInteractions {
       
       editor.replaceRange('\n\n---\n\n', editor.getCursor());
     } catch (error) {
-      editor.replaceRange(`\n\n✖️ Error: ${error.message}\n\n`, editor.getCursor());
+      editor.replaceRange(`\n\n✖ Error: ${error.message}\n\n`, editor.getCursor());
       new Notice('AI Error: ' + error.message);
     }
   }
@@ -2422,7 +2422,7 @@ async createInputArea() {
       this.plugin._sessionManager.create(name.trim());
       this._renderMessages();
       this.plugin.saveState();
-      new Notice(`✔️ Created conversation: ${name}`);
+      new Notice(`✓ Created conversation: ${name}`);
     }
   }
 
@@ -2447,10 +2447,10 @@ async createInputArea() {
         const fullPath = await this.plugin.getUniqueFilePath(folderPath, baseName, 'md');
         
         await this.app.vault.create(fullPath, content);
-        new Notice(`✔️ Conversation saved to: ${fullPath}`);
+        new Notice(`✓ Conversation saved to: ${fullPath}`);
     } catch (error) {
         console.error('Error saving conversation:', error);
-        new Notice(`✖️ Error saving conversation: ${error.message}`);
+        new Notice(`✖ Error saving conversation: ${error.message}`);
     }
 }
 
@@ -2729,7 +2729,7 @@ async createInputArea() {
       const attachmentCount = this.pendingAttachments.length;
       if (attachmentCount > 0) {
         this.inputEl.value += `\n[📎 ${attachmentCount} file${attachmentCount > 1 ? 's' : ''} attached]`;
-        new Notice(`✔️ ${attachmentCount} file${attachmentCount > 1 ? 's' : ''} ready to attach`);
+        new Notice(`✓ ${attachmentCount} file${attachmentCount > 1 ? 's' : ''} ready to attach`);
       }
     });
     modal.open();
@@ -2819,13 +2819,13 @@ async createInputArea() {
         this.plugin.saveState();
       } else {
         // If no content at all, show an error
-        streamingMsg.textContent = '✖️ No response received';
+        streamingMsg.textContent = '✖ No response received';
       }
       
     } catch (e) {
       console.error("Chat Error:", e);
       
-      let errorMessage = '✖️ Error occurred';
+      let errorMessage = '✖ Error occurred';
       if (e.message.includes('429')) {
         errorMessage = '⏳ Rate limit exceeded. Please wait a moment and try again Or Try changing the model.';
       } else if (e.message.includes('401') || e.message.includes('403')) {
@@ -2835,7 +2835,7 @@ async createInputArea() {
       } else if (e.message.includes('fetch') || e.message.includes('Failed to fetch')) {
         errorMessage = '🌐 Cannot connect to Local AI. Please check if the server is running at ' + this.plugin.settings.baseUrl;
       } else {
-        errorMessage = `✖️ Error: ${e.message}`;
+        errorMessage = `✖ Error: ${e.message}`;
       }
       
       streamingMsg.textContent = errorMessage;
@@ -3000,7 +3000,7 @@ class SettingsModal extends Modal {
     
     saveBtn.addEventListener('click', async () => {
       await this.plugin.saveSettings();
-      new Notice('✔️ Settings saved successfully!');
+      new Notice('✓ Settings saved successfully!');
       this.close();
     });
     
@@ -3071,12 +3071,12 @@ class SettingsModal extends Modal {
         const provider = new LocalAIProvider(this.plugin);
         const health = await provider.checkHealth();
         if (health.ok) {
-          new Notice('✔️ ' + health.message);
+          new Notice('✓ ' + health.message);
         } else {
-          new Notice('✖️ ' + health.message);
+          new Notice('✖ ' + health.message);
         }
       } catch (e) {
-        new Notice('✖️ Error: ' + e.message);
+        new Notice('✖ Error: ' + e.message);
       } finally {
         testBtn.disabled = false;
         testBtn.empty();
@@ -3783,7 +3783,7 @@ class SettingsModal extends Modal {
       this.plugin._sessionManager.create(name);
       this.plugin.saveState();
       this.showConversationsSettings(container);
-      new Notice(`✔️ Created conversation: ${name}`);
+      new Notice(`✓ Created conversation: ${name}`);
       newSessionInput.value = '';
       this.refreshChatViews();
     });
@@ -3838,10 +3838,10 @@ class SettingsModal extends Modal {
         const fullPath = await this.plugin.getUniqueFilePath(folderPath, baseName, 'md');
         
         await this.app.vault.create(fullPath, content);
-        new Notice(`✔️ Conversation saved to: ${fullPath}`);
+        new Notice(`✓ Conversation saved to: ${fullPath}`);
     } catch (error) {
         console.error('Error saving conversation:', error);
-        new Notice(`✖️ Error saving conversation: ${error.message}`);
+        new Notice(`✖ Error saving conversation: ${error.message}`);
     }
 }
 
@@ -4095,7 +4095,7 @@ module.exports = class AIPlugin extends Plugin {
           if (name && name.trim()) {
             this._sessionManager.create(name.trim());
             this.saveState();
-            new Notice(`✔️ Created conversation: ${name}`);
+            new Notice(`✓ Created conversation: ${name}`);
           }
         }
       }
@@ -4177,10 +4177,10 @@ module.exports = class AIPlugin extends Plugin {
         const fullPath = await this.getUniqueFilePath(folderPath, baseName, 'md');
         
         await this.app.vault.create(fullPath, content);
-        new Notice(`✔️ Conversation saved to: ${fullPath}`);
+        new Notice(`✓ Conversation saved to: ${fullPath}`);
     } catch (error) {
         console.error('Error saving conversation:', error);
-        new Notice(`✖️ Error saving conversation: ${error.message}`);
+        new Notice(`✖ Error saving conversation: ${error.message}`);
     }
 }
 
@@ -4209,9 +4209,9 @@ module.exports = class AIPlugin extends Plugin {
       });
       
       editor.replaceSelection("\n\n---\n\n");
-      new Notice('✔️ Response completed');
+      new Notice('✓ Response completed');
     } catch (e) {
-      editor.replaceSelection(`\n\n✖️ Error: ${e.message}\n\n`);
+      editor.replaceSelection(`\n\n✖ Error: ${e.message}\n\n`);
       new Notice('AI Error: ' + e.message);
     }
   }

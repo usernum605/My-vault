@@ -29,8 +29,8 @@
     --list-marke-color: #235f8c;
     --list-bullet-radius: 100%;
     --checkbox-color: var(--marker-color);
-    --checkbox-border-color: var(--accent-brighter-30);
-    --checkbox-border-color-hover: var(--theme-color);
+    --checkbox-border-color: var(--marker-color);
+    --checkbox-border-color-hover: var(--marker-color);
     -table-border-color: var(--theme-color);
     --table-border-width: 1px;
     --font-editor-theme:-apple-system,
@@ -166,6 +166,7 @@ only screen and (min-device-pixel-ratio:2) {
     --color-purple:#9e86c8;
     --color-pink:#b05279
 }
+
  .theme-light,
 .theme-light.minimal-default-light,
 body {
@@ -384,7 +385,7 @@ body {
      --graph-node-focused: #766818;
      --marker-color: #9B6767;
      --checkbox-color: #6C2727;
-     --checkbox-border-color: var(--text-muted);
+     --checkbox-border-color: var(--marker-color);
      --checkbox-border-color-hover: var(--ax2);
      --base-h: 44;
      --base-s: 58%;

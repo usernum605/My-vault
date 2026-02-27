@@ -8,6 +8,7 @@ cssclasses:
   - rtl-everything
 The Topic:
   - Dev
+  - Learning
 ---
 ### 📚 Learning Log - 2026-02-24
 

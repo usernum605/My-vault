@@ -1,6 +1,6 @@
 ---
 The Topic:
-  - Learn how to learn
+  - Learning
 translate: true
 links pages:
   - "[[Learn]]"

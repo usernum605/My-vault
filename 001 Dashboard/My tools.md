@@ -6,6 +6,8 @@ cssclasses:
   - page-grid
   - pen-blue
   - center-everything
+  - invert-banner
+  - invert-dark-apt
 icon: lucide-tool-case
 tags:
   - Self↑up
