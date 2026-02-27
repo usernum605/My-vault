@@ -6,6 +6,7 @@
       {
         "id": "8b4f862c20832a6d",
         "type": "tabs",
+        "dimension": 50,
         "children": [
           {
             "id": "19c003a36a5455dc",
@@ -14,7 +15,7 @@
               "type": "markdown",
               "state": {
                 "file": "001 Dashboard/Dashboard/Dashboard.md",
-                "mode": "preview",
+                "mode": "source",
                 "source": false,
                 "backlinks": false
               },
@@ -52,6 +53,7 @@
       {
         "id": "85dfe0a0e611a622",
         "type": "tabs",
+        "dimension": 50,
         "children": [
           {
             "id": "4779c648e70da9ed",
@@ -183,7 +185,7 @@
         "state": {
           "type": "outline",
           "state": {
-            "file": "003 Daily/001 Active Diaries/2026-02-24.md",
+            "file": "001 Dashboard/Dashboard/Dashboard.md",
             "followCursor": false,
             "showSearch": false,
             "searchQuery": ""
@@ -218,7 +220,7 @@
         "state": {
           "type": "localgraph",
           "state": {
-            "file": "003 Daily/001 Active Diaries/2026-02-27.md",
+            "file": "001 Dashboard/Dashboard/Dashboard.md",
             "options": {
               "collapse-filter": true,
               "search": "",
@@ -260,7 +262,7 @@
         }
       }
     ],
-    "currentTab": 3,
+    "currentTab": 0,
     "pinned": true
   },
   "left-ribbon": {
@@ -279,12 +281,17 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "4779c648e70da9ed",
+  "active": "19c003a36a5455dc",
   "lastOpenFiles": [
-    "001 Dashboard/Dashboard/Dashboard.md",
     "003 Daily/001 Active Diaries/2026-02-27.md",
+    "001 Dashboard/Dashboard/Dashboard.md",
+    "002 Notes/003 Saved Notes/Log - How to learn.md",
+    "004 Files/002 Archive/Olds/Old Topics/Termux commands Ai.md",
+    "004 Files/002 Archive/Olds/Old codes/Tracker 0.md",
+    "002 Notes/002 Lessons/Learn Something.md",
+    "002 Notes/002 Lessons/Logs",
+    "001 Dashboard/Azkaru.md",
     "003 Daily/001 Active Diaries/2026-02-26.md",
-    "001 Dashboard/My tools.md",
-    "001 Dashboard/Azkaru.md"
+    "001 Dashboard/My tools.md"
   ]
 }
