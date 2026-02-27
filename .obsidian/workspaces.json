@@ -249,7 +249,7 @@
             "type": "tabs",
             "children": [
               {
-                "id": "19c003a36a5455dc",
+                "id": "4025747625f6a582",
                 "type": "leaf",
                 "state": {
                   "type": "markdown",
@@ -257,29 +257,23 @@
                     "file": "001 Dashboard/Dashboard/Dashboard.md",
                     "mode": "preview",
                     "source": false,
-                    "backlinks": false
+                    "backlinks": true,
+                    "backlinkOpts": {
+                      "collapseAll": false,
+                      "extraContext": false,
+                      "sortOrder": "alphabetical",
+                      "showSearch": false,
+                      "searchQuery": "",
+                      "backlinkCollapsed": false,
+                      "unlinkedCollapsed": true
+                    }
                   },
                   "icon": "lucide-file",
                   "title": "Dashboard"
                 }
               },
               {
-                "id": "d940175c72d80582",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "001 Dashboard/My tools.md",
-                    "mode": "preview",
-                    "source": false,
-                    "backlinks": false
-                  },
-                  "icon": "lucide-file",
-                  "title": "My tools"
-                }
-              },
-              {
-                "id": "8ef702dc016378c8",
+                "id": "06c77867d2b34c33",
                 "type": "leaf",
                 "state": {
                   "type": "graph",
@@ -291,11 +285,11 @@
             ]
           },
           {
-            "id": "85dfe0a0e611a622",
+            "id": "31cc512b26368b43",
             "type": "tabs",
             "children": [
               {
-                "id": "f88c4d6bbedb58b9",
+                "id": "8ef702dc016378c8",
                 "type": "leaf",
                 "state": {
                   "type": "markdown",
@@ -319,7 +313,7 @@
                 }
               },
               {
-                "id": "aa2e9a9ec973d425",
+                "id": "bcc67986715f0cd8",
                 "type": "leaf",
                 "state": {
                   "type": "markdown",
@@ -327,10 +321,31 @@
                     "file": "001 Dashboard/Azkaru.md",
                     "mode": "preview",
                     "source": false,
-                    "backlinks": false
+                    "backlinks": true,
+                    "backlinkOpts": {
+                      "collapseAll": false,
+                      "extraContext": false,
+                      "sortOrder": "alphabetical",
+                      "showSearch": false,
+                      "searchQuery": "",
+                      "backlinkCollapsed": false,
+                      "unlinkedCollapsed": true
+                    }
                   },
                   "icon": "lucide-file",
                   "title": "Azkaru"
+                }
+              },
+              {
+                "id": "d87ed5ae9b860fa9",
+                "type": "leaf",
+                "state": {
+                  "type": "pdf",
+                  "state": {
+                    "file": "004 Files/001 Attach/warsh.pdf"
+                  },
+                  "icon": "lucide-file-text",
+                  "title": "warsh"
                 }
               }
             ]
@@ -459,7 +474,7 @@
             "state": {
               "type": "localgraph",
               "state": {
-                "file": "003 Daily/001 Active Diaries/2026-02-27.md",
+                "file": "001 Dashboard/Dashboard/Dashboard.md",
                 "options": {
                   "collapse-filter": true,
                   "search": "",
@@ -520,8 +535,8 @@
           "workspaces:Manage workspace layouts": false
         }
       },
-      "active": "f88c4d6bbedb58b9",
-      "mtime": "2026-02-27T01:02:12+01:00"
+      "active": "4025747625f6a582",
+      "mtime": "2026-02-27T08:18:14+01:00"
     }
   },
   "active": "Diarie"
