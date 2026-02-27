@@ -17,7 +17,10 @@ const tasks = dv.pages('"003 Daily/001 Active Diaries"')
   .where(t => !t.completed && t.text.includes("العمل على مشروع"));
 
 if (tasks.length > 0) {
-  dv.taskList(tasks, false);
+  // تغليف المهام بـ div يدعم الـ RTL
+  dv.container.createEl("div", { cls: "rtl-tasks" }, el => {
+    dv.taskList(tasks, false);
+  });
 }
 ```
 

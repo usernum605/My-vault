@@ -2,11 +2,11 @@
   "accentColor": "#235f8c",
   "cssTheme": "Minimalist",
   "enabledCssSnippets": [
-    "Arrange",
-    "Arabic",
-    "Cards",
+    "dashboard",
     "Coller",
-    "dashboard"
+    "Cards",
+    "Arrange",
+    "Arabic"
   ],
   "interfaceFontFamily": "Noto Naskh Arabic,IBM Plex Sans Arabic",
   "monospaceFontFamily": "IBM Plex Mono",

@@ -9,6 +9,7 @@ cssclasses:
 The Topic:
   - Dev
   - Learning
+hidely: true
 ---
 ### 📚 Learning Log - 2026-02-24
 

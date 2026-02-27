@@ -8,6 +8,7 @@ tags:
   - Self↑up
 links pages:
   - "[[Diny]]"
+  - "[[My tools]]"
 ---
 ### الصلاة والإنتاجية
 <div style='color: skyblue'>
