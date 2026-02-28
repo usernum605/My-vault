@@ -7,6 +7,7 @@ cssclasses:
 banner_y: 68
 links pages:
   - "path: 003 Daily"
+hidely: true
 ---
 ```dataviewjs
 // ---------- DATE ENGINE ----------
@@ -528,73 +529,4 @@ data.forEach((item, i) => {
 });
 
 container.appendChild(canvas);
-```
-
-
-```dataviewjs
-const tasksFolder = "003 Daily/001 Active Diaries";
-const archiveFolder = "003 Daily/002 Archived Diaries";
-const threeDaysAgo = moment().subtract(15, 'days');
-
-// الحصول على جميع الملفات في مجلد المهام
-const files = app.vault.getFiles()
-    .filter(file => file.path.includes(tasksFolder))
-    .filter(file => {
-        // استخراج التاريخ من اسم الملف إذا كان بصيغة yyyy-mm-dd
-        const dateMatch = file.name.match(/(\d{4}-\d{2}-\d{2})/);
-        if (dateMatch) {
-            const fileDate = moment(dateMatch[1]);
-            return fileDate.isBefore(threeDaysAgo);
-        }
-        return false;
-    });
-
-// نقل الملفات
-if (files.length > 0) {
-    files.forEach(async (file) => {
-        const newPath = file.path.replace(tasksFolder, archiveFolder);
-        await app.vault.rename(file, newPath);
-        console.log(`تم نقل: ${file.name} إلى الأرشيف`);
-    });
-    dv.paragraph(`✅ تم نقل ${files.length} ملف إلى الأرشيف`);
-} else {
-}
-```
-
-```dataviewjs
-// نقل الملفات الأقدم من 30 يوم باستخدام ctime
-const sourceFolder = "002 Notes/001 Notes";
-const archiveFolder = "002 Notes/004 Archived Notes";
-const thirtyDaysAgo = moment().subtract(30, 'days');
-
-// الحصول على جميع الملفات في المجلد المصدر
-const files = app.vault.getFiles()
-    .filter(file => file.path.startsWith(sourceFolder))
-    .filter(file => {
-        // الحصول على وقت إنشاء الملف
-        const fileCtime = moment(file.stat.ctime);
-        // التحقق إذا كان الملف أقدم من 30 يوم
-        return fileCtime.isBefore(thirtyDaysAgo);
-    });
-
-// نقل الملفات
-if (files.length > 0) {
-    files.forEach(async (file) => {
-        // إنشاء المسار الجديد في مجلد الأرشيف
-        const newPath = file.path.replace(sourceFolder, archiveFolder);
-        
-        // التأكد من وجود المجلد الهدف (اختياري)
-        const archiveFolderExists = app.vault.getAbstractFileByPath(archiveFolder);
-        if (!archiveFolderExists) {
-            await app.vault.createFolder(archiveFolder);
-        }
-        
-        // نقل الملف
-        await app.vault.rename(file, newPath);
-        console.log(`تم نقل: ${file.name} إلى الأرشيف`);
-    });
-    
-    dv.paragraph(`✅ تم نقل ${files.length} ملف إلى الأرشيف`);
-} else {
-}
 ```

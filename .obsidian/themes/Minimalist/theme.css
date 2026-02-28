@@ -110,6 +110,11 @@
     --table-add-button-border-width:0px;
     --file-margins-y:var(--size-4-2)
 }
+
+.notice {
+    border-right: 4px solid var(--interactive-accent) !important;
+    border-radius: 8px !important;
+}
 .mod-macos {
     --top-left-padding-y:24px
 }

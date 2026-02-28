@@ -2,16 +2,6 @@
 /* RTL Text Direction Classes */
 /* =============================================== */
 
-div.side-dock-ribbon-action[aria-label="AI Assistant"] {
-    display: none !important;
-}
-.side-dock-ribbon-action[aria-label="Internet"] {
-    display: none !important;
-}
-.side-dock-ribbon-action[aria-label="Manage workspace layouts"] {
-    display: none !important;
-}
-
 /* Individual RTL Classes */
 
 /* Reading View */
@@ -306,10 +296,24 @@ p.center-text {
     margin: 0 auto !important;
 }
 
+.markdown-embed-content h1,
+.markdown-embed-content h2,
+.markdown-embed-content h3,
+.markdown-embed-content h4,
+.markdown-embed-content h5,
+.markdown-embed-content h6 {
+    text-align: center !important;
+}
 
 /* =============================================== */
 /* Auto‑Focus Mode for PDFs and notes with "Full" property */
 /* =============================================== */
+
+/* hide ribbon items - start */
+.side-dock-ribbon-action[aria-label="Internet"] { display: none !important; }
+div.side-dock-ribbon-action[aria-label="AI Assistant"] { display: none !important; }
+.side-dock-ribbon-action[aria-label="Manage workspace layouts"] { display: none !important; }
+/* hide ribbon items - end */
 
 :root {
   --focus-animation-duration: 0.12s;
@@ -432,7 +436,7 @@ body:has(.workspace-leaf .workspace-leaf-content[data-type="pdf"]) .status-bar {
 
 .mod-root .workspace-tabs:has(.workspace-leaf .markdown-source-view.Focusly) .workspace-tab-header-container,
 .mod-root .workspace-tabs:has(.workspace-leaf .markdown-preview-view.Focusly) .workspace-tab-header-container,
-.mod-root .workspace-tabs:has(.workspace-leaf .workspace-leaf-content[data-type="pdf"]) .workspace-tab-header-container {
+/*.mod-root .workspace-tabs:has(.workspace-leaf .workspace-leaf-content[data-type="pdf"]) .workspace-tab-header-container*/ {
   height: 0;
   overflow: hidden;
   transition: height var(--focus-animation-duration) ease;
@@ -440,7 +444,7 @@ body:has(.workspace-leaf .workspace-leaf-content[data-type="pdf"]) .status-bar {
 
 .mod-root .workspace-tabs:has(.workspace-leaf .markdown-source-view.Focusly) .workspace-tab-header-container:hover,
 .mod-root .workspace-tabs:has(.workspace-leaf .markdown-preview-view.Focusly) .workspace-tab-header-container:hover,
-.mod-root .workspace-tabs:has(.workspace-leaf .workspace-leaf-content[data-type="pdf"]) .workspace-tab-header-container:hover {
+.mod-root .workspace-tabs:has(.workspace-leaf .workspace-leaf-content[data-type="pdf"]) .workspace-tab-header-container:hover{
   height: var(--header-height);
 }
 
@@ -455,9 +459,9 @@ body:has(.workspace-leaf .workspace-leaf-content[data-type="pdf"]) .status-bar {
 .mod-root .workspace-tabs:has(.workspace-leaf .markdown-preview-view.Focusly) .workspace-tab-header-container
   .workspace-tab-header-new-tab,
 .mod-root .workspace-tabs:has(.workspace-leaf .markdown-preview-view.Focusly) .workspace-tab-header-container
-  .workspace-tab-header-tab-list,
+  .workspace-tab-header-tab-list/*,
 .mod-root .workspace-tabs:has(.workspace-leaf .workspace-leaf-content[data-type="pdf"]) .workspace-tab-header-container
-  .workspace-tab-header-container-inner,
+  .workspace-tab-header-container-inner,*/
 .mod-root .workspace-tabs:has(.workspace-leaf .workspace-leaf-content[data-type="pdf"]) .workspace-tab-header-container
   .workspace-tab-header-new-tab,
 .mod-root .workspace-tabs:has(.workspace-leaf .workspace-leaf-content[data-type="pdf"]) .workspace-tab-header-container

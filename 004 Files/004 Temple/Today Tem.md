@@ -18,12 +18,7 @@ ui: preview
 banner_y: 40
 icon: lucide-calendar-minus-2
 ---
-
-<div style="text-align: center ! important; padding: 20px; border-radius: 15px; background: linear-gradient(135deg, #667eea20, #764ba220); backdrop-filter: blur(5px); margin: 20px 0;">
-  <span style="font-size: 1.5em; color: #667eea; font-weight: 600;">﴿ وَاصْبِرْ وَمَا صَبْرُكَ إِلَّا بِاللَّهِ ﴾</span>
-</div>
-
-![[RandomAya]]
+![[Automaticly]]
 
 - [ ] العمل على [[log - {{date}}]]
 ## مهام هذا اليوم 
@@ -48,7 +43,7 @@ icon: lucide-calendar-minus-2
 - [ ] <strong style='color: steelblue'>٢٥ دقيقة</strong> أداء صلاة العشاء مع النوافل والشفع والوتر <!-- (@{{date}} after-isha 20m) -->
 - [ ] <strong style='color: steelblue'>٨ دقائق</strong> قراءة [[أذكار النوم]] <!-- (@{{date}} after-isha 30m) -->
 
-### ==المراجعة النهائية==
+## المراجعة النهائية
 
 #### المحاسبة
 ##### الحمد لله الذي وفقني في: 

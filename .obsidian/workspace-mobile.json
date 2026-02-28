@@ -15,7 +15,7 @@
               "state": {
                 "file": "001 Dashboard/Dashboard/Dashboard.md",
                 "mode": "preview",
-                "source": true,
+                "source": false,
                 "backlinks": true,
                 "backlinkOpts": {
                   "collapseAll": false,
@@ -48,12 +48,12 @@
         "type": "tabs",
         "children": [
           {
-            "id": "8ef702dc016378c8",
+            "id": "474d236e2831d5b2",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "003 Daily/001 Active Diaries/2026-02-27.md",
+                "file": "003 Daily/001 Active Diaries/2026-02-28.md",
                 "mode": "preview",
                 "source": false,
                 "backlinks": true,
@@ -68,7 +68,7 @@
                 }
               },
               "icon": "lucide-file",
-              "title": "2026-02-27"
+              "title": "2026-02-28"
             }
           },
           {
@@ -198,7 +198,7 @@
         "state": {
           "type": "outline",
           "state": {
-            "file": "003 Daily/001 Active Diaries/2026-02-27.md",
+            "file": "001 Dashboard/Dashboard/Trackers/Tracker A.md",
             "followCursor": false,
             "showSearch": false,
             "searchQuery": ""
@@ -233,7 +233,7 @@
         "state": {
           "type": "localgraph",
           "state": {
-            "file": "003 Daily/001 Active Diaries/2026-02-27.md",
+            "file": "001 Dashboard/Dashboard/Dashboard.md",
             "options": {
               "collapse-filter": true,
               "search": "",
@@ -289,38 +289,42 @@
       "graph:Open graph view": false,
       "daily-notes:Open today's daily note": false,
       "zk-prefixer:Create new unique note": false,
-      "Ai-Assistant:AI Assistant": false,
-      "browse-internet:Internet": false,
-      "workspaces:Manage workspace layouts": false
+      "Ai-Assistant:AI Assistant": true,
+      "browse-internet:Internet": true,
+      "workspaces:Manage workspace layouts": true
     }
   },
-  "active": "8ef702dc016378c8",
+  "active": "474d236e2831d5b2",
   "lastOpenFiles": [
-    "001 Dashboard/Dashboard/Dashboard.md",
-    "003 Daily/001 Active Diaries/2026-02-27.md",
-    "004 Files/001 Attach/warsh.pdf",
-    "002 Notes/001 Notes/Introduction To My Vault.md",
+    "004 Files/002 Archive/Attach Embedded/Automaticly.md",
     "004 Files/004 Temple/Today Tem.md",
     "001 Dashboard/Azkaru.md",
+    "002 Notes/001 Notes/Read track.md",
+    "003 Daily/001 Active Diaries/2026-02-28.md",
+    "003 Daily/001 Active Diaries/2026-02-27.md",
+    "001 Dashboard/Dashboard/Dashboard.md",
+    "004 Files/002 Archive/Attach Embedded/Pomodoro.md",
+    "001 Dashboard/Dashboard/Trackers/Quran Tracker.md",
+    "001 Dashboard/learn English.md",
+    "001 Dashboard/Dashboard/Trackers/Tracker B.md",
+    "001 Dashboard/Dashboard/Trackers/Tracker A.md",
+    "004 Files/002 Archive/Olds/Old codes/Tracker 0.md",
+    "002 Notes/001 Notes/Quran.md",
+    "002 Notes/002 lessons/Logs/log - 2026-02-28.md",
+    "004 Files/001 Attach/Recording 20260228124357.m4a",
+    "002 Notes/001 Notes/Open page issues.md",
+    "004 Files/001 Attach/warsh.pdf",
+    "003 Daily/001 Active Diaries/2026-02-26.md",
+    "001 Dashboard/Dashboard/Bases/005 Diaries.md",
+    "004 Files/002 Archive/Attach Embedded/أذكار الصباح.md",
+    "002 Notes/003 Saved Notes/My YouTube Channels.md",
+    "002 Notes/003 Saved Notes/Tathakar.md",
+    "002 Notes/001 Notes/Introduction To My Vault.md",
     "004 Files/004 Temple/Log Tem.md",
     "004 Files/003 AI Conversations/How.md",
     "002 Notes/003 Saved Notes/Log - How to learn.md",
     "001 Dashboard/Self Education.md",
-    "002 Notes/002 lessons/Ai course.md",
-    "002 Notes/003 Saved Notes/Mawaidh.md",
-    "002 Notes/002 lessons/Logs/log - 2026-02-27.md",
-    "001 Dashboard/learn English.md",
-    "001 Dashboard/My tools.md",
-    "004 Files/002 Archive/Attach Embedded/RandomAya.md",
-    "004 Files/002 Archive/Attach Embedded/Pomodoro.md",
-    "004 Files/002 Archive/Attach Embedded/أذكار الصباح.md",
-    "003 Daily/002 Archived Diaries/2026-01-25.md",
-    "004 Files/002 Archive/Attach Embedded/أذكار النوم.md",
-    "001 Dashboard/Athkar & Adia.md",
-    "004 Files/003 AI Conversations/القرآن.md",
     "004 Files/001 Attach/Recording 20260227140329.m4a",
-    "004 Files/001 Attach/Recording 20260227140255.m4a",
-    "002 Notes/003 Saved Notes/My YouTube Channels.md",
-    "001 Dashboard/Dashboard/Trackers/Tracker A.md"
+    "004 Files/001 Attach/Recording 20260227140255.m4a"
   ]
 }
