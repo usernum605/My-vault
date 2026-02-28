@@ -4,7 +4,7 @@
   "latitude": "",
   "longitude": "",
   "city": "Relizane",
-  "country": "DZ",
+  "country": "Algeria",
   "method": -1,
   "athanAudioPath": "004 Files/001 Attach/Sounds/Athan.mp3",
   "hijriDateFormat": "iso",
@@ -122,7 +122,7 @@
       "adjustedHolidays": [],
       "method": "HJCoSA"
     },
-    "fetchedAtISO": "2026-02-28T13:24:46.626Z"
+    "fetchedAtISO": "2026-02-28T14:24:34.615Z"
   },
   "enableDailyNotes": true,
   "dailyNotesFolder": "003 Daily/001 Active Diaries",

@@ -83,7 +83,7 @@ if (files.length > 0) {
 
 async function autoMoveLogFiles() {
     const sourceFolder = '002 Notes/001 Notes';
-    const targetFolder = '002 Notes/002 lessons/Logs';
+    const targetFolder = '002 Notes/002 Lessons/Logs';
     
     // التأكد من وجود المجلد الهدف
     const targetFolderExists = app.vault.getAbstractFileByPath(targetFolder);
@@ -133,7 +133,7 @@ await autoMoveLogFiles();
 // كود تلقائي لملء ملفات Log الفارغة (يعمل بصمت)
 
 async function autoFillEmptyLogs() {
-    const logsFolder = '002 Notes/002 lessons/Logs';
+    const logsFolder = '002 Notes/002 Lessons/Logs';
     const templateFile = 'Log Tem.md';
     
     // البحث عن القالب
