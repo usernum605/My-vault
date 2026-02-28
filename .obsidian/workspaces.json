@@ -304,12 +304,12 @@
             "type": "tabs",
             "children": [
               {
-                "id": "8ef702dc016378c8",
+                "id": "33a8b5372abaed6a",
                 "type": "leaf",
                 "state": {
                   "type": "markdown",
                   "state": {
-                    "file": "003 Daily/001 Active Diaries/2026-02-27.md",
+                    "file": "003 Daily/001 Active Diaries/2026-02-28.md",
                     "mode": "preview",
                     "source": false,
                     "backlinks": true,
@@ -324,7 +324,7 @@
                     }
                   },
                   "icon": "lucide-file",
-                  "title": "2026-02-27"
+                  "title": "2026-02-28"
                 }
               },
               {
@@ -550,8 +550,8 @@
           "workspaces:Manage workspace layouts": false
         }
       },
-      "active": "4025747625f6a582",
-      "mtime": "2026-02-27T08:18:14+01:00"
+      "active": "33a8b5372abaed6a",
+      "mtime": "2026-02-28T16:30:10+01:00"
     }
   },
   "active": "Diarie"

@@ -1318,27 +1318,24 @@ module.exports = class StyleshVault extends Plugin {
     }
     
     hideBacklinksOnStartup() {
-    // انتظر حتى يكتمل تحميل التطبيق
     setTimeout(() => {
         this.closeBacklinksLeaf();
     }, 1000);
     
-    // راقب أي محاولة لفتح backlinks وأغلقه فوراً
     this.registerEvent(
         this.app.workspace.on('layout-change', () => {
             this.closeBacklinksLeaf();
         })
     );
-}
+    }
     closeBacklinksLeaf() {
-    // ابحث عن أي leaf من نوع backlink
     this.app.workspace.iterateAllLeaves((leaf) => {
         if (leaf.view?.getViewType?.() === 'backlink') {
             leaf.detach();
-            console.log('Closed backlinks leaf'); // للتتبع
+            console.log('Closed backlinks leaf');
         }
     });
-}
+    }
 
     updateFileExplorer() {
         if (!this.settings.showFileExplorerIcons) return;

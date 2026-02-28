@@ -6,7 +6,6 @@ cssclasses:
   - dashboard
 links pages:
   - "[[Tracker B]]"
-ui: preview-force
 ---
 # Tracker Read Quran
 
