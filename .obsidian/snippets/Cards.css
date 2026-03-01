@@ -553,7 +553,7 @@ STYLESH CALLOUT FEATURE
 
 /* LINKS CALLOUT */
 
-.hidelink .callout[data-callout="link"] {
+.Link .callout[data-callout="link"] {
     display: none;
 }
 

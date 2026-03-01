@@ -4,36 +4,26 @@
     "type": "split",
     "children": [
       {
-        "id": "f9799e8adcf74fe4",
+        "id": "b0f29f92ede01f44",
         "type": "tabs",
         "children": [
           {
-            "id": "28b31a153940b452",
+            "id": "89e4bea3368eda91",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "002 Notes/002 Lessons/000 Map of content.md",
-                "mode": "source",
-                "source": true,
+                "file": "002 Notes/001 Notes/أشعار.md",
+                "mode": "preview",
+                "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "000 Map of content"
+              "title": "أشعار"
             }
           },
           {
-            "id": "72b16cd5bc7c523b",
-            "type": "leaf",
-            "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
-            }
-          },
-          {
-            "id": "c96b013f18376bfe",
+            "id": "89bd58fd628bfe85",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -41,23 +31,14 @@
                 "file": "003 Daily/001 Active Diaries/2026-03-01.md",
                 "mode": "preview",
                 "source": false,
-                "backlinks": true,
-                "backlinkOpts": {
-                  "collapseAll": false,
-                  "extraContext": false,
-                  "sortOrder": "alphabetical",
-                  "showSearch": false,
-                  "searchQuery": "",
-                  "backlinkCollapsed": false,
-                  "unlinkedCollapsed": true
-                }
+                "backlinks": false
               },
               "icon": "lucide-file",
               "title": "2026-03-01"
             }
           },
           {
-            "id": "900bb127655c730b",
+            "id": "328b3a3165d3511f",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -65,22 +46,14 @@
                 "file": "003 Daily/001 Active Diaries/2026-03-01.md",
                 "mode": "preview",
                 "source": false,
-                "backlinks": true,
-                "backlinkOpts": {
-                  "collapseAll": false,
-                  "extraContext": false,
-                  "sortOrder": "alphabetical",
-                  "showSearch": false,
-                  "searchQuery": "",
-                  "backlinkCollapsed": false,
-                  "unlinkedCollapsed": true
-                }
+                "backlinks": false
               },
               "icon": "lucide-file",
               "title": "2026-03-01"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -108,7 +81,7 @@
         "state": {
           "type": "search",
           "state": {
-            "query": "",
+            "query": "Dataview ",
             "matchingCase": false,
             "explainSearch": false,
             "collapseAll": false,
@@ -159,8 +132,7 @@
         }
       }
     ],
-    "currentTab": 0,
-    "pinned": true
+    "currentTab": 0
   },
   "right": {
     "id": "82e1ec58a196f876",
@@ -207,7 +179,7 @@
         "state": {
           "type": "localgraph",
           "state": {
-            "file": "002 Notes/002 Lessons/000 Map of content.md",
+            "file": "001 Dashboard/Dashboard/Bases/001 Dash.md",
             "options": {
               "collapse-filter": true,
               "search": "",
@@ -249,8 +221,7 @@
         }
       }
     ],
-    "currentTab": 3,
-    "pinned": true
+    "currentTab": 4
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -268,36 +239,36 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "28b31a153940b452",
+  "active": "89bd58fd628bfe85",
   "lastOpenFiles": [
+    "002 Notes/001 Notes/أشعار.md",
     "003 Daily/001 Active Diaries/2026-03-01.md",
+    "004 Files/004 Temple/Log Tem.md",
+    "002 Notes/002 Lessons/Logs/log - 2026-03-01.md",
+    "001 Dashboard/Dashboard/Bases/003 Notes.md",
+    "002 Notes/001 Notes/Anata.md",
+    "001 Dashboard/Dashboard/Bases/001 Dash.md",
+    "001 Dashboard/Dashboard/Bases/000 Ultimate Base.md",
+    "dhikr.md",
+    "001 Dashboard/Dashboard/Bases/002 My projects.md",
+    "001 Dashboard/Dashboard/Bases/004 My notes.md",
+    "001 Dashboard/Athkar & Adia.md",
     "002 Notes/002 Lessons/000 Map of content.md",
+    "002 Notes/001 Notes/Quran.md",
     "004 Files/002 Archive/Olds/Old codes/Appear graph.md",
     "002 Notes/004 Archived Notes/Quran dictionary.md",
     "004 Files/002 Archive/Olds/Old codes/Stylesh Vault.md",
-    "001 Dashboard/Dashboard/Bases/000 Ultimate Base.md",
     "001 Dashboard/learn English.md",
     "001 Dashboard/Dashboard/Dashboard.md",
     "002 Notes/001 Notes/Test.md",
-    "001 Dashboard/Dashboard/Bases/002 My projects.md",
     "002 Notes/003 Saved Notes/Mawaidh.md",
     "004 Files/001 Attach/warsh.pdf",
     "003 Daily/001 Active Diaries/2026-02-28.md",
     "001 Dashboard/Azkaru.md",
-    "002 Notes/003 Saved Notes/رسائل/كيف تستقبل.md",
-    "002 Notes/003 Saved Notes/رسائل",
-    "001 Dashboard/Dashboard/Bases/001 Dash.md",
-    "002 Notes/003 Saved Notes/رسائل/نصائح هامة للفلاح.md",
+    "002 Notes/003 Saved Notes/Messages/كيف تستقبل.md",
+    "002 Notes/003 Saved Notes/Messages",
+    "002 Notes/003 Saved Notes/Messages/نصائح هامة للفلاح.md",
     "001 Dashboard/Dashboard/Trackers/Tracker A.md",
-    "001 Dashboard/Dashboard/Trackers/Tracker Q.md",
-    "001 Dashboard/Dashboard/Trackers/Tracker B.md",
-    "002 Notes/004 Archived Notes/Prompt.md",
-    "004 Files/002 Archive/Attach Embedded/Automaticly.md",
-    "001 Dashboard/Dashboard/Bases/004 My notes.md",
-    "002 Notes/002 Lessons/Logs/log - 2026-02-28.md",
-    "001 Dashboard/Self Education.md",
-    "001 Dashboard/Dashboard/Bases/005 Diaries.md",
-    "001 Dashboard/Dashboard/Bases/003 Notes.md",
     "004 Files/001 Attach/Sounds/Ayam.m4a",
     "004 Files/001 Attach/Sounds/Rec-Tazkira.m4a",
     "004 Files/001 Attach/Sounds/Takwa.mp3",
