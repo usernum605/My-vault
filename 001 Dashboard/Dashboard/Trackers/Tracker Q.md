@@ -1,5 +1,6 @@
 ---
 icon: lucide-form-input
+hidely: true
 ---
 ```dataviewjs
 // كود متقدم لتتبع صفحات القرآن - مع منع التكرار لمدة ساعتين
@@ -52,16 +53,16 @@ if (fileCache?.frontmatter?.["Number of Pages (reading)"] !== undefined) {
 }
 
 // جلب مجموع الصفحات السابقة هذا الشهر
-const monthStart = moment(todayDate).startOf('month').format('YYYY-MM-DD');
-const monthEnd = moment(todayDate).endOf('month').format('YYYY-MM-DD');
+const monthStart = moment(todayDate).startOf('year').format('YYYY-MM-DD');
+const monthEnd = moment(todayDate).endOf('year').format('YYYY-MM-DD');
 
 let totalPagesThisMonth = 0;
 const allDailyFiles = app.vault.getMarkdownFiles()
     .filter(f => f.path.includes('003 Daily/001 Active Diaries'))
     .filter(f => {
         const fileDateMatch = f.name.match(/(\d{4}-\d{2}-\d{2})/);
-        if (!fileDateMatch) return false;
-        return fileDateMatch[1] >= monthStart && fileDateMatch[1] <= monthEnd;
+        //if (!fileDateMatch) return false;
+        //return fileDateMatch[1] >= monthStart && fileDateMatch[1] <= monthEnd;
     });
 
 for (const file of allDailyFiles) {

@@ -392,8 +392,8 @@ if(dates.length){
 let bulletBox=dashboard.createDiv({cls:"q-box"});
 bulletBox.createDiv({cls:"q-bullet-title",text:"التقدم في ختم كتاب ربي"});
 
-let monthStart=currentMonth.startOf("month");
-let monthEnd=currentMonth.endOf("month");
+let monthStart=currentMonth.startOf("year");
+let monthEnd=currentMonth.endOf("year");
 
 let monthPages2=pages.where(p=>
   p.file.name>=monthStart.toFormat("yyyy-MM-dd") &&

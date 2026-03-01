@@ -328,6 +328,30 @@
                 }
               },
               {
+                "id": "6e58ea11e7de505a",
+                "type": "leaf",
+                "state": {
+                  "type": "markdown",
+                  "state": {
+                    "file": "003 Daily/001 Active Diaries/2026-03-01.md",
+                    "mode": "preview",
+                    "source": false,
+                    "backlinks": true,
+                    "backlinkOpts": {
+                      "collapseAll": false,
+                      "extraContext": false,
+                      "sortOrder": "alphabetical",
+                      "showSearch": false,
+                      "searchQuery": "",
+                      "backlinkCollapsed": false,
+                      "unlinkedCollapsed": true
+                    }
+                  },
+                  "icon": "lucide-file",
+                  "title": "2026-03-01"
+                }
+              },
+              {
                 "id": "bcc67986715f0cd8",
                 "type": "leaf",
                 "state": {
@@ -363,7 +387,8 @@
                   "title": "warsh"
                 }
               }
-            ]
+            ],
+            "currentTab": 1
           }
         ],
         "direction": "vertical"
@@ -550,8 +575,8 @@
           "workspaces:Manage workspace layouts": false
         }
       },
-      "active": "33a8b5372abaed6a",
-      "mtime": "2026-02-28T16:30:10+01:00"
+      "active": "6e58ea11e7de505a",
+      "mtime": "2026-03-01T05:57:26+01:00"
     }
   },
   "active": "Diarie"

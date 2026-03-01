@@ -4,7 +4,6 @@ links pages:
   - "[[Dashboard]]"
 ---
 
-
 ```base
 filters:
   and:

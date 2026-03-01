@@ -492,8 +492,10 @@ body {
   padding-right: 20px !important;
 }
 /* --------------
-ATHKAR CALLOUT FEATURE
+STYLESH CALLOUT FEATURE
 -----------------*/
+
+/* ATHKAR CALLOUT */
 
 .markdown-reading-view,
 .markdown-preview-view {
@@ -545,9 +547,20 @@ ATHKAR CALLOUT FEATURE
     font-size: 0.9em;
 }
 
-
 .callout[data-callout="adhkar"] .callout-content {
     color: var(--text-normal);
+}
+
+/* LINKS CALLOUT */
+
+.hidelink .callout[data-callout="link"] {
+    display: none;
+}
+
+.callout[data-callout="link"] {
+    --callout-icon: link;
+    background-color: rgba(0, 120, 255, 0.1) !important;
+    border-left-color: #0078ff !important;
 }
 
 /* --------------

@@ -4,35 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "8b4f862c20832a6d",
+        "id": "f9799e8adcf74fe4",
         "type": "tabs",
         "children": [
           {
-            "id": "4025747625f6a582",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "001 Dashboard/Dashboard/Dashboard.md",
-                "mode": "preview",
-                "source": false,
-                "backlinks": true,
-                "backlinkOpts": {
-                  "collapseAll": false,
-                  "extraContext": false,
-                  "sortOrder": "alphabetical",
-                  "showSearch": false,
-                  "searchQuery": "",
-                  "backlinkCollapsed": false,
-                  "unlinkedCollapsed": true
-                }
-              },
-              "icon": "lucide-file",
-              "title": "Dashboard"
-            }
-          },
-          {
-            "id": "06c77867d2b34c33",
+            "id": "28b31a153940b452",
             "type": "leaf",
             "state": {
               "type": "graph",
@@ -40,20 +16,14 @@
               "icon": "lucide-git-fork",
               "title": "Graph view"
             }
-          }
-        ]
-      },
-      {
-        "id": "31cc512b26368b43",
-        "type": "tabs",
-        "children": [
+          },
           {
-            "id": "33a8b5372abaed6a",
+            "id": "900bb127655c730b",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "003 Daily/001 Active Diaries/2026-02-28.md",
+                "file": "003 Daily/001 Active Diaries/2026-03-01.md",
                 "mode": "preview",
                 "source": false,
                 "backlinks": true,
@@ -68,43 +38,7 @@
                 }
               },
               "icon": "lucide-file",
-              "title": "2026-02-28"
-            }
-          },
-          {
-            "id": "bcc67986715f0cd8",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "001 Dashboard/Azkaru.md",
-                "mode": "preview",
-                "source": false,
-                "backlinks": true,
-                "backlinkOpts": {
-                  "collapseAll": false,
-                  "extraContext": false,
-                  "sortOrder": "alphabetical",
-                  "showSearch": false,
-                  "searchQuery": "",
-                  "backlinkCollapsed": false,
-                  "unlinkedCollapsed": true
-                }
-              },
-              "icon": "lucide-file",
-              "title": "Azkaru"
-            }
-          },
-          {
-            "id": "d87ed5ae9b860fa9",
-            "type": "leaf",
-            "state": {
-              "type": "pdf",
-              "state": {
-                "file": "004 Files/001 Attach/warsh.pdf"
-              },
-              "icon": "lucide-file-text",
-              "title": "warsh"
+              "title": "2026-03-01"
             }
           }
         ]
@@ -123,7 +57,7 @@
           "type": "file-explorer",
           "state": {
             "sortOrder": "alphabetical",
-            "autoReveal": true
+            "autoReveal": false
           },
           "icon": "lucide-folder-closed",
           "title": "Files"
@@ -186,7 +120,8 @@
         }
       }
     ],
-    "currentTab": 0
+    "currentTab": 0,
+    "pinned": true
   },
   "right": {
     "id": "82e1ec58a196f876",
@@ -233,7 +168,6 @@
         "state": {
           "type": "localgraph",
           "state": {
-            "file": "001 Dashboard/Dashboard/Dashboard.md",
             "options": {
               "collapse-filter": true,
               "search": "",
@@ -275,7 +209,7 @@
         }
       }
     ],
-    "currentTab": 4,
+    "currentTab": 3,
     "pinned": true
   },
   "left-ribbon": {
@@ -294,14 +228,36 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "33a8b5372abaed6a",
+  "active": "28b31a153940b452",
   "lastOpenFiles": [
-    "003 Daily/001 Active Diaries/2026-02-27.md",
+    "004 Files/002 Archive/Olds/Old codes/Appear graph.md",
+    "002 Notes/004 Archived Notes/Quran dictionary.md",
+    "004 Files/002 Archive/Olds/Old codes/Stylesh Vault.md",
+    "001 Dashboard/Dashboard/Bases/000 Ultimate Base.md",
+    "003 Daily/001 Active Diaries/2026-03-01.md",
+    "001 Dashboard/learn English.md",
     "001 Dashboard/Dashboard/Dashboard.md",
-    "004 Files/002 Archive/Attach Embedded/RandomAya.md",
-    "003 Daily/001 Active Diaries/2026-02-28.md",
+    "002 Notes/002 Lessons/000 Map of content.md",
+    "002 Notes/001 Notes/Test.md",
     "001 Dashboard/Dashboard/Bases/002 My projects.md",
+    "002 Notes/003 Saved Notes/Mawaidh.md",
+    "004 Files/001 Attach/warsh.pdf",
+    "003 Daily/001 Active Diaries/2026-02-28.md",
+    "001 Dashboard/Azkaru.md",
+    "002 Notes/003 Saved Notes/رسائل/كيف تستقبل.md",
+    "002 Notes/003 Saved Notes/رسائل",
+    "001 Dashboard/Dashboard/Bases/001 Dash.md",
+    "002 Notes/003 Saved Notes/رسائل/نصائح هامة للفلاح.md",
+    "001 Dashboard/Dashboard/Trackers/Tracker A.md",
+    "001 Dashboard/Dashboard/Trackers/Tracker Q.md",
+    "001 Dashboard/Dashboard/Trackers/Tracker B.md",
+    "002 Notes/004 Archived Notes/Prompt.md",
     "004 Files/002 Archive/Attach Embedded/Automaticly.md",
+    "001 Dashboard/Dashboard/Bases/004 My notes.md",
+    "002 Notes/002 Lessons/Logs/log - 2026-02-28.md",
+    "001 Dashboard/Self Education.md",
+    "001 Dashboard/Dashboard/Bases/005 Diaries.md",
+    "001 Dashboard/Dashboard/Bases/003 Notes.md",
     "004 Files/001 Attach/Sounds/Ayam.m4a",
     "004 Files/001 Attach/Sounds/Rec-Tazkira.m4a",
     "004 Files/001 Attach/Sounds/Takwa.mp3",
@@ -309,28 +265,6 @@
     "004 Files/001 Attach/Sounds/night.m4a",
     "004 Files/001 Attach/Sounds/morning.m4a",
     "004 Files/001 Attach/Sounds/iqama.m4a",
-    "004 Files/001 Attach/Sounds/fasting.m4a",
-    "004 Files/001 Attach/Sounds/Athan.mp3",
-    "004 Files/001 Attach/Sounds/afternoon.m4a",
-    "004 Files/002 Archive/Attach Embedded/Pomodoro.md",
-    "001 Dashboard/Dashboard/Bases/000 Ultimate Base.md",
-    "002 Notes/002 Lessons/Logs/log - 2026-02-28.md",
-    "002 Notes/002 Lessons/Logs/log - 2026-02-27.md",
-    "002 Notes/002 Lessons/Logs/log - 2026-02-26.md",
-    "002 Notes/002 Lessons/الدوال.md",
-    "002 Notes/002 Lessons/Noise in the games.md",
-    "002 Notes/002 Lessons/Ai course.md",
-    "002 Notes/002 Lessons/003 Math.md",
-    "002 Notes/002 Lessons/002 Game dev.md",
-    "002 Notes/002 Lessons/001 The Courses.md",
-    "002 Notes/002 Lessons/000 Map of content.md",
-    "002 Notes/002 Lessons_temp/Logs/log - 2026-02-28.md",
-    "002 Notes/002 Lessons_temp/Logs/log - 2026-02-27.md",
-    "002 Notes/002 Lessons_temp/Logs/log - 2026-02-26.md",
-    "002 Notes/002 Lessons_temp/الدوال.md",
-    "002 Notes/002 Lessons_temp/Noise in the games.md",
-    "002 Notes/002 Lessons_temp/Ai course.md",
-    "002 Notes/002 Lessons_temp/003 Math.md",
-    "002 Notes/002 Lessons_temp/002 Game dev.md"
+    "004 Files/001 Attach/Sounds/fasting.m4a"
   ]
 }

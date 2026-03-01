@@ -10,7 +10,7 @@ cssclasses:
 </div>
 
 ![[RandomAya]]
-![[Quran Tracker]]
+![[Tracker Q]]
 ```dataviewjs
 const DiariesFolder = "003 Daily/001 Active Diaries";
 const archiveFolder = "003 Daily/002 Archived Diaries";

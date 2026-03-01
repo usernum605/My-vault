@@ -651,14 +651,11 @@ these to suit your own folder structure and vault theme!
 }
 
 .theme-dark .pdf-container img,
-.theme-dark .pdf-viewer img {
+.theme-dark .pdf-viewer img,
+.theme-dark .pdf-embed {
     filter: invert(1) hue-rotate(180deg);
 }
 
-.theme-dark .pdf-embed {
-    filter: invert(1) hue-rotate(180deg);
-    mix-blend-mode: screen;
-}
 /* pdf light mode */
 .theme-light .workspace-leaf-content[data-type=pdf] .pdf-viewer .canvasWrapper,
 .theme-light .workspace-leaf-content[data-type=pdf] .pdfViewer .canvasWrapper,

@@ -1,7 +1,7 @@
 ---
 ui: preview-force
 links pages:
-  - " path: 002 Notes"
+  - "path: 002 Notes"
 ---
 
 ```base

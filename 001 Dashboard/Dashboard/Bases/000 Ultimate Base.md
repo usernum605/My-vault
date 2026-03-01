@@ -18,6 +18,7 @@ links pages:
 ![[004 My notes]]
 ![[003 Notes]]
 ## MY DIARIES
+
 ![[005 Diaries]]
 ## THE TRACKER
 ![[Tracker A]]

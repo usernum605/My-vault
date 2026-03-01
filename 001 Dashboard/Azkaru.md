@@ -6,6 +6,7 @@ cssclasses:
   - callout
   - center-everything
   - page-black
+  - Focusly
 banner_y: 50
 tags:
   - Islamic/Dine

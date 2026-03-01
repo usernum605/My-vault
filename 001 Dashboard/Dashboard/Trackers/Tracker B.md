@@ -5,8 +5,6 @@ cssclasses:
   - card
   - invert-banner
 banner_y: 68
-links pages:
-  - "path: 003 Daily"
 hidely: true
 ---
 ```dataviewjs

@@ -42,9 +42,6 @@ The Topic:
   Your browser does not support the audio element.
 </audio>
 
-###### المصجف
-![](warsh.pdf)
-
 ## مواعظ
 
 ###### رسالة ابن أبي سفيان
