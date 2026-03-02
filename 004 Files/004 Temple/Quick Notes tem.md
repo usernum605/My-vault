@@ -8,6 +8,7 @@ tags:
   - Type/Quick-Notes
 links pages:
   - "[[003 Notes]]"
+  - "[[004 My notes]]"
 The Topic:
 ---
 ### Note About {{title}}

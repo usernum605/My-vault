@@ -1,12 +1,13 @@
 ---
 icon: lucide-map-pinned
 links pages:
-  - " path: 002 Notes/002 Lessons"
   - "[[Dashboard]]"
 banner: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRzIg8KgmlGtYJif9lbh_0hyVN8k3wwcdHshBWK5mj6bw&s=10
 cssclasses:
   - invert-banner
   - invert-dark
+  - Link
+  - prop
 node_size: 20
 ---
 ```base
@@ -19,3 +20,8 @@ views:
     name: Table
 
 ```
+
+> [!link]- Bases Links
+> [[003 Math]]
+> [[002 Game dev]]
+> [[001 The Courses]]

@@ -1,5 +1,5 @@
 ---
-banner: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSV9VNjcV7pZQMdB-gIn0MUy9AQknOArKas5-TJ64dpkw&s
+banner: https://admango.cdn.mangomolo.com/analytics/uploads/168/68de14006b.jpg
 icon: lucide-speech
 links pages:
   - "[[My tools#وضع الفيديو في اوبسيديان]]"

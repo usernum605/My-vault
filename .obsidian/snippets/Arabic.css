@@ -53,3 +53,8 @@
   line-height: 1.8;
   font-size: 1.1em;
 }
+
+body.prop .metadata-properties-heading,
+body.prop .metadata-add-button {
+    display: none !important;
+}

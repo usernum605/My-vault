@@ -7,7 +7,6 @@ cssclasses:
   - invert-banner
 hidely: true
 ---
-[[Ai course]]
 ```base
 filters:
   and:
@@ -16,3 +15,6 @@ views:
   - type: table
     name: Table
 ```
+
+> [!link]- Bases Links
+> [[Ai course]]

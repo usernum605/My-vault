@@ -396,14 +396,15 @@ body {
      --base-s: 58%;
      --base-l: 63%;
 }
- /* Mobile sidebars (when pinned) */ .is-mobile .workspace-drawer.mod-left.is-pinned  {
+ /* Mobile sidebars (when pinned) */ 
+ .is-mobile .workspace-drawer.mod-left.is-pinned  {
      width: 500px ;
      min-width: 350px ;
      max-width: 500px ;
 }
  .is-mobile .workspace-drawer.mod-right.is-pinned  {
      width: 450px ;
-     min-width: 350px ;
+     min-width: 355px ;
      max-width: 450px ;
 }
  /* Reading Mode */ .markdown-preview-view ul li::marker  {

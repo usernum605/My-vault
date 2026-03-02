@@ -2,7 +2,10 @@
 .metadata-container.metadata-heading-off .metadata-properties-heading {
     display: none;
 }
-
+/* Hide Add Property button when prop class is present */
+body.prop .metadata-add-button {
+    display: none !important;
+}
 /* BANNER COLOR INVERSION FEATURE */
 .invert-banner .banner-image img {
     filter: invert(1) hue-rotate(180deg);

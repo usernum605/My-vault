@@ -21,3 +21,7 @@ views:
       - file.tags
 
 ```
+
+> [!link]- Bases Links
+> [[Fully Ai Game]]
+> [[Noise in the games]]

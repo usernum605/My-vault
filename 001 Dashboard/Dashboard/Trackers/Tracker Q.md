@@ -1,9 +1,20 @@
 ---
 icon: lucide-form-input
 hidely: true
+banner: https://marketplace.canva.com/EAHBFGCGpKk/1/0/1131w/canva-green-and-white-modern-islamic-qur%27an-tracker-document-4lD2UK58iBg.jpg
+banner_y: 15
+cssclasses:
+  - invert-banner
+  - invert-dark
+  - invert-dark-apt
 ---
 ```dataviewjs
 // كود متقدم لتتبع صفحات القرآن - مع منع التكرار لمدة ساعتين
+
+// التحقق مما إذا كانت النافذة مفتوحة بالفعل
+if (window.__quranModalOpen) {
+    return;
+}
 
 const currentFile = app.workspace.getActiveFile();
 if (!currentFile) {
@@ -30,8 +41,7 @@ if (lastInputTime) {
     const hoursSinceLastInput = (timeSinceLastInput / (1000 * 60 * 60)).toFixed(1);
     
     if (timeSinceLastInput < COOLDOWN_MS) {
-        // إظهار رسالة في الكونسول فقط (بدون نافذة)
-        console.log(`⏳ تم إدخال قراءة قبل ${hoursSinceLastInput} ساعة. سيتم إعادة الفتح بعد ${(COOLDOWN_MS - timeSinceLastInput) / (1000 * 60 * 60)} ساعات.`);
+        console.log(`⏳ تم إدخال قراءة قبل ${hoursSinceLastInput} ساعة. سيتم إعادة الفتح بعد ${((COOLDOWN_MS - timeSinceLastInput) / (1000 * 60 * 60)).toFixed(1)} ساعات.`);
         return;
     }
 }
@@ -39,7 +49,6 @@ if (lastInputTime) {
 // التحقق مما إذا كان اليوم قد تم إدخال قراءة بالفعل
 const fileCache = app.metadataCache.getFileCache(currentFile);
 if (fileCache?.frontmatter?.["Number of Pages (reading)"] !== undefined) {
-    // هناك قراءة مسجلة لهذا اليوم، نتحقق متى تم الإدخال
     if (lastInputTime) {
         const timeSinceLastInput = Date.now() - parseInt(lastInputTime);
         if (timeSinceLastInput < COOLDOWN_MS) {
@@ -47,37 +56,30 @@ if (fileCache?.frontmatter?.["Number of Pages (reading)"] !== undefined) {
             return;
         }
     } else {
-        // لا يوجد وقت سابق، ولكن هناك قراءة مسجلة - نسمح بالإدخال
         console.log('تم تسجيل قراءة سابقة، ولكن لا يوجد وقت مرجعي - سيتم فتح النافذة');
     }
 }
 
-// جلب مجموع الصفحات السابقة هذا الشهر
-const monthStart = moment(todayDate).startOf('year').format('YYYY-MM-DD');
-const monthEnd = moment(todayDate).endOf('year').format('YYYY-MM-DD');
-
-let totalPagesThisMonth = 0;
+// جلب مجموع الصفحات من جميع الملفات (بدون تحديد فترة زمنية)
+let totalPagesSoFar = 0;
 const allDailyFiles = app.vault.getMarkdownFiles()
     .filter(f => f.path.includes('003 Daily/001 Active Diaries'))
-    .filter(f => {
-        const fileDateMatch = f.name.match(/(\d{4}-\d{2}-\d{2})/);
-        //if (!fileDateMatch) return false;
-        //return fileDateMatch[1] >= monthStart && fileDateMatch[1] <= monthEnd;
-    });
+    .filter(f => f.path !== currentFile.path);
 
+// حساب مجموع الصفحات من جميع الملفات السابقة
 for (const file of allDailyFiles) {
-    if (file.path === currentFile.path) continue;
     const cache = app.metadataCache.getFileCache(file);
-    totalPagesThisMonth += cache?.frontmatter?.["Number of Pages (reading)"] || 0;
+    totalPagesSoFar += cache?.frontmatter?.["Number of Pages (reading)"] || 0;
 }
+
+// تعيين علامة أن النافذة ستفتح
+window.__quranModalOpen = true;
 
 // ===== نافذة منبثقة جميلة =====
 const modalHtml = `
 <div class="modal-container" style="direction: rtl;position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 1000; background-color: rgba(0, 0, 0, 0.5);">
     <div class="modal" style="background-color: var(--background-primary); border-radius: 16px; padding: 20px; width: 320px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); border: 1px solid var(--background-modifier-border);">
         <h3 style="margin-top: 0; margin-bottom: 15px; color: var(--text-normal); font-size: 18px;">إلى أين وصلت في تلاوة القرآن؟</h3>
-        
-        
         <input type="number" id="modal-page-input" style="direction: right; width: 100%; padding: 10px; border-radius: 12px; border: 1px solid var(--background-modifier-border); background-color: var(--background-secondary); color: var(--text-normal); font-size: 16px; box-sizing: border-box; margin-bottom: 15px;" placeholder="رقم الصفحة التي وصلت إليها" autofocus>
         
         <div style="display: flex; gap: 10px;">
@@ -97,29 +99,66 @@ document.body.appendChild(modalDiv);
 const input = modalDiv.querySelector('#modal-page-input');
 input.focus();
 
+// دالة لإغلاق النافذة وتنظيف العلامة
+function closeModal() {
+    modalDiv.remove();
+    window.__quranModalOpen = false;
+}
+
 // معالج زر الإلغاء
 modalDiv.querySelector('#modal-cancel').addEventListener('click', () => {
-    modalDiv.remove();
+    closeModal();
 });
 
 // معالج زر الحفظ
 modalDiv.querySelector('#modal-submit').addEventListener('click', async () => {
     const pageNum = parseInt(input.value);
-    modalDiv.remove();
     
     if (isNaN(pageNum) || pageNum < 0) {
         new Notice('❌ الرجاء إدخال رقم صحيح');
         return;
     }
     
-    const todayPages = pageNum - totalPagesThisMonth;
+    const todayPages = pageNum - totalPagesSoFar;
     if (todayPages < 0) {
         new Notice('⚠️ رقم الصفحة أقل من المجموع السابق');
         return;
     }
     
-    if (todayPages === 0 && !confirm('⚠️ لم تقرأ أي صفحات اليوم. هل أنت متأكد؟')) {
-        return;
+    // إغلاق النافذة أولاً
+    closeModal();
+    
+    if (todayPages === 0) {
+        const confirmed = await new Promise(resolve => {
+            // نافذة تأكيد مخصصة لتجنب confirm التي توقف التنفيذ
+            const confirmDiv = document.createElement('div');
+            confirmDiv.innerHTML = `
+            <div class="modal-container" style="direction: rtl;position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 1001; background-color: rgba(0, 0, 0, 0.5);">
+                <div class="modal" style="background-color: var(--background-primary); border-radius: 16px; padding: 20px; width: 280px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);">
+                    <p style="margin-bottom: 20px;">⚠️ لم تقرأ أي صفحات اليوم. هل أنت متأكد؟</p>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="confirm-yes" style="flex:1; padding: 8px; border-radius: 8px; border: none; background-color: var(--interactive-accent); color: var(--text-on-accent); cursor: pointer;">نعم</button>
+                        <button id="confirm-no" style="flex:1; padding: 8px; border-radius: 8px; border: 1px solid var(--background-modifier-border); background-color: transparent; color: var(--text-muted); cursor: pointer;">لا</button>
+                    </div>
+                </div>
+            </div>
+            `;
+            document.body.appendChild(confirmDiv);
+            
+            confirmDiv.querySelector('#confirm-yes').addEventListener('click', () => {
+                confirmDiv.remove();
+                resolve(true);
+            });
+            
+            confirmDiv.querySelector('#confirm-no').addEventListener('click', () => {
+                confirmDiv.remove();
+                resolve(false);
+            });
+        });
+        
+        if (!confirmed) {
+            return;
+        }
     }
     
     // حفظ النتيجة
@@ -137,6 +176,13 @@ modalDiv.querySelector('#modal-submit').addEventListener('click', async () => {
 input.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         modalDiv.querySelector('#modal-submit').click();
+    }
+});
+
+// معالج الضغط على Escape لإغلاق النافذة
+modalDiv.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeModal();
     }
 });
 ```

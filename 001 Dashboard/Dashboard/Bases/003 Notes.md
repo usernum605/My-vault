@@ -1,6 +1,9 @@
 ---
 links pages:
   - "[[002 My projects]]"
+cssclasses:
+  - prop
+  - Link
 ---
 ```base
 filters:
@@ -18,7 +21,7 @@ views:
 
 ```
 
-> [!note]- Bases Links
-> [[002 Notes/001 Notes/Rebuild icons.md|Rebuild icons]]
-> [[002 Notes/001 Notes/أشعار.md|أشعار]]
-> [[002 Notes/001 Notes/Quran.md|Quran]]
+> [!link]- Real Links (Base)
+> [[Poem]]
+> [[Rebuild icons]]
+> [[Quran]]

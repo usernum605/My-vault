@@ -3,6 +3,8 @@ const { Plugin, PluginSettingTab, Setting, Notice } = require('obsidian');
 const DEFAULT_SETTINGS = {
     appendAfterBlock: true,
     autoRunOnChange: false,
+    enableBases: true,
+    enableDataview: true,
 };
 
 module.exports = class RealNodesPlugin extends Plugin {
@@ -11,13 +13,13 @@ module.exports = class RealNodesPlugin extends Plugin {
 
         this.addCommand({
             id: 'append-bases-links-after-block',
-            name: 'Bases Linker: Append after block',
+            name: 'Real Nodes: Append after block',
             callback: () => this.processCurrentFile(false),
         });
 
         this.addCommand({
             id: 'append-bases-links-to-end',
-            name: 'Bases Linker: Append to end',
+            name: 'Real Nodes: Append to end',
             callback: () => this.processCurrentFile(true),
         });
 
@@ -58,12 +60,16 @@ module.exports = class RealNodesPlugin extends Plugin {
     async processFile(file, forceAppendToEnd) {
         console.log(`Processing file: ${file.path}`);
         const content = await this.app.vault.read(file);
-        const newContent = await this.transformContent(content, file, forceAppendToEnd ?? !this.settings.appendAfterBlock);
-        if (newContent !== content) {
+        
+        const cleanContent = this.removeExistingLinks(content);
+        
+        const newContent = await this.transformContent(cleanContent, file, forceAppendToEnd ?? !this.settings.appendAfterBlock);
+        
+        if (newContent !== cleanContent) {
             this.isManualChange = true;
             await this.app.vault.modify(file, newContent);
             this.isManualChange = false;
-            new Notice(`Bases links updated in ${file.name}`);
+            new Notice(`Real Nodes updated in ${file.name}`);
             console.log('File updated successfully');
         } else {
             new Notice('No changes needed');
@@ -71,47 +77,89 @@ module.exports = class RealNodesPlugin extends Plugin {
         }
     }
 
+    removeExistingLinks(content) {
+        const linkBlockRegex = /> \[!link\]- Real Links.*\n(> .*\n)*/g;
+        return content.replace(linkBlockRegex, '');
+    }
+
     async transformContent(content, file, appendToEnd) {
         const baseRegex = /```base\n([\s\S]*?)```/g;
+        const dataviewRegex = /```dataview\n([\s\S]*?)```/g;
+        
         let match;
         let lastIndex = 0;
         const parts = [];
         let hasChanges = false;
         let allLinks = [];
 
-        console.log('Searching for Base blocks...');
-        while ((match = baseRegex.exec(content)) !== null) {
-            const fullMatch = match[0];
-            const yamlText = match[1].trim();
-            const blockStart = match.index;
-            const blockEnd = blockStart + fullMatch.length;
+        console.log('Searching for query blocks...');
 
-            console.log(`Found Base block at index ${blockStart}`);
-            parts.push(content.slice(lastIndex, blockStart));
-            parts.push(fullMatch);
+        if (this.settings.enableBases) {
+            while ((match = baseRegex.exec(content)) !== null) {
+                const fullMatch = match[0];
+                const queryText = match[1].trim();
+                const blockStart = match.index;
+                const blockEnd = blockStart + fullMatch.length;
 
-            const linkedFiles = this.getFilesFromBaseQuery(yamlText, file);
-            console.log(`Extracted ${linkedFiles.length} files from Base block`);
+                console.log(`Found Base block at index ${blockStart}`);
+                parts.push(content.slice(lastIndex, blockStart));
+                parts.push(fullMatch);
 
-            if (linkedFiles.length > 0) {
-                const linksText = this.formatLinks(linkedFiles);
-                if (!appendToEnd) {
-                    parts.push('\n\n' + linksText);
-                    hasChanges = true;
-                } else {
-                    allLinks.push(...linkedFiles);
-                    hasChanges = true;
+                const linkedFiles = this.getFilesFromBaseQuery(queryText, file);
+                console.log(`Extracted ${linkedFiles.length} files from Base block`);
+
+                if (linkedFiles.length > 0) {
+                    const linksText = this.formatLinks(linkedFiles, 'Base');
+                    if (!appendToEnd) {
+                        parts.push('\n\n' + linksText);
+                        hasChanges = true;
+                    } else {
+                        allLinks.push(...linkedFiles);
+                        hasChanges = true;
+                    }
                 }
-            }
 
-            lastIndex = blockEnd;
+                lastIndex = blockEnd;
+            }
+        }
+
+        if (this.settings.enableDataview) {
+            dataviewRegex.lastIndex = lastIndex;
+            
+            while ((match = dataviewRegex.exec(content)) !== null) {
+                const fullMatch = match[0];
+                const queryText = match[1].trim();
+                const blockStart = match.index;
+                const blockEnd = blockStart + fullMatch.length;
+
+                console.log(`Found Dataview block at index ${blockStart}`);
+                
+                parts.push(content.slice(lastIndex, blockStart));
+                parts.push(fullMatch);
+
+                const linkedFiles = await this.getFilesFromDataviewQuery(queryText, file);
+                console.log(`Extracted ${linkedFiles.length} files from Dataview block`);
+
+                if (linkedFiles.length > 0) {
+                    const linksText = this.formatLinks(linkedFiles, 'Dataview');
+                    if (!appendToEnd) {
+                        parts.push('\n\n' + linksText);
+                        hasChanges = true;
+                    } else {
+                        allLinks.push(...linkedFiles);
+                        hasChanges = true;
+                    }
+                }
+
+                lastIndex = blockEnd;
+            }
         }
 
         parts.push(content.slice(lastIndex));
 
         if (appendToEnd && hasChanges && allLinks.length > 0) {
             const uniqueLinks = [...new Set(allLinks)];
-            const linksText = this.formatLinks(uniqueLinks);
+            const linksText = this.formatLinks(uniqueLinks, 'Combined');
             parts.push('\n\n' + linksText);
             console.log(`Appended ${uniqueLinks.length} unique links to end`);
         }
@@ -119,27 +167,17 @@ module.exports = class RealNodesPlugin extends Plugin {
         return parts.join('');
     }
 
+    // ======================== دوال Bases المصححة ========================
     getFilesFromBaseQuery(yamlText, currentFile) {
         try {
-            const parsed = this.parseBaseYAML(yamlText);
-            console.log('Parsed filters:', JSON.stringify(parsed.filters, null, 2));
-
-            if (!parsed || !parsed.filters) {
-                console.log('No filters found');
-                return [];
-            }
-
-            const filters = parsed.filters;
+            const conditions = this.parseBaseConditions(yamlText);
+            console.log('Parsed conditions:', JSON.stringify(conditions, null, 2));
+            
             const allFiles = this.app.vault.getMarkdownFiles();
             console.log(`Total files in vault: ${allFiles.length}`);
 
             const matchedFiles = allFiles.filter(file => {
-                try {
-                    return this.evaluateFilter(file, filters);
-                } catch (e) {
-                    console.error('Error evaluating filter for file:', file.path, e);
-                    return false;
-                }
+                return this.evaluateBaseConditions(file, conditions);
             });
 
             console.log(`Matched files: ${matchedFiles.length}`);
@@ -150,186 +188,185 @@ module.exports = class RealNodesPlugin extends Plugin {
         }
     }
 
-    // ======================== محلل YAML مخصص لـ Bases مع دعم "not:" كمفتاح ========================
-    parseBaseYAML(text) {
-        const lines = text.split('\n');
-        const root = {};
-        const stack = [{ indent: -1, obj: root }];
-
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            if (line.trim() === '' || line.trim().startsWith('#')) continue;
-
-            const indent = line.search(/\S/);
-            const trimmed = line.trim();
-
-            // ضبط المكدس حسب المسافة البادئة
-            while (stack.length > 0 && indent <= stack[stack.length - 1].indent) {
-                stack.pop();
-            }
-
-            const currentObj = stack[stack.length - 1].obj;
-
-            // عنصر قائمة يبدأ بـ -
-            if (trimmed.startsWith('-')) {
-                const itemText = trimmed.substring(1).trim();
-
-                // التحقق مما إذا كان هذا العنصر يمثل مفتاحًا (ينتهي بنقطتين)
-                if (itemText.endsWith(':')) {
-                    // مفتاح لكائن فرعي (مثل "not:")
-                    const key = itemText.slice(0, -1).trim(); // إزالة النقطتين
-                    if (!currentObj[key]) currentObj[key] = {};
-                    // دفع الكائن الجديد إلى المكدس بمسافة بادئة +2 (افتراضي)
-                    stack.push({ indent: indent + 2, obj: currentObj[key] });
-                } else {
-                    // قيمة نصية عادية
-                    if (!Array.isArray(currentObj._items)) currentObj._items = [];
-                    currentObj._items.push(itemText);
+    parseBaseConditions(yamlText) {
+        const conditions = {
+            or: []
+        };
+        
+        const lines = yamlText.split('\n');
+        let i = 0;
+        
+        // البحث عن filters
+        while (i < lines.length && !lines[i].trim().startsWith('filters:')) {
+            i++;
+        }
+        i++;
+        
+        // البحث عن or
+        while (i < lines.length && !lines[i].trim().startsWith('or:')) {
+            i++;
+        }
+        i++;
+        
+        let currentAnd = null;
+        
+        while (i < lines.length) {
+            const line = lines[i].trim();
+            const fullLine = lines[i];
+            const indent = fullLine.search(/\S/);
+            
+            if (line.startsWith('views:')) break;
+            
+            if (line.startsWith('-')) {
+                const item = line.substring(1).trim();
+                
+                if (item === 'and:') {
+                    currentAnd = { and: [] };
+                    conditions.or.push(currentAnd);
+                }
+                else if (currentAnd && indent > 4) {
+                    currentAnd.and.push(item);
+                }
+                else {
+                    conditions.or.push(item);
+                    currentAnd = null;
                 }
             }
-            // مفتاح عادي (ليس ضمن قائمة)
-            else if (trimmed.includes(':')) {
-                const colonIndex = trimmed.indexOf(':');
-                const key = trimmed.substring(0, colonIndex).trim();
-                let value = trimmed.substring(colonIndex + 1).trim();
-
-                if (value === '' || value === '|') {
-                    // هذا المفتاح سيحتوي على كائن فرعي
-                    if (!currentObj[key]) currentObj[key] = {};
-                    stack.push({ indent, obj: currentObj[key] });
-                } else {
-                    // قيمة مباشرة
-                    if (value === 'true') value = true;
-                    else if (value === 'false') value = false;
-                    else if (!isNaN(value) && value !== '') value = Number(value);
-                    else if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
-                    else if (value.startsWith("'") && value.endsWith("'")) value = value.slice(1, -1);
-
-                    currentObj[key] = value;
-                }
-            }
+            
+            i++;
         }
-
-        // تحويل كل _items إلى مصفوفات حقيقية
-        this.convertItems(root);
-        return root;
+        
+        return conditions;
     }
 
-    convertItems(obj) {
-        for (let key in obj) {
-            if (obj[key] && typeof obj[key] === 'object') {
-                if (Array.isArray(obj[key]._items)) {
-                    obj[key] = obj[key]._items;
-                }
-                this.convertItems(obj[key]);
+    evaluateBaseConditions(file, conditions) {
+        if (!conditions || !conditions.or) return false;
+        
+        return conditions.or.some(condition => {
+            if (typeof condition === 'string') {
+                return this.evaluateBaseCondition(file, condition);
             }
-        }
-    }
-    // ======================== نهاية المحلل ========================
-
-    evaluateFilter(file, filter) {
-        if (!filter) return true;
-
-        if (typeof filter === 'string') {
-            return this.evaluateStringCondition(file, filter);
-        }
-
-        if (Array.isArray(filter)) {
-            return filter.every(sub => this.evaluateFilter(file, sub));
-        }
-
-        if (filter.and && Array.isArray(filter.and)) {
-            return filter.and.every(sub => this.evaluateFilter(file, sub));
-        }
-
-        if (filter.or && Array.isArray(filter.or)) {
-            return filter.or.some(sub => this.evaluateFilter(file, sub));
-        }
-
-        if (filter.not) {
-            const notCondition = Array.isArray(filter.not) ? filter.not[0] : filter.not;
-            return !this.evaluateFilter(file, notCondition);
-        }
-
-        for (let key in filter) {
-            if (filter.hasOwnProperty(key)) {
-                return this.evaluateSimpleCondition(file, key, filter[key]);
-            }
-        }
-
-        return false;
-    }
-
-    evaluateStringCondition(file, condition) {
-        const inFolderMatch = condition.match(/file\.inFolder\(["']([^"']+)["']\)/);
-        if (inFolderMatch) {
-            const folder = inFolderMatch[1];
-            return file.path.startsWith(folder + '/') || file.path === folder;
-        }
-
-        const hasTagMatch = condition.match(/file\.hasTag\(["']([^"']+)["']\)/);
-        if (hasTagMatch) {
-            const tag = hasTagMatch[1];
-            const cache = this.app.metadataCache.getFileCache(file);
-            const tags = cache?.frontmatter?.tags;
-            if (tags) {
-                const arr = Array.isArray(tags) ? tags : [tags];
-                return arr.includes(tag);
+            else if (condition.and && Array.isArray(condition.and)) {
+                // جميع شروط AND يجب أن تتحقق
+                return condition.and.every(subCond => 
+                    this.evaluateBaseCondition(file, subCond)
+                );
             }
             return false;
-        }
-
-        const nameEqMatch = condition.match(/file\.name\s*==\s*["']([^"']+)["']/);
-        if (nameEqMatch) return file.basename === nameEqMatch[1];
-
-        const nameContainsMatch = condition.match(/file\.name\.contains\(["']([^"']+)["']\)/);
-        if (nameContainsMatch) return file.basename.includes(nameContainsMatch[1]);
-
-        const topicMatch = condition.match(/note\["The Topic"\]\.contains\(["']([^"']+)["']\)/);
-        if (topicMatch) {
-            const val = topicMatch[1];
-            const cache = this.app.metadataCache.getFileCache(file);
-            const topic = cache?.frontmatter?.['The Topic'];
-            return topic && topic.includes(val);
-        }
-
-        return false;
-    }
-
-    evaluateSimpleCondition(file, key, value) {
-        if (key === 'file.inFolder') {
-            return file.path.startsWith(value + '/') || file.path === value;
-        }
-        if (key === 'file.hasTag') {
-            const cache = this.app.metadataCache.getFileCache(file);
-            const tags = cache?.frontmatter?.tags;
-            if (tags) {
-                const arr = Array.isArray(tags) ? tags : [tags];
-                return arr.includes(value);
-            }
-            return false;
-        }
-        if (key === 'file.name') {
-            if (typeof value === 'object' && value.contains) {
-                return file.basename.includes(value.contains);
-            }
-            return file.basename === value;
-        }
-        if (key === 'note["The Topic"].contains') {
-            const cache = this.app.metadataCache.getFileCache(file);
-            const topic = cache?.frontmatter?.['The Topic'];
-            return topic && topic.includes(value);
-        }
-        return false;
-    }
-
-    formatLinks(filePaths) {
-        if (filePaths.length === 0) return '';
-        let result = '> [!note]- Bases Links\n';
-        filePaths.forEach(path => {
-            const fileName = path.split('/').pop().replace('.md', '') || path;
-            result += `> [[${path}|${fileName}]]\n`;
         });
+    }
+
+    evaluateBaseCondition(file, condition) {
+        // file.folder == "path"
+        const folderEqMatch = condition.match(/file\.folder\s*==\s*["']([^"']+)["']/);
+        if (folderEqMatch) {
+            const targetFolder = folderEqMatch[1];
+            const fileFolder = file.path.includes('/') ? 
+                file.path.substring(0, file.path.lastIndexOf('/')) : '';
+            return fileFolder === targetFolder;
+        }
+
+        // file.folder != "path"
+        const folderNeMatch = condition.match(/file\.folder\s*!=\s*["']([^"']+)["']/);
+        if (folderNeMatch) {
+            const targetFolder = folderNeMatch[1];
+            const fileFolder = file.path.includes('/') ? 
+                file.path.substring(0, file.path.lastIndexOf('/')) : '';
+            return fileFolder !== targetFolder;
+        }
+
+        // file.name != "name" (عدم مساواة تامة)
+        const nameNeMatch = condition.match(/file\.name\s*!=\s*["']([^"']+)["']/);
+        if (nameNeMatch) {
+            const forbiddenName = nameNeMatch[1];
+            return file.basename !== forbiddenName;
+        }
+
+        // file.hasProperty("prop")
+        const hasPropMatch = condition.match(/file\.hasProperty\(["']([^"']+)["']\)/);
+        if (hasPropMatch) {
+            const prop = hasPropMatch[1];
+            const cache = this.app.metadataCache.getFileCache(file);
+            return cache?.frontmatter?.hasOwnProperty(prop) || false;
+        }
+
+        // التحقق من عدم احتواء الاسم على "Tem" (حالة خاصة)
+        if (condition.includes('!file.name.contains("Tem")')) {
+            return !file.basename.includes('Tem') && !file.basename.includes('tem') && !file.basename.includes('TEM');
+        }
+
+        // file.name.contains (للمستقبل)
+        const nameContainsMatch = condition.match(/file\.name\.contains\(["']([^"']+)["']\)/);
+        if (nameContainsMatch) {
+            const text = nameContainsMatch[1];
+            return file.basename.includes(text);
+        }
+
+        // !file.name.contains (النفي)
+        const nameNotContainsMatch = condition.match(/!file\.name\.contains\(["']([^"']+)["']\)/);
+        if (nameNotContainsMatch) {
+            const text = nameNotContainsMatch[1];
+            return !file.basename.includes(text);
+        }
+
+        return false;
+    }
+
+    // ======================== دوال Dataview ========================
+    async getFilesFromDataviewQuery(queryText, currentFile) {
+        try {
+            const dataview = this.app.plugins.getPlugin('dataview');
+            if (!dataview) {
+                console.log('Dataview plugin not found');
+                return [];
+            }
+
+            console.log('Executing Dataview query:', queryText);
+            
+            const result = await dataview.api.query(queryText);
+            
+            if (!result.successful) {
+                console.log('Dataview query failed:', result.error);
+                return [];
+            }
+
+            const files = [];
+            
+            if (result.value.type === 'table' && result.value.headers) {
+                if (result.value.headers[0] === 'File') {
+                    result.value.values.forEach(row => {
+                        if (row[0] && row[0].path) {
+                            files.push(row[0].path);
+                        }
+                    });
+                }
+            } else if (result.value.type === 'list') {
+                result.value.values.forEach(item => {
+                    if (item && item.path) {
+                        files.push(item.path);
+                    }
+                });
+            }
+
+            return [...new Set(files)];
+        } catch (e) {
+            console.error('Error executing Dataview query:', e);
+            return [];
+        }
+    }
+
+    formatLinks(filePaths, source = '') {
+        if (filePaths.length === 0) return '';
+        const sourceText = source ? ` (${source})` : '';
+        let result = `> [!link]- Real Links${sourceText}\n`;
+        
+        const sortedPaths = [...filePaths].sort();
+        
+        sortedPaths.forEach(path => {
+            const fileName = path.split('/').pop().replace('.md', '') || path;
+            result += `> - [[${fileName}]]\n`;
+        });
+        
         return result;
     }
 };
@@ -346,7 +383,7 @@ class RealNodesSettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Append after block')
-            .setDesc('If enabled, links will be appended right after each Base block. Otherwise, they will be appended at the end of the file.')
+            .setDesc('If enabled, links will be appended right after each block. Otherwise, they will be appended at the end of the file.')
             .addToggle(toggle => toggle
                 .setValue(this.plugin.settings.appendAfterBlock)
                 .onChange(async (value) => {
@@ -355,8 +392,28 @@ class RealNodesSettingTab extends PluginSettingTab {
                 }));
 
         new Setting(containerEl)
+            .setName('Enable Bases support')
+            .setDesc('Process ```base blocks')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.enableBases)
+                .onChange(async (value) => {
+                    this.plugin.settings.enableBases = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        new Setting(containerEl)
+            .setName('Enable Dataview support')
+            .setDesc('Process ```dataview blocks')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.enableDataview)
+                .onChange(async (value) => {
+                    this.plugin.settings.enableDataview = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        new Setting(containerEl)
             .setName('Auto run on file change')
-            .setDesc('Automatically process file when it is changed. Disable if you experience performance issues.')
+            .setDesc('Automatically process file when it is changed.')
             .addToggle(toggle => toggle
                 .setValue(this.plugin.settings.autoRunOnChange)
                 .onChange(async (value) => {

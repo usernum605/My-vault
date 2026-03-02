@@ -1,4 +1,8 @@
-
+---
+hidely: true
+cssclasses:
+  - prop
+---
 ```base
 filters:
   and:
