@@ -6,10 +6,11 @@ banner: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRzIg8KgmlGtYJif9lb
 cssclasses:
   - invert-banner
   - invert-dark
-  - Link
   - prop
+  - Link
 node_size: 20
 ---
+##### Main Files
 ```base
 filters:
   and:
@@ -18,6 +19,8 @@ filters:
 views:
   - type: table
     name: Table
+    order:
+      - file.name
 
 ```
 

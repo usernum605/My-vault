@@ -9,7 +9,7 @@ cssclasses:
   - page-black
 links pages:
   - "[[warsh.pdf]]"
-node_size: 30
+node_size: 25
 ---
 
 ### سورة الفاتحة

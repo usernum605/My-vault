@@ -1,4 +1,15 @@
 {
   "appendAfterBlock": true,
-  "autoRunOnChange": true
+  "autoRunOnChange": true,
+  "enableBases": true,
+  "enableDataview": true,
+  "autoUpdateFolders": [],
+  "autoUpdateFiles": [
+    "001 Dashboard/Dashboard/Bases/002 My projects.md",
+    "001 Dashboard/Dashboard/Bases/001 Dash.md",
+    "002 Notes/002 Lessons/000 Map of content.md",
+    "002 Notes/002 Lessons/001 The Courses.md",
+    "002 Notes/002 Lessons/002 Game dev.md"
+  ],
+  "autoUpdateAll": false
 }

@@ -4,41 +4,83 @@
     "type": "split",
     "children": [
       {
-        "id": "0f5d867df1c80e1a",
+        "id": "92204f62cbb1926a",
         "type": "tabs",
         "children": [
           {
-            "id": "945f9df975fe74a1",
+            "id": "55fba3e3cbeb764b",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "001 Dashboard/Dashboard/Bases/002 My projects.md",
+                "file": "001 Dashboard/Dashboard/Dashboard.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "Dashboard"
+            }
+          },
+          {
+            "id": "9f210a50c81d88e0",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
+            }
+          }
+        ]
+      },
+      {
+        "id": "7e8d2adeab52024b",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "ed81fb7694ed14b9",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "003 Daily/001 Active Diaries/2026-03-02.md",
                 "mode": "preview",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "002 My projects"
+              "title": "2026-03-02"
             }
           },
           {
-            "id": "0e48f1764bc21ffc",
+            "id": "5373d0d9ca94c471",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "001 Dashboard/Dashboard/Bases/004 My notes.md",
+                "file": "001 Dashboard/Azkaru.md",
                 "mode": "preview",
-                "source": true,
+                "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "004 My notes"
+              "title": "Azkaru"
+            }
+          },
+          {
+            "id": "857579681a07abb0",
+            "type": "leaf",
+            "state": {
+              "type": "pdf",
+              "state": {
+                "file": "004 Files/001 Attach/warsh.pdf"
+              },
+              "icon": "lucide-file-text",
+              "title": "warsh"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -129,13 +171,23 @@
         "state": {
           "type": "outline",
           "state": {
-            "file": "001 Dashboard/Dashboard/Trackers/Tracker Q.md",
+            "file": "003 Daily/001 Active Diaries/2026-03-02.md",
             "followCursor": false,
             "showSearch": false,
             "searchQuery": ""
           },
           "icon": "lucide-list",
           "title": "Outline"
+        }
+      },
+      {
+        "id": "ef0e7e9a7e4fa340",
+        "type": "leaf",
+        "state": {
+          "type": "Search-iframe",
+          "state": {},
+          "icon": "lucide-globe",
+          "title": "Internet"
         }
       },
       {
@@ -154,7 +206,7 @@
         "state": {
           "type": "localgraph",
           "state": {
-            "file": "001 Dashboard/Dashboard/Bases/002 My projects.md",
+            "file": "003 Daily/001 Active Diaries/2026-03-02.md",
             "options": {
               "collapse-filter": true,
               "search": "",
@@ -196,7 +248,7 @@
         }
       }
     ],
-    "currentTab": 3
+    "currentTab": 4
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -214,44 +266,11 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "0e48f1764bc21ffc",
+  "active": "ade1f671023e7af0",
   "lastOpenFiles": [
-    "001 Dashboard/Dashboard/Bases/005 Diaries.md",
-    "001 Dashboard/Dashboard/Bases/003 Notes.md",
-    "001 Dashboard/Dashboard/Bases/002 My projects.md",
-    "001 Dashboard/Dashboard/Bases/001 Dash.md",
-    "001 Dashboard/Dashboard/Bases/000 Ultimate Base.md",
-    "001 Dashboard/Dashboard/Bases/004 My notes.md",
+    "001 Dashboard/Dashboard/Dashboard.md",
     "003 Daily/001 Active Diaries/2026-03-02.md",
-    "Clippings/Pin on Islam kids.md",
-    "Clippings",
-    "Clippings/Pin on Islam kids 1.md",
-    "002 Notes/003 Saved Notes/Mawaidh.md",
-    "001 Dashboard/Dashboard/Trackers/Tracker Q.md",
-    "001 Dashboard/Self Education.md",
-    "001 Dashboard/Dashboard/Trackers/Tracker A.md",
-    "002 Notes/001 Notes/Tes.md",
-    "004 Files/001 Attach/Pasted image 20260302010334.jpg",
-    "003 Daily/001 Active Diaries/2026-03-01.md",
-    "004 Files/001 Attach/Pasted image 20260302005442.jpg",
-    "004 Files/004 Temple/Quick Notes tem.md",
-    "004 Files/004 Temple/Log Tem.md",
-    "004 Files/004 Temple/Save Note Tem.md",
-    "004 Files/004 Temple/Today Tem.md",
-    "002 Notes/002 Lessons/003 Math.md",
-    "002 Notes/002 Lessons/002 Game dev.md",
-    "002 Notes/002 Lessons/001 The Courses.md",
-    "002 Notes/002 Lessons/000 Map of content.md",
     "004 Files/001 Attach/warsh.pdf",
-    "002 Notes/001 Notes/Poem.md",
-    "002 Notes/002 Lessons/Logs/log - 2026-03-01.md",
-    "002 Notes/003 Saved Notes/Messages",
-    "004 Files/001 Attach/Sounds/Ayam.m4a",
-    "004 Files/001 Attach/Sounds/Rec-Tazkira.m4a",
-    "004 Files/001 Attach/Sounds/Takwa.mp3",
-    "004 Files/001 Attach/Sounds/pre-athan.m4a",
-    "004 Files/001 Attach/Sounds/night.m4a",
-    "004 Files/001 Attach/Sounds/morning.m4a",
-    "004 Files/001 Attach/Sounds/iqama.m4a"
+    "001 Dashboard/Azkaru.md"
   ]
 }

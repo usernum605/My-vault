@@ -11,10 +11,16 @@ cssclasses:
 ```dataviewjs
 // كود متقدم لتتبع صفحات القرآن - مع منع التكرار لمدة ساعتين
 
-// التحقق مما إذا كانت النافذة مفتوحة بالفعل
-if (window.__quranModalOpen) {
+// استخدام متغير عام مع timeout للتأكد من التنفيذ مرة واحدة فقط
+if (window.__quranExecuted) {
     return;
 }
+window.__quranExecuted = true;
+
+// إعادة تعيين المتغير بعد ثانية واحدة للسماح بالتنفيذ مرة أخرى إذا لزم الأمر
+setTimeout(() => {
+    window.__quranExecuted = false;
+}, 1000);
 
 const currentFile = app.workspace.getActiveFile();
 if (!currentFile) {
@@ -72,14 +78,19 @@ for (const file of allDailyFiles) {
     totalPagesSoFar += cache?.frontmatter?.["Number of Pages (reading)"] || 0;
 }
 
-// تعيين علامة أن النافذة ستفتح
-window.__quranModalOpen = true;
+// التحقق إذا كانت النافذة مفتوحة بالفعل
+if (document.querySelector('.quran-modal')) {
+    return;
+}
 
 // ===== نافذة منبثقة جميلة =====
 const modalHtml = `
-<div class="modal-container" style="direction: rtl;position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 1000; background-color: rgba(0, 0, 0, 0.5);">
+<div class="quran-modal modal-container" style="direction: rtl;position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 1000; background-color: rgba(0, 0, 0, 0.5);">
     <div class="modal" style="background-color: var(--background-primary); border-radius: 16px; padding: 20px; width: 320px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); border: 1px solid var(--background-modifier-border);">
         <h3 style="margin-top: 0; margin-bottom: 15px; color: var(--text-normal); font-size: 18px;">إلى أين وصلت في تلاوة القرآن؟</h3>
+        <div style="margin-bottom: 10px; color: var(--text-muted); font-size: 14px;">
+            مجموع الصفحات السابقة: <strong>${totalPagesSoFar}</strong>
+        </div>
         <input type="number" id="modal-page-input" style="direction: right; width: 100%; padding: 10px; border-radius: 12px; border: 1px solid var(--background-modifier-border); background-color: var(--background-secondary); color: var(--text-normal); font-size: 16px; box-sizing: border-box; margin-bottom: 15px;" placeholder="رقم الصفحة التي وصلت إليها" autofocus>
         
         <div style="display: flex; gap: 10px;">
@@ -93,16 +104,19 @@ const modalHtml = `
 // إنشاء وإضافة النافذة إلى الصفحة
 const modalDiv = document.createElement('div');
 modalDiv.innerHTML = modalHtml;
+modalDiv.classList.add('quran-modal');
 document.body.appendChild(modalDiv);
 
 // التركيز على حقل الإدخال
 const input = modalDiv.querySelector('#modal-page-input');
-input.focus();
+setTimeout(() => input.focus(), 100);
 
-// دالة لإغلاق النافذة وتنظيف العلامة
+// دالة لإغلاق النافذة
 function closeModal() {
-    modalDiv.remove();
-    window.__quranModalOpen = false;
+    const modal = document.querySelector('.quran-modal');
+    if (modal) {
+        modal.remove();
+    }
 }
 
 // معالج زر الإلغاء
@@ -129,33 +143,8 @@ modalDiv.querySelector('#modal-submit').addEventListener('click', async () => {
     closeModal();
     
     if (todayPages === 0) {
-        const confirmed = await new Promise(resolve => {
-            // نافذة تأكيد مخصصة لتجنب confirm التي توقف التنفيذ
-            const confirmDiv = document.createElement('div');
-            confirmDiv.innerHTML = `
-            <div class="modal-container" style="direction: rtl;position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 1001; background-color: rgba(0, 0, 0, 0.5);">
-                <div class="modal" style="background-color: var(--background-primary); border-radius: 16px; padding: 20px; width: 280px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);">
-                    <p style="margin-bottom: 20px;">⚠️ لم تقرأ أي صفحات اليوم. هل أنت متأكد؟</p>
-                    <div style="display: flex; gap: 10px;">
-                        <button id="confirm-yes" style="flex:1; padding: 8px; border-radius: 8px; border: none; background-color: var(--interactive-accent); color: var(--text-on-accent); cursor: pointer;">نعم</button>
-                        <button id="confirm-no" style="flex:1; padding: 8px; border-radius: 8px; border: 1px solid var(--background-modifier-border); background-color: transparent; color: var(--text-muted); cursor: pointer;">لا</button>
-                    </div>
-                </div>
-            </div>
-            `;
-            document.body.appendChild(confirmDiv);
-            
-            confirmDiv.querySelector('#confirm-yes').addEventListener('click', () => {
-                confirmDiv.remove();
-                resolve(true);
-            });
-            
-            confirmDiv.querySelector('#confirm-no').addEventListener('click', () => {
-                confirmDiv.remove();
-                resolve(false);
-            });
-        });
-        
+        // استخدام confirm بسيط بدلاً من نافذة مخصصة
+        const confirmed = confirm('⚠️ لم تقرأ أي صفحات اليوم. هل أنت متأكد؟');
         if (!confirmed) {
             return;
         }
@@ -176,13 +165,6 @@ modalDiv.querySelector('#modal-submit').addEventListener('click', async () => {
 input.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         modalDiv.querySelector('#modal-submit').click();
-    }
-});
-
-// معالج الضغط على Escape لإغلاق النافذة
-modalDiv.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        closeModal();
     }
 });
 ```

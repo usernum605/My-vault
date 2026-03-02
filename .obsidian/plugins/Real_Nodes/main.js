@@ -1,16 +1,19 @@
-const { Plugin, PluginSettingTab, Setting, Notice } = require('obsidian');
+const { Plugin, PluginSettingTab, Setting, Notice, TFolder } = require('obsidian');
 
 const DEFAULT_SETTINGS = {
     appendAfterBlock: true,
     autoRunOnChange: false,
     enableBases: true,
     enableDataview: true,
+    autoUpdateFiles: [],   // الملفات المحددة للتحديث التلقائي
+    autoUpdateAll: false,  // تحديث تلقائي لكل الملفات
 };
 
 module.exports = class RealNodesPlugin extends Plugin {
     async onload() {
         await this.loadSettings();
 
+        // أوامر يدوية
         this.addCommand({
             id: 'append-bases-links-after-block',
             name: 'Real Nodes: Append after block',
@@ -23,15 +26,15 @@ module.exports = class RealNodesPlugin extends Plugin {
             callback: () => this.processCurrentFile(true),
         });
 
-        if (this.settings.autoRunOnChange) {
-            this.registerEvent(
-                this.app.workspace.on('file-change', (file) => {
-                    if (!this.isManualChange && file.extension === 'md') {
-                        this.processFile(file);
-                    }
-                })
-            );
-        }
+        // أمر لإضافة الملف الحالي إلى قائمة التحديث التلقائي
+        this.addCommand({
+            id: 'add-current-file-to-auto-update',
+            name: 'Real Nodes: Add current file to auto update list',
+            callback: () => this.addCurrentFileToAutoUpdate(),
+        });
+
+        // تفعيل المراقبة التلقائية
+        this.setupAutoUpdate();
 
         this.addSettingTab(new RealNodesSettingTab(this.app, this));
     }
@@ -48,6 +51,89 @@ module.exports = class RealNodesPlugin extends Plugin {
         await this.saveData(this.settings);
     }
 
+    // ======================== دوال التحديث التلقائي ========================
+    setupAutoUpdate() {
+        // مراقبة تغييرات الملفات
+        this.registerEvent(
+            this.app.vault.on('modify', (file) => {
+                if (!this.isManualChange && file.extension === 'md') {
+                    this.checkAndProcessFile(file);
+                }
+            })
+        );
+
+        // مراقبة إنشاء ملفات جديدة
+        this.registerEvent(
+            this.app.vault.on('create', (file) => {
+                if (!this.isManualChange && file.extension === 'md') {
+                    this.checkAndProcessFile(file);
+                }
+            })
+        );
+
+        // مراقبة تغيير اسم الملف
+        this.registerEvent(
+            this.app.vault.on('rename', (file, oldPath) => {
+                if (!this.isManualChange && file.extension === 'md') {
+                    this.checkAndProcessFile(file);
+                }
+            })
+        );
+    }
+
+    checkAndProcessFile(file) {
+        // التحقق مما إذا كان التحديث التلقائي مفعل
+        if (!this.settings.autoRunOnChange) return;
+
+        // التحقق من تفعيل التحديث لكل الملفات
+        if (this.settings.autoUpdateAll) {
+            console.log(`Auto updating all files: ${file.path}`);
+            this.processFile(file);
+            return;
+        }
+
+        // التحقق مما إذا كان الملف في قائمة الملفات المحددة
+        if (this.settings.autoUpdateFiles.includes(file.path)) {
+            console.log(`Auto updating specific file: ${file.path}`);
+            this.processFile(file);
+            return;
+        }
+    }
+
+    async addCurrentFileToAutoUpdate() {
+        const activeFile = this.app.workspace.getActiveFile();
+        if (!activeFile) {
+            new Notice('No active file');
+            return;
+        }
+
+        if (!this.settings.autoUpdateFiles.includes(activeFile.path)) {
+            this.settings.autoUpdateFiles.push(activeFile.path);
+            await this.saveSettings();
+            new Notice(`Added ${activeFile.name} to auto update list`);
+        } else {
+            new Notice(`${activeFile.name} is already in auto update list`);
+        }
+    }
+
+    async removeCurrentFileFromAutoUpdate() {
+        const activeFile = this.app.workspace.getActiveFile();
+        if (!activeFile) {
+            new Notice('No active file');
+            return;
+        }
+
+        const index = this.settings.autoUpdateFiles.indexOf(activeFile.path);
+        if (index > -1) {
+            this.settings.autoUpdateFiles.splice(index, 1);
+            await this.saveSettings();
+            new Notice(`Removed ${activeFile.name} from auto update list`);
+        } else {
+            new Notice(`${activeFile.name} is not in auto update list`);
+        }
+    }
+
+    // ======================== دوال معالجة الملفات ========================
     async processCurrentFile(forceAppendToEnd) {
         const activeFile = this.app.workspace.getActiveFile();
         if (!activeFile) {
@@ -72,7 +158,6 @@ module.exports = class RealNodesPlugin extends Plugin {
             new Notice(`Real Nodes updated in ${file.name}`);
             console.log('File updated successfully');
         } else {
-            new Notice('No changes needed');
             console.log('No changes detected');
         }
     }
@@ -167,7 +252,7 @@ module.exports = class RealNodesPlugin extends Plugin {
         return parts.join('');
     }
 
-    // ======================== دوال Bases المصححة ========================
+    // ======================== دوال Bases ========================
     getFilesFromBaseQuery(yamlText, currentFile) {
         try {
             const conditions = this.parseBaseConditions(yamlText);
@@ -196,16 +281,10 @@ module.exports = class RealNodesPlugin extends Plugin {
         const lines = yamlText.split('\n');
         let i = 0;
         
-        // البحث عن filters
-        while (i < lines.length && !lines[i].trim().startsWith('filters:')) {
-            i++;
-        }
+        while (i < lines.length && !lines[i].trim().startsWith('filters:')) i++;
         i++;
         
-        // البحث عن or
-        while (i < lines.length && !lines[i].trim().startsWith('or:')) {
-            i++;
-        }
+        while (i < lines.length && !lines[i].trim().startsWith('or:')) i++;
         i++;
         
         let currentAnd = null;
@@ -247,7 +326,6 @@ module.exports = class RealNodesPlugin extends Plugin {
                 return this.evaluateBaseCondition(file, condition);
             }
             else if (condition.and && Array.isArray(condition.and)) {
-                // جميع شروط AND يجب أن تتحقق
                 return condition.and.every(subCond => 
                     this.evaluateBaseCondition(file, subCond)
                 );
@@ -257,7 +335,6 @@ module.exports = class RealNodesPlugin extends Plugin {
     }
 
     evaluateBaseCondition(file, condition) {
-        // file.folder == "path"
         const folderEqMatch = condition.match(/file\.folder\s*==\s*["']([^"']+)["']/);
         if (folderEqMatch) {
             const targetFolder = folderEqMatch[1];
@@ -266,7 +343,6 @@ module.exports = class RealNodesPlugin extends Plugin {
             return fileFolder === targetFolder;
         }
 
-        // file.folder != "path"
         const folderNeMatch = condition.match(/file\.folder\s*!=\s*["']([^"']+)["']/);
         if (folderNeMatch) {
             const targetFolder = folderNeMatch[1];
@@ -275,14 +351,12 @@ module.exports = class RealNodesPlugin extends Plugin {
             return fileFolder !== targetFolder;
         }
 
-        // file.name != "name" (عدم مساواة تامة)
         const nameNeMatch = condition.match(/file\.name\s*!=\s*["']([^"']+)["']/);
         if (nameNeMatch) {
             const forbiddenName = nameNeMatch[1];
             return file.basename !== forbiddenName;
         }
 
-        // file.hasProperty("prop")
         const hasPropMatch = condition.match(/file\.hasProperty\(["']([^"']+)["']\)/);
         if (hasPropMatch) {
             const prop = hasPropMatch[1];
@@ -290,19 +364,16 @@ module.exports = class RealNodesPlugin extends Plugin {
             return cache?.frontmatter?.hasOwnProperty(prop) || false;
         }
 
-        // التحقق من عدم احتواء الاسم على "Tem" (حالة خاصة)
         if (condition.includes('!file.name.contains("Tem")')) {
             return !file.basename.includes('Tem') && !file.basename.includes('tem') && !file.basename.includes('TEM');
         }
 
-        // file.name.contains (للمستقبل)
         const nameContainsMatch = condition.match(/file\.name\.contains\(["']([^"']+)["']\)/);
         if (nameContainsMatch) {
             const text = nameContainsMatch[1];
             return file.basename.includes(text);
         }
 
-        // !file.name.contains (النفي)
         const nameNotContainsMatch = condition.match(/!file\.name\.contains\(["']([^"']+)["']\)/);
         if (nameNotContainsMatch) {
             const text = nameNotContainsMatch[1];
@@ -381,6 +452,9 @@ class RealNodesSettingTab extends PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
 
+        // الإعدادات الأساسية
+        containerEl.createEl('h2', { text: 'General Settings' });
+
         new Setting(containerEl)
             .setName('Append after block')
             .setDesc('If enabled, links will be appended right after each block. Otherwise, they will be appended at the end of the file.')
@@ -411,14 +485,59 @@ class RealNodesSettingTab extends PluginSettingTab {
                     await this.plugin.saveSettings();
                 }));
 
+        // إعدادات التحديث التلقائي
+        containerEl.createEl('h2', { text: 'Auto Update Settings' });
+
         new Setting(containerEl)
-            .setName('Auto run on file change')
-            .setDesc('Automatically process file when it is changed.')
+            .setName('Enable auto update')
+            .setDesc('Turn on automatic updates for selected files')
             .addToggle(toggle => toggle
                 .setValue(this.plugin.settings.autoRunOnChange)
                 .onChange(async (value) => {
                     this.plugin.settings.autoRunOnChange = value;
                     await this.plugin.saveSettings();
                 }));
+
+        new Setting(containerEl)
+            .setName('Auto update all files')
+            .setDesc('⚠️ Warning: This will auto update EVERY markdown file in your vault')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.autoUpdateAll)
+                .onChange(async (value) => {
+                    this.plugin.settings.autoUpdateAll = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        // قائمة الملفات المحددة
+        containerEl.createEl('h3', { text: 'Selected Files for Auto Update' });
+        
+        if (this.plugin.settings.autoUpdateFiles.length === 0) {
+            containerEl.createEl('p', { 
+                text: 'No files selected. Use commands to add files:',
+                cls: 'setting-item-description'
+            });
+            containerEl.createEl('ul', { cls: 'setting-item-description' }).innerHTML = `
+                <li>「Real Nodes: Add current file to auto update list」</li>
+                <li>「Real Nodes: Remove current file from auto update list」</li>
+            `;
+        } else {
+            const fileList = containerEl.createEl('div', { cls: 'setting-item' });
+            this.plugin.settings.autoUpdateFiles.forEach(filePath => {
+                const fileSetting = new Setting(fileList)
+                    .setName(filePath.split('/').pop())
+                    .setDesc(filePath);
+                
+                fileSetting.addButton(btn => btn
+                    .setButtonText('Remove')
+                    .onClick(async () => {
+                        const index = this.plugin.settings.autoUpdateFiles.indexOf(filePath);
+                        if (index > -1) {
+                            this.plugin.settings.autoUpdateFiles.splice(index, 1);
+                            await this.plugin.saveSettings();
+                            this.display();
+                        }
+                    }));
+            });
+        }
     }
 }

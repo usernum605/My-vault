@@ -1,13 +1,5 @@
 {
-  "fwdMultiplier": 1,
-  "bwdMultiplier": 1,
-  "lettersPerWt": 0,
-  "manualMultiplier": 0,
+  "manualMultiplier": 1.5,
   "manualOverride": true,
-  "hideAllCallouts": true,
-  "hiddenCallouts": [
-    "Links"
-  ],
-  "autoUpdateLinks": false,
-  "wordsPerWeight": 1
+  "calculateForAll": false
 }

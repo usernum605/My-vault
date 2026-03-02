@@ -11,6 +11,7 @@
     "links pages": "multitext",
     "The Topic": "multitext",
     "translate": "checkbox",
-    "hidely": "checkbox"
+    "hidely": "checkbox",
+    "culcultree": "checkbox"
   }
 }
