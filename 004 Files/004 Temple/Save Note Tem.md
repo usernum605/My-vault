@@ -4,6 +4,7 @@ banner: https://img.simplerousercontent.net/scaled_image/4142661/7b31da2ab10442d
 cssclasses:
   - invert-dark
   - invert-banner
+  - Headless
 The Topic:
 ---
 # {{TITLE}}

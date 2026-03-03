@@ -6,10 +6,10 @@ cssclasses:
   - invert-banner
   - IBM
   - rtl-everything
+  - Headless
 The Topic:
   - Dev
   - Learning
-hidely: true
 ---
 ### 📚 Learning Log - 2026-02-24
 

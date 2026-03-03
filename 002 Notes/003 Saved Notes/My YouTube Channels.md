@@ -9,7 +9,6 @@ cssclasses:
   - center-title
   - dashboard
 ui: preview
-hidely: true
 ---
 [YouTube](https://www.youtube.com/)
 

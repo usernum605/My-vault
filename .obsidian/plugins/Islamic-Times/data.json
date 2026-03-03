@@ -88,24 +88,24 @@
   "enableOfflineFallback": true,
   "tryWakeLockOnMobile": true,
   "showSystemNotification": true,
-  "displayReference": "lastThird",
+  "displayReference": "sunrise",
   "cached": {
     "prayerTimes": {
-      "Fajr": "06:02",
-      "Sunrise": "07:27",
+      "Fajr": "06:01",
+      "Sunrise": "07:25",
       "Dhuhr": "13:10",
-      "Asr": "16:23",
-      "Maghrib": "18:54",
+      "Asr": "16:24",
+      "Maghrib": "18:55",
       "Isha": "20:14",
       "Midnight": "01:10"
     },
     "hijri": {
-      "date": "13-09-1447",
+      "date": "14-09-1447",
       "format": "DD-MM-YYYY",
-      "day": "13",
+      "day": "14",
       "weekday": {
-        "en": "Al Athnayn",
-        "ar": "الاثنين"
+        "en": "Al Thalaata",
+        "ar": "الثلاثاء"
       },
       "month": {
         "number": 9,
@@ -122,12 +122,12 @@
       "adjustedHolidays": [],
       "method": "HJCoSA"
     },
-    "fetchedAtISO": "2026-03-02T01:50:31.830Z"
+    "fetchedAtISO": "2026-03-03T04:36:51.988Z"
   },
   "enableDailyNotes": true,
   "dailyNotesFolder": "003 Daily/001 Active Diaries",
   "dailyNotesDateFormat": "gregorian",
-  "autoOpenIslamicNoteOnStartup": false,
+  "autoOpenIslamicNoteOnStartup": true,
   "englishNoteTemplate": "",
   "englishNoteTemplatePath": "004 Files/004 Temple/Today Tem.md",
   "englishNoteTemplateMode": "file",

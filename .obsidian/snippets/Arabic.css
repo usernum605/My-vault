@@ -1,16 +1,30 @@
-/* استيراد الخطوط */
+/* ===============================
+  | IMPORT FONTS
+=============================== */
+
+/* Default font - Noto Naskh Arabic */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600&display=swap');
 
-/* Sans (عربي + إنجليزي) */
+/* Normal - IBM Plex Sans */
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 
-/* Monospace */
+/* Monospace - IBM Plex Mono */
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap');
 
+/* ===============================
+  | Default FONT - Noto Naskh Arabic
+=============================== */
 
-/* ================================
-   Preview Mode
-================================ */
+.markdown-preview-view span[dir="rtl"],
+.markdown-source-view.mod-cm6 .cm-content span[dir="rtl"] {
+  font-family: "Noto Naskh Arabic", serif !important;
+  line-height: 1.8;
+  font-size: 1.1em;
+}
+
+/* ===============================
+   IBM FONT
+=============================== */
 
 .markdown-preview-view.IBM {
   font-family: "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif !important;
@@ -23,11 +37,6 @@
   font-weight: 405;
 }
 
-
-/* ================================
-   Live Preview (CM6)
-================================ */
-
 .markdown-source-view.mod-cm6.IBM .cm-content {
   font-family: "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif !important;
 }
@@ -38,23 +47,23 @@
   font-family: "IBM Plex Mono", monospace !important;
 }
 
-
-/* ================================
-   Source Mode (Legacy fallback)
-================================ */
-
 .markdown-source-view.IBM textarea {
   font-family: "IBM Plex Sans Arabic", "IBM Plex Sans", sans-serif !important;
 }
-/* الوضع الافتراضي - خط Noto Naskh Arabic */
-.markdown-preview-view span[dir="rtl"],
-.markdown-source-view.mod-cm6 .cm-content span[dir="rtl"] {
-  font-family: "Noto Naskh Arabic", serif !important;
-  line-height: 1.8;
-  font-size: 1.1em;
+
+/* ===============================================
+  | PAGE FONT SIZES
+=============================================== */
+
+.font-small {
+    font-size: 0.9rem !important;
 }
 
-body.prop .metadata-properties-heading,
-body.prop .metadata-add-button {
-    display: none !important;
+
+.font-big {
+    font-size: 1.20rem !important;  
+}
+
+.font-huge {
+    font-size: 1.40rem !important;
 }

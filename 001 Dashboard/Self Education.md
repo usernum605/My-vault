@@ -5,6 +5,7 @@ cssclasses:
   - card
   - rtl-paragraph
   - Focus
+  - no-plus
 tags:
   - Self↑up
 links pages:

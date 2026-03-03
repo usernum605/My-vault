@@ -6,8 +6,7 @@ banner: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQAWJ5luRpi5RaVKm2L
 cssclasses:
   - invert-banner
   - Link
-  - prop
-hidely: true
+  - Disappear
 ---
 ```base
 filters:

@@ -2,10 +2,8 @@
 links pages:
   - "[[Dashboard]]"
 cssclasses:
-  - prop
   - Link
-  - prop
-ui: edit
+  - Disappear
 ---
 
 ```base

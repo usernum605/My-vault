@@ -3,7 +3,6 @@ translate: true
 tags:
   - Self↑up/knowledge
 icon: lucide-book-open
-hidely: true
 ---
 
 # Temporary Chat

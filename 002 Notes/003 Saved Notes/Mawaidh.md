@@ -1,5 +1,5 @@
 ---
-banner: https://admango.cdn.mangomolo.com/analytics/uploads/168/68de14006b.jpg
+banner: Ihttps://admango.cdn.mangomolo.com/analytics/uploads/168/68de14006b.jpg
 icon: lucide-speech
 links pages:
   - "[[My tools#وضع الفيديو في اوبسيديان]]"

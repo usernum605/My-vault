@@ -26,7 +26,6 @@ const DEFAULT_SETTINGS = {
     enableCache: true,
     cacheExpiryDays: 30,
     hideScrollbars: true,
-    hidelyProperty: "hidely",
     showPropertiesOnCreate: true,
     showPropertiesOnCreateDuration: 60
 };
@@ -432,29 +431,6 @@ module.exports = class StyleshVault extends Plugin {
 
     const isNewlyCreated = currentFilePath ? this.checkNewlyCreatedFile(currentFile) : false;
     const hasTemporaryVisible = currentFilePath && this.temporaryVisibleProps.has(currentFilePath);
-    
-    // التحقق من وجود خاصية hidely في الملف الحالي
-    const fm = currentFile ? this.app.metadataCache.getFileCache(currentFile)?.frontmatter : null;
-    const hasHidely = fm?.[this.settings.hidelyProperty] === true;
-    
-    // إضافة أو إزالة class من metadata-container في الملف النشط فقط
-    // نستخدم setTimeout للتأكد من وجود العناصر في DOM
-    setTimeout(() => {
-        const metadataContainers = document.querySelectorAll('.metadata-container');
-        metadataContainers.forEach(container => {
-            // نتحقق من أن هذا الـ container يتبع الملف النشط
-            const isActiveFileContainer = container.closest('.workspace-leaf.mod-active');
-            if (isActiveFileContainer) {
-                if (hasHidely && !isNewlyCreated && !hasTemporaryVisible) {
-                    container.classList.add('metadata-heading-off');
-                    console.log('Added metadata-heading-off class to active container'); // للتتبع
-                } else {
-                    container.classList.remove('metadata-heading-off');
-                    console.log('Removed metadata-heading-off class from active container'); // للتتبع
-                }
-            }
-        });
-    }, 100);
 
     this.settings.hiddenProperties.forEach(prop => {
         let shouldShow = false;
@@ -1598,10 +1574,6 @@ module.exports = class StyleshVault extends Plugin {
     }
     if (!this.settings.showPropertiesOnCreateDuration) {
         this.settings.showPropertiesOnCreateDuration = 60;
-    }
-    
-    if (this.settings.hidelyProperty === undefined) {
-        this.settings.hidelyProperty = "hidely";
     }
   }
 

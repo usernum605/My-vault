@@ -8,6 +8,7 @@ cssclasses:
   - center-everything
   - invert-banner
   - invert-dark-apt
+  - no-plus
 icon: lucide-tool-case
 tags:
   - Self↑up

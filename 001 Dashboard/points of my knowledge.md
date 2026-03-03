@@ -5,7 +5,7 @@ tags:
   - Self↑up/knowledge
 cssclasses:
   - card
-hidely: true
+  - Disappear
 ---
 ### 0) From my knowledge (books, video, podcast..)
 1. لا داعي للبهرجة اعرف مقامك 

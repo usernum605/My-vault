@@ -10,8 +10,6 @@
     "node_size": "number",
     "links pages": "multitext",
     "The Topic": "multitext",
-    "translate": "checkbox",
-    "hidely": "checkbox",
-    "culcultree": "checkbox"
+    "translate": "checkbox"
   }
 }

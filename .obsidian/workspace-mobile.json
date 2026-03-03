@@ -181,16 +181,6 @@
         }
       },
       {
-        "id": "ef0e7e9a7e4fa340",
-        "type": "leaf",
-        "state": {
-          "type": "Search-iframe",
-          "state": {},
-          "icon": "lucide-globe",
-          "title": "Internet"
-        }
-      },
-      {
         "id": "8d0c689c34a24f14",
         "type": "leaf",
         "state": {
@@ -248,7 +238,8 @@
         }
       }
     ],
-    "currentTab": 4
+    "currentTab": 2,
+    "pinned": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -266,11 +257,37 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "ade1f671023e7af0",
+  "active": "ed81fb7694ed14b9",
   "lastOpenFiles": [
+    "003 Daily/001 Active Diaries/2026-03-03.md",
+    "002 Notes/001 Notes/Untitled.md",
+    "002 Notes/001 Notes/Tales.md",
     "001 Dashboard/Dashboard/Dashboard.md",
-    "003 Daily/001 Active Diaries/2026-03-02.md",
+    "004 Files/002 Archive/Olds/Old codes/Pomo.md",
+    "004 Files/002 Archive/Olds/Old codes/Script for get images.md",
+    "002 Notes/001 Notes/Tes.md",
+    "001 Dashboard/Azkaru.md",
     "004 Files/001 Attach/warsh.pdf",
-    "001 Dashboard/Azkaru.md"
+    "001 Dashboard/Dashboard/Trackers/Tracker Q.md",
+    "001 Dashboard/Self Education.md",
+    "002 Notes/001 Notes/Test.md",
+    "001 Dashboard/Diny.md",
+    "003 Daily/001 Active Diaries/2026-03-02.md",
+    "002 Notes/002 Lessons/000 Map of content.md",
+    "001 Dashboard/Dashboard/Bases/001 Dash.md",
+    "002 Notes/002 Lessons/001 The Courses.md",
+    "002 Notes/002 Lessons/002 Game dev.md",
+    "001 Dashboard/Dashboard/Bases/002 My projects.md",
+    "001 Dashboard/Dashboard/Bases/003 Notes.md",
+    "001 Dashboard/Dashboard/Bases/004 My notes.md",
+    "001 Dashboard/Dashboard/Bases/005 Diaries.md",
+    "002 Notes/003 Saved Notes/Log - How to learn.md",
+    "002 Notes/003 Saved Notes/Poem.md",
+    "002 Notes/001 Notes/Rebuild icons.md",
+    "002 Notes/001 Notes/Edits code.md",
+    "004 Files/001 Attach/Sounds/Takwa.mp3",
+    "004 Files/002 Archive/Attach Embedded/أذكار الصباح.md",
+    "004 Files/001 Attach/Sounds/Rec-Tazkira.m4a",
+    "004 Files/001 Attach/Sounds/Ayam.m4a"
   ]
 }

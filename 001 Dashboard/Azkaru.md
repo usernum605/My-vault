@@ -6,6 +6,7 @@ cssclasses:
   - callout
   - center-everything
   - page-black
+  - no-plus
   - Focusly
 banner_y: 50
 tags:

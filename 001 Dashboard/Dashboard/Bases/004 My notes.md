@@ -3,8 +3,8 @@ banner: https://images.unsplash.com/photo-1517842645767-c639042777db?w=500&auto=
 links pages:
   - "[[003 Notes]]"
 cssclasses:
-  - prop
   - Link
+  - no-plus
 ---
 ```dataview
 TABLE 

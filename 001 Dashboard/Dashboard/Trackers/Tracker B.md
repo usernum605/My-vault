@@ -5,7 +5,6 @@ cssclasses:
   - card
   - invert-banner
 banner_y: 68
-hidely: true
 ---
 ```dataviewjs
 // ---------- DATE ENGINE ----------

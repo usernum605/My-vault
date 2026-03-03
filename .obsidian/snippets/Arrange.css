@@ -433,14 +433,15 @@ body:has(.workspace-leaf .workspace-leaf-content[data-type="pdf"]) .status-bar {
 .status-bar:hover {
   opacity: 1;
 }
-
+/*
 .mod-root .workspace-tabs:has(.workspace-leaf .markdown-source-view.Focusly) .workspace-tab-header-container,
 .mod-root .workspace-tabs:has(.workspace-leaf .markdown-preview-view.Focusly) .workspace-tab-header-container,
-/*.mod-root .workspace-tabs:has(.workspace-leaf .workspace-leaf-content[data-type="pdf"]) .workspace-tab-header-container*/ {
+.mod-root .workspace-tabs:has(.workspace-leaf .workspace-leaf-content[data-type="pdf"]) .workspace-tab-header-container {
   height: 0;
   overflow: hidden;
   transition: height var(--focus-animation-duration) ease;
 }
+*/
 
 .mod-root .workspace-tabs:has(.workspace-leaf .markdown-source-view.Focusly) .workspace-tab-header-container:hover,
 .mod-root .workspace-tabs:has(.workspace-leaf .markdown-preview-view.Focusly) .workspace-tab-header-container:hover,
@@ -459,9 +460,9 @@ body:has(.workspace-leaf .workspace-leaf-content[data-type="pdf"]) .status-bar {
 .mod-root .workspace-tabs:has(.workspace-leaf .markdown-preview-view.Focusly) .workspace-tab-header-container
   .workspace-tab-header-new-tab,
 .mod-root .workspace-tabs:has(.workspace-leaf .markdown-preview-view.Focusly) .workspace-tab-header-container
-  .workspace-tab-header-tab-list/*,
+  .workspace-tab-header-tab-list,
 .mod-root .workspace-tabs:has(.workspace-leaf .workspace-leaf-content[data-type="pdf"]) .workspace-tab-header-container
-  .workspace-tab-header-container-inner,*/
+  .workspace-tab-header-container-inner,
 .mod-root .workspace-tabs:has(.workspace-leaf .workspace-leaf-content[data-type="pdf"]) .workspace-tab-header-container
   .workspace-tab-header-new-tab,
 .mod-root .workspace-tabs:has(.workspace-leaf .workspace-leaf-content[data-type="pdf"]) .workspace-tab-header-container
@@ -522,21 +523,4 @@ body:has(.workspace-leaf .workspace-leaf-content[data-type="pdf"]) .status-bar {
   & .view-header:focus-within .view-header-title-container {
     opacity: 1;
   }
-}
-
-/* =============================================== */
-/* PAGE FONT SIZES - ADD AT END */
-/* =============================================== */
-
-.font-small {
-    font-size: 0.9rem !important;
-}
-
-
-.font-big {
-    font-size: 1.20rem !important;  
-}
-
-.font-huge {
-    font-size: 1.40rem !important;
 }

@@ -5,6 +5,7 @@ tags:
 cssclasses:
   - card
   - rtl-everything
+  - no-plus
 Number of Pages (reading):
 Read Quran:
 Number of Pages (Memorizing):

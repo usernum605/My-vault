@@ -1,8 +1,7 @@
 ---
 cssclasses:
   - dashboard
-  - prop
-hidely: true
+  - no-plus
 icon: lucide-receipt-text
 links pages:
   - "[[My YouTube Channels]]"

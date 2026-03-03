@@ -7,7 +7,7 @@
   "bannerFading": true,
   "enableIcon": false,
   "iconProperty": "icon",
-  "iconSize": 40,
+  "iconSize": 36,
   "iconTopMargin": 70,
   "iconTopMarginWithoutBanner": -10,
   "iconLeftMargin": 30,
@@ -30,15 +30,13 @@
     "cssclasses",
     "banner_y",
     "node_size",
-    "banner",
-    "hidely"
+    "banner"
   ],
   "temporaryHiddenProperties": [
     "cssclasses",
     "tags",
     "ui",
-    "node_size",
-    "hidely"
+    "node_size"
   ],
   "temporaryViewTimeout": 30,
   "defaultNotePath": "",

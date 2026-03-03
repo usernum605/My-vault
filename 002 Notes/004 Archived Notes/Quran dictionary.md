@@ -1,5 +1,4 @@
 ---
-hidely: true
 cssclasses:
   - card
   - IBM

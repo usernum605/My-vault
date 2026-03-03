@@ -9,8 +9,8 @@ cssclasses:
   - list-cards
   - cards-cols-2
   - dashboard
+  - Disappear
 icon: lucide-languages
-hidely: true
 ---
 > انت تعرف أهمية الإنجليزية ولكنك كسول وهذه هي مشكلتك لذا استعن بالله ولا تعجز
 

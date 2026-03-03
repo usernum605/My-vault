@@ -2,8 +2,8 @@
 links pages:
   - "[[002 My projects]]"
 cssclasses:
-  - prop
   - Link
+  - Disappear
 ---
 ```base
 filters:

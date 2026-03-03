@@ -4,12 +4,14 @@ cssclasses:
   - center-title
   - card
   - cards-cols-2
-  - Focus
+  - IBM
+  - no-plus
 banner: https://www.litmus.com/wp-content/uploads/2023/09/template_hero.svg
 icon: lucide-layout-grid
 links pages:
   - "[[000 Ultimate Base]]"
 banner_y: 33
+ui: preview-force
 ---
 ```dataviewjs
 const tasks = dv.pages('"003 Daily/001 Active Diaries"')

@@ -635,11 +635,8 @@ these to suit your own folder structure and vault theme!
   );
 }
 /* pdf invert dark */
-.theme-dark .pdf-container,
-.theme-dark .pdf-viewer,
-.theme-dark .pdf-embed,
-.theme-dark iframe[src*=".pdf"],
-.theme-dark div[data-pdf] {
+.workspace-leaf-content[data-type=pdf] .pdf-viewer .canvasWrapper,
+.theme-dark .workspace-leaf-content[data-type=pdf] .pdfViewer .canvasWrapper {
     filter: invert(1) hue-rotate(180deg);
     mix-blend-mode: screen;
 }
@@ -654,11 +651,13 @@ these to suit your own folder structure and vault theme!
 .theme-dark .pdf-viewer img,
 .theme-dark .pdf-embed {
     filter: invert(1) hue-rotate(180deg);
+    mix-blend-mode: screen;
 }
 
 /* pdf light mode */
 .theme-light .workspace-leaf-content[data-type=pdf] .pdf-viewer .canvasWrapper,
 .theme-light .workspace-leaf-content[data-type=pdf] .pdfViewer .canvasWrapper,
+.workspace-leaf-content[data-type=pdf] .pdf-viewer .canvasWrapper,
 .theme-light .pdf-container,
 .theme-light .pdf-viewer,
 .theme-light .pdf-embed {

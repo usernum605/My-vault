@@ -1,7 +1,6 @@
 ---
-hidely: true
 cssclasses:
-  - prop
+  - Disappear
 ---
 ```base
 filters:

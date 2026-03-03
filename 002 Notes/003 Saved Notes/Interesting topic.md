@@ -7,9 +7,12 @@ banner: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJShHBWwcAi8tdOP3G
 cssclasses:
   - invert-banner
   - recolor-images
+  - dashboard
 The Topic:
   - Learning
 ---
+##### فيديوهات سوف اشاهدها
+- ![](
 ##### تذكر
 
 ![[Tathakar]]

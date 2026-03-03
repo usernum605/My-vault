@@ -1,13 +1,14 @@
 ---
 icon: lucide-form-input
-hidely: true
 banner: https://marketplace.canva.com/EAHBFGCGpKk/1/0/1131w/canva-green-and-white-modern-islamic-qur%27an-tracker-document-4lD2UK58iBg.jpg
 banner_y: 15
 cssclasses:
   - invert-banner
   - invert-dark
   - invert-dark-apt
+ui: edit
 ---
+<!--
 ```dataviewjs
 // كود متقدم لتتبع صفحات القرآن - مع منع التكرار لمدة ساعتين
 
@@ -37,7 +38,7 @@ const todayDate = todayMatch[1];
 
 // ===== التحقق من آخر وقت إدخال =====
 const LAST_INPUT_KEY = `[[quran]]-pages-last-input-${currentFile.path}`;
-const COOLDOWN_HOURS = 2; // ساعتان
+const COOLDOWN_HOURS = 0.002; // ساعتان
 const COOLDOWN_MS = COOLDOWN_HOURS * 60 * 60 * 1000;
 
 // التحقق من وجود إدخال سابق خلال ساعتين
@@ -78,6 +79,9 @@ for (const file of allDailyFiles) {
     totalPagesSoFar += cache?.frontmatter?.["Number of Pages (reading)"] || 0;
 }
 
+// الحصول على آخر صفحة مسجلة
+const lastPage = totalPagesSoFar;
+
 // التحقق إذا كانت النافذة مفتوحة بالفعل
 if (document.querySelector('.quran-modal')) {
     return;
@@ -86,15 +90,24 @@ if (document.querySelector('.quran-modal')) {
 // ===== نافذة منبثقة جميلة =====
 const modalHtml = `
 <div class="quran-modal modal-container" style="direction: rtl;position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 1000; background-color: rgba(0, 0, 0, 0.5);">
-    <div class="modal" style="background-color: var(--background-primary); border-radius: 16px; padding: 20px; width: 320px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); border: 1px solid var(--background-modifier-border);">
+    <div class="modal" style="background-color: var(--background-primary); border-radius: 16px; padding: 20px; width: 340px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); border: 1px solid var(--background-modifier-border);">
         <h3 style="margin-top: 0; margin-bottom: 15px; color: var(--text-normal); font-size: 18px;">إلى أين وصلت في تلاوة القرآن؟</h3>
-        <div style="margin-bottom: 10px; color: var(--text-muted); font-size: 14px;">
-            مجموع الصفحات السابقة: <strong>${totalPagesSoFar}</strong>
+        
+        ${lastPage > 0 ? `
+        <div style="margin-bottom: 15px; padding: 12px; background-color: var(--background-secondary); border-radius: 12px; text-align: center;">
+            <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 5px;">آخر صفحة وصلت لها سابقاً:</div>
+            <div style="font-size: 24px; font-weight: bold; color: var(--text-accent); margin-bottom: 8px;">${lastPage}</div>
+            <a href="obsidian://open?vault=My-vault&file=004%20Files%2F001%20Attach%2Fwarsh.pdf"
+               style="display: inline-block; padding: 8px 16px; background-color: var(--interactive-accent); color: var(--text-on-accent); text-decoration: none; border-radius: 20px; font-size: 14px; font-weight: 500;">
+                استمر من حيث توقفت
+            </a>
         </div>
-        <input type="number" id="modal-page-input" style="direction: right; width: 100%; padding: 10px; border-radius: 12px; border: 1px solid var(--background-modifier-border); background-color: var(--background-secondary); color: var(--text-normal); font-size: 16px; box-sizing: border-box; margin-bottom: 15px;" placeholder="رقم الصفحة التي وصلت إليها" autofocus>
+        ` : ''}
+        
+        <input type="number" id="modal-page-input" style="direction: right; width: 100%; padding: 10px; border-radius: 12px; border: 1px solid var(--background-modifier-border); background-color: var(--background-secondary); color: var(--text-normal); font-size: 16px; box-sizing: border-box; margin-bottom: 15px;" placeholder="رقم الصفحة الجديدة التي وصلت إليها" autofocus>
         
         <div style="display: flex; gap: 10px;">
-            <button id="modal-submit" style="flex: 2; padding: 10px; border-radius: 12px; border: none; background-color: var(--interactive-accent); color: var(--text-on-accent); font-size: 14px; cursor: pointer;">حفظ</button>
+            <button id="modal-submit" style="flex: 2; padding: 10px; border-radius: 12px; border: none; background-color: var(--interactive-accent); color: var(--text-on-accent); font-size: 14px; cursor: pointer;">حفظ التقدم</button>
             <button id="modal-cancel" style="flex: 1; padding: 10px; border-radius: 12px; border: 1px solid var(--background-modifier-border); background-color: transparent; color: var(--text-muted); font-size: 14px; cursor: pointer;">إلغاء</button>
         </div>
     </div>
@@ -143,7 +156,6 @@ modalDiv.querySelector('#modal-submit').addEventListener('click', async () => {
     closeModal();
     
     if (todayPages === 0) {
-        // استخدام confirm بسيط بدلاً من نافذة مخصصة
         const confirmed = confirm('⚠️ لم تقرأ أي صفحات اليوم. هل أنت متأكد؟');
         if (!confirmed) {
             return;
@@ -159,6 +171,11 @@ modalDiv.querySelector('#modal-submit').addEventListener('click', async () => {
     localStorage.setItem(LAST_INPUT_KEY, Date.now().toString());
     
     new Notice(`✓ تم تسجيل ${todayPages} صفحة`);
+    
+    // عرض رسالة مع رابط للصفحة الجديدة
+    setTimeout(() => {
+        new Notice(`✅ يمكنك الآن الاستمرار من صفحة ${pageNum}`);
+    }, 1500);
 });
 
 // معالج الضغط على Enter في حقل الإدخال
@@ -167,4 +184,8 @@ input.addEventListener('keypress', (e) => {
         modalDiv.querySelector('#modal-submit').click();
     }
 });
+```
+-->
+```dataviewjs
+
 ```
