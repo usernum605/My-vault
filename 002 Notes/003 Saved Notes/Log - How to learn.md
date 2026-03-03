@@ -1,6 +1,9 @@
 ---
 icon: lucide-file-spreadsheet
 banner: https://cdn.dynamicscommunities.com/wp-content/uploads/2025/02/AdobeStock_810736991.jpeg
+tags:
+  - Self↑up/Programing
+  - Type/Main-Files
 cssclasses:
   - invert-dark
   - invert-banner

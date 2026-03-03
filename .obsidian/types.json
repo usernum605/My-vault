@@ -8,8 +8,8 @@
     "Number of Pages (reading)": "number",
     "Read Quran": "checkbox",
     "node_size": "number",
-    "links pages": "multitext",
     "The Topic": "multitext",
-    "translate": "checkbox"
+    "translate": "checkbox",
+    "links pages": "links"
   }
 }

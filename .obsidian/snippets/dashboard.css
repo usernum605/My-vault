@@ -315,3 +315,66 @@ body {
 .markdown-source-view.Headless .metadata-properties-heading {
     display: none !important;
 }
+
+/* ===== CIRCLE IMAGES FEATURE ===== */
+/* Makes images circular - apply .circle-images class to any container or use standalone */
+
+/* Option 1: Apply to all images in a container with .circle-images class */
+.circle-images img,
+.circle-images .image-embed img,
+.circle-images .internal-embed img {
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    aspect-ratio: 1/1 !important; /* Ensures perfect circle even with rectangular images */
+}
+
+/* Option 2: Standalone class for individual images */
+img.circle-image,
+.image-embed.circle-image img,
+.internal-embed.circle-image img {
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    aspect-ratio: 1/1 !important;
+}
+
+/* Option 3: For dashboard-specific image circles */
+.dashboard .circle-images img,
+.dashboard-list .circle-images img {
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    aspect-ratio: 1/1 !important;
+}
+
+/* Optional: Add border and shadow for better visibility */
+.circle-images.with-border img,
+img.circle-image.with-border {
+    border: 3px solid var(--text-accent) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Optional: Different sizes for circle images */
+.circle-images.small img,
+img.circle-image.small {
+    width: 50px !important;
+    height: 50px !important;
+}
+
+.circle-images.medium img,
+img.circle-image.medium {
+    width: 100px !important;
+    height: 100px !important;
+}
+
+.circle-images.large img,
+img.circle-image.large {
+    width: 150px !important;
+    height: 150px !important;
+}
+
+/* Optional: Hover effect for circle images */
+.circle-images img:hover,
+img.circle-image:hover {
+    transform: scale(1.05) !important;
+    transition: transform 0.3s ease !important;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
+}
