@@ -1,7 +1,7 @@
 ---
 The Topic:
   - Learning
-translate: true
+Translate: true
 links pages:
   - "[[Learn]]"
   - "[[How]]"

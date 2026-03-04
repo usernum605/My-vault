@@ -9,7 +9,7 @@
     "Read Quran": "checkbox",
     "node_size": "number",
     "The Topic": "multitext",
-    "translate": "checkbox",
-    "links pages": "multitext"
+    "links pages": "multitext",
+    "Translate": "checkbox"
   }
 }

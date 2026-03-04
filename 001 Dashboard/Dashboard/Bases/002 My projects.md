@@ -39,7 +39,6 @@ views:
 > [!link]- Real Links (Base)
 > - [[Quran]]
 > - [[Rebuild icons]]
-> - [[Untitled]]
 > - [[log - 2026-02-27]]
 > - [[log - 2026-02-28]]
 > - [[log - 2026-03-01]]
@@ -56,9 +55,33 @@ views:
 > - [[سلسلة الموت]]
 > - [[Fully Ai Game]]
 > - [[Prompt]]
+> - [[User experience]]
+> - [[图像噪点生成技术简介  周骅的博客]]
 > - [[Termux commands Ai]]
 > - [[Termux commands Pomo]]
 > - [[To Learn]]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

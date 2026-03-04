@@ -19,7 +19,7 @@ module.exports = class AutoTranslatePlugin extends Plugin {
         this.currentFile = null;
         this.observer = null;
         this.mutationObserver = null;
-        this.translationCache = new WeakMap(); // element -> final text (after rules)
+        this.translationCache = new WeakMap();
         this.visibleElements = new Set();
         this.translationQueue = [];
         this.processing = false;
@@ -89,11 +89,13 @@ module.exports = class AutoTranslatePlugin extends Plugin {
     }
 
     shouldTranslate(file) {
-        if (!file) return false;
-        const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
-        if (!frontmatter) return false;
-        const val = frontmatter.translate;
-        return val === true || val === 'true';
+    if (!file) return false;
+    const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+    if (!frontmatter) return false;
+    const translateKey = Object.keys(frontmatter).find(key => key.toLowerCase() === 'translate');
+    if (!translateKey) return false;
+    const val = frontmatter[translateKey];
+    return val === true || val === 'true';
     }
 
     async reinitialize() {
@@ -194,42 +196,36 @@ module.exports = class AutoTranslatePlugin extends Plugin {
         }
 
         try {
-            // Apply user rules and get final text
             const finalText = await this.applyRulesAndTranslate(original);
             this.translationCache.set(el, finalText);
             if (this.visibleElements.has(el)) {
                 this.applyTranslation(el, finalText);
             }
         } catch (err) {
-            console.error('Translation failed:', err);
+            console.error('Translation failed for element:', el, err);
+            // If translation fails, we simply leave the original text
         } finally {
             this.processing = false;
+            // Small delay to avoid overwhelming the API
             setTimeout(() => this.processQueue(), 300);
         }
     }
 
-    // Apply do-not-translate and manual translation rules using placeholders
     async applyRulesAndTranslate(originalText) {
-        // Prepare lists: sort by length descending to avoid partial overlaps
         const dntTerms = [...this.settings.doNotTranslate].sort((a, b) => b.length - a.length);
         const mtPairs = [...this.settings.manualTranslations].sort((a, b) => b.from.length - a.from.length);
 
-        // Build placeholder map
-        const placeholders = new Map(); // placeholder -> { type, original, replacement }
+        const placeholders = new Map();
         let placeholderCounter = 0;
 
-        // Function to generate unique placeholder
         function getPlaceholder() {
             return `__OBSD_TR_${placeholderCounter++}__`;
         }
 
-        // Start with original text
         let textWithPlaceholders = originalText;
 
-        // First, replace MT terms (manual translations)
+        // Apply manual translations first
         for (const { from, to } of mtPairs) {
-            // Create a regex that matches the whole word/phrase (case-sensitive? could be configurable, but we'll use exact match with word boundaries)
-            // Using word boundaries might not work for phrases with spaces, so we'll use simple string replace with a regex that escapes special chars.
             const escaped = from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const regex = new RegExp(escaped, 'g');
             textWithPlaceholders = textWithPlaceholders.replace(regex, (match) => {
@@ -239,21 +235,21 @@ module.exports = class AutoTranslatePlugin extends Plugin {
             });
         }
 
-        // Then replace DNT terms (do not translate) – these should not be translated, so they will be restored as original
+        // Apply do-not-translate terms
         for (const term of dntTerms) {
             const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const regex = new RegExp(escaped, 'g');
             textWithPlaceholders = textWithPlaceholders.replace(regex, (match) => {
                 const placeholder = getPlaceholder();
-                placeholders.set(placeholder, { type: 'dnt', original: match, replacement: match }); // replacement is same as original
+                placeholders.set(placeholder, { type: 'dnt', original: match, replacement: match });
                 return placeholder;
             });
         }
 
-        // Now translate the text with placeholders (Google will treat them as opaque tokens)
+        // Translate the text with placeholders
         const translatedWithPlaceholders = await this.getTranslation(textWithPlaceholders);
 
-        // Replace placeholders back
+        // Restore placeholders
         let finalText = translatedWithPlaceholders;
         for (const [placeholder, info] of placeholders) {
             finalText = finalText.replace(new RegExp(placeholder, 'g'), info.replacement);
@@ -263,22 +259,33 @@ module.exports = class AutoTranslatePlugin extends Plugin {
     }
 
     async getTranslation(text) {
+        // Return cached translation if available
         if (this.cache[text]) {
             return this.cache[text];
         }
+
+        // Avoid duplicate requests for the same text
         if (this.pendingTranslations.has(text)) {
             return this.pendingTranslations.get(text);
         }
 
-        const promise = this.translateText(text).then(translated => {
-            this.cache[text] = translated;
-            this.saveCacheDebounced();
-            this.pendingTranslations.delete(text);
-            return translated;
-        }).catch(err => {
-            this.pendingTranslations.delete(text);
-            throw err;
-        });
+        const promise = this.translateText(text)
+            .then(translated => {
+                // Only cache if translation succeeded and is not empty
+                if (translated && translated.trim() !== '') {
+                    this.cache[text] = translated;
+                    this.saveCacheDebounced();
+                } else {
+                    console.warn(`Translation returned empty for: "${text}"`);
+                }
+                this.pendingTranslations.delete(text);
+                return translated || text; // fallback to original if empty
+            })
+            .catch(err => {
+                console.error(`Translation error for "${text}":`, err);
+                this.pendingTranslations.delete(text);
+                throw err; // rethrow so caller can handle
+            });
 
         this.pendingTranslations.set(text, promise);
         return promise;
@@ -297,16 +304,29 @@ module.exports = class AutoTranslatePlugin extends Plugin {
     }
 
     async translateText(text, targetLang = 'ar') {
+        // Google Translate API endpoint
         const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=' 
             + targetLang + '&dt=t&q=' + encodeURIComponent(text);
 
-        const response = await fetch(url);
-        const data = await response.json();
-        return data[0].map(item => item[0]).join('');
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error ${response.status}`);
+            }
+            const data = await response.json();
+            // The response format: array of sentences, each an array [translation, original, ...]
+            if (!data || !Array.isArray(data) || !data[0]) {
+                throw new Error('Unexpected API response format');
+            }
+            return data[0].map(item => item[0]).join('');
+        } catch (error) {
+            console.error('translateText fetch failed:', error);
+            throw error; // rethrow to be caught by getTranslation
+        }
     }
 };
 
-// Settings tab
+// ==================== Settings Tab (unchanged) ====================
 class AutoTranslateSettingTab extends PluginSettingTab {
     constructor(app, plugin) {
         super(app, plugin);
@@ -326,7 +346,6 @@ class AutoTranslateSettingTab extends PluginSettingTab {
         const dntContainer = containerEl.createDiv();
         this.renderDntList(dntContainer);
 
-        // Add new DNT term
         const addDntDiv = containerEl.createDiv({ cls: 'setting-item' });
         new Setting(addDntDiv)
             .setName('Add new term')
@@ -335,7 +354,7 @@ class AutoTranslateSettingTab extends PluginSettingTab {
                 if (value && !this.plugin.settings.doNotTranslate.includes(value)) {
                     this.plugin.settings.doNotTranslate.push(value);
                     await this.plugin.saveSettings();
-                    this.display(); // refresh
+                    this.display();
                 }
             }));
 
@@ -346,7 +365,6 @@ class AutoTranslateSettingTab extends PluginSettingTab {
         const mtContainer = containerEl.createDiv();
         this.renderMtList(mtContainer);
 
-        // Add new MT pair
         const addMtDiv = containerEl.createDiv({ cls: 'setting-item' });
         let fromInput, toInput;
         new Setting(addMtDiv)
@@ -389,7 +407,6 @@ class AutoTranslateSettingTab extends PluginSettingTab {
             new Setting(item)
                 .setClass('mod-no-header')
                 .addButton(btn => btn.setIcon('pencil').setTooltip('Edit').onClick(async () => {
-                    // Simple edit: prompt for new values
                     const newFrom = await this.prompt('Edit English phrase', pair.from);
                     if (newFrom === null) return;
                     const newTo = await this.prompt('Edit Arabic translation', pair.to);
@@ -411,8 +428,7 @@ class AutoTranslateSettingTab extends PluginSettingTab {
     }
 
     async prompt(question, defaultValue = '') {
-        // Simple modal prompt using Obsidian API
-        const { Modal, App, Setting } = require('obsidian');
+        const { Modal, Setting } = require('obsidian');
         return new Promise((resolve) => {
             const modal = new Modal(this.app);
             let inputValue = defaultValue;

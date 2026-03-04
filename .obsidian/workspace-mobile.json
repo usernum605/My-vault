@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "8b4f862c20832a6d",
+        "id": "2951b0263b667b8a",
         "type": "tabs",
         "children": [
           {
-            "id": "19c003a36a5455dc",
+            "id": "5a007c269932aa35",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -23,7 +23,7 @@
             }
           },
           {
-            "id": "8ef702dc016378c8",
+            "id": "3a61e48e2d37a129",
             "type": "leaf",
             "state": {
               "type": "graph",
@@ -35,11 +35,11 @@
         ]
       },
       {
-        "id": "2951b0263b667b8a",
+        "id": "bdbd654e68dc2ece",
         "type": "tabs",
         "children": [
           {
-            "id": "5a007c269932aa35",
+            "id": "e7af8abd2a81b02e",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -236,7 +236,7 @@
         }
       }
     ],
-    "currentTab": 3,
+    "currentTab": 4,
     "pinned": true
   },
   "left-ribbon": {
@@ -257,7 +257,20 @@
   },
   "active": "5a007c269932aa35",
   "lastOpenFiles": [
+    "004 Files/002 Archive/002 Interesting/图像噪点生成技术简介  周骅的博客.md",
+    "001 Dashboard/Self Education.md",
     "003 Daily/001 Active Diaries/2026-03-04.md",
-    "001 Dashboard/Dashboard/Dashboard.md"
+    "الفصل 147 - الفصل 147_ إخلاء الناغا العمال.cbz",
+    "004 Files/002 Archive/002 Interesting/就事论事的智慧  周骅的博客.md",
+    "004 Files/002 Archive/002 Interesting/User experience.md",
+    "002 Notes/001 Notes/Hi.md",
+    "004 Files/003 AI Conversations/Math - functions.md",
+    "004 Files/003 AI Conversations/How.md",
+    "004 Files/003 AI Conversations/To Learn.md",
+    "002 Notes/003 Saved Notes/Log - How to learn.md",
+    "004 Files/002 Archive/002 Interesting",
+    "001 Dashboard/Dashboard/Dashboard.md",
+    "002 Notes/003 Saved Notes/Quotes.md",
+    "Clippings"
   ]
 }

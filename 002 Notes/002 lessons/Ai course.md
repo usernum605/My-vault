@@ -5,7 +5,7 @@ icon: lucide-brain-cog
 The Topic:
   - course
   - Ai
-translate: true
+Translate: true
 ---
  
 # AI for Business Professionals

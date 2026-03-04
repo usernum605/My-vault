@@ -251,11 +251,11 @@
         "type": "split",
         "children": [
           {
-            "id": "8b4f862c20832a6d",
+            "id": "2951b0263b667b8a",
             "type": "tabs",
             "children": [
               {
-                "id": "19c003a36a5455dc",
+                "id": "5a007c269932aa35",
                 "type": "leaf",
                 "state": {
                   "type": "markdown",
@@ -270,7 +270,7 @@
                 }
               },
               {
-                "id": "8ef702dc016378c8",
+                "id": "3a61e48e2d37a129",
                 "type": "leaf",
                 "state": {
                   "type": "graph",
@@ -282,11 +282,11 @@
             ]
           },
           {
-            "id": "2951b0263b667b8a",
+            "id": "bdbd654e68dc2ece",
             "type": "tabs",
             "children": [
               {
-                "id": "5a007c269932aa35",
+                "id": "e7af8abd2a81b02e",
                 "type": "leaf",
                 "state": {
                   "type": "markdown",
@@ -483,7 +483,7 @@
             }
           }
         ],
-        "currentTab": 3,
+        "currentTab": 4,
         "pinned": true
       },
       "left-ribbon": {
@@ -503,7 +503,7 @@
         }
       },
       "active": "5a007c269932aa35",
-      "mtime": "2026-03-04T14:52:30+01:00"
+      "mtime": "2026-03-04T15:05:48+01:00"
     }
   },
   "active": "Diarie"
