@@ -4,22 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "4c6dd72782ccc45a",
+        "id": "32a04ca982ed534c",
         "type": "tabs",
         "children": [
           {
-            "id": "460e7c9d74ed920c",
+            "id": "803585108f6a8eae",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "004 Files/002 Archive/002 Interesting/noise in the images.md",
-                "mode": "preview",
-                "source": false,
-                "backlinks": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "noise in the images"
+              "title": "New tab"
             }
           }
         ]
@@ -208,10 +203,10 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "460e7c9d74ed920c",
+  "active": "803585108f6a8eae",
   "lastOpenFiles": [
-    "004 Files/002 Archive/002 Interesting/就事论事的智慧  周骅的博客.md",
     "004 Files/002 Archive/002 Interesting/noise in the images.md",
+    "004 Files/002 Archive/002 Interesting/就事论事的智慧  周骅的博客.md",
     "002 Notes/001 Notes/حكم.md",
     "001 Dashboard/My tools.md",
     "003 Daily/001 Active Diaries/2026-03-04.md",

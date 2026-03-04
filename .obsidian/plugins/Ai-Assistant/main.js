@@ -818,9 +818,9 @@ class LocalAIProvider extends BaseAIProvider {
         // Ignore
       }
       
-      return { ok: false, message: '✖ Local AI service is not reachable' };
+      return { ok: false, message: '⨉ Local AI service is not reachable' };
     } catch (error) {
-      return { ok: false, message: `✖ ${error.message}` };
+      return { ok: false, message: `⨉ ${error.message}` };
     }
   }
 }
@@ -877,12 +877,12 @@ class OpenAIProvider extends BaseAIProvider {
       });
       
       if (response.status === 401) {
-        return { ok: false, message: '✖ Invalid API key' };
+        return { ok: false, message: '⨉ Invalid API key' };
       }
       
-      return { ok: response.ok, message: response.ok ? '✓ Connected to OpenAI' : `✖ Error ${response.status}` };
+      return { ok: response.ok, message: response.ok ? '✓ Connected to OpenAI' : `⨉ Error ${response.status}` };
     } catch (e) {
-      return { ok: false, message: `✖ ${e.message}` };
+      return { ok: false, message: `⨉ ${e.message}` };
     }
   }
 }
@@ -985,16 +985,16 @@ class GeminiProvider extends BaseAIProvider {
       });
       
       if (response.status === 403 || response.status === 401) {
-        return { ok: false, message: '✖ Invalid API key' };
+        return { ok: false, message: '⨉ Invalid API key' };
       }
       
       if (response.status === 429) {
         return { ok: false, message: '⏳ Rate limit exceeded. Please wait.' };
       }
       
-      return { ok: response.ok, message: response.ok ? '✓ Connected to Gemini' : `✖ Error ${response.status}` };
+      return { ok: response.ok, message: response.ok ? '✓ Connected to Gemini' : `⨉ Error ${response.status}` };
     } catch (e) {
-      return { ok: false, message: `✖ ${e.message}` };
+      return { ok: false, message: `⨉ ${e.message}` };
     }
   }
 }
@@ -1058,12 +1058,12 @@ class AnthropicProvider extends BaseAIProvider {
       });
       
       if (response.status === 401) {
-        return { ok: false, message: '✖ Invalid API key' };
+        return { ok: false, message: '⨉ Invalid API key' };
       }
       
-      return { ok: response.ok, message: response.ok ? '✓ Connected to Anthropic' : `✖ Error ${response.status}` };
+      return { ok: response.ok, message: response.ok ? '✓ Connected to Anthropic' : `⨉ Error ${response.status}` };
     } catch (e) {
-      return { ok: false, message: `✖ ${e.message}` };
+      return { ok: false, message: `⨉ ${e.message}` };
     }
   }
 }
@@ -1155,7 +1155,7 @@ class CustomProvider extends BaseAIProvider {
     } catch (error) {
       return { 
         ok: false, 
-        message: `✖ ${error.message}` 
+        message: `⨉ ${error.message}` 
       };
     }
   }
@@ -1873,7 +1873,7 @@ class InNoteAIInteractions {
       
       editor.replaceRange('\n\n---\n\n', editor.getCursor());
     } catch (error) {
-      editor.replaceRange(`\n\n✖ Error: ${error.message}\n\n`, editor.getCursor());
+      editor.replaceRange(`\n\n⨉ Error: ${error.message}\n\n`, editor.getCursor());
       new Notice('AI Error: ' + error.message);
     }
   }
@@ -2450,7 +2450,7 @@ async createInputArea() {
         new Notice(`✓ Conversation saved to: ${fullPath}`);
     } catch (error) {
         console.error('Error saving conversation:', error);
-        new Notice(`✖ Error saving conversation: ${error.message}`);
+        new Notice(`⨉ Error saving conversation: ${error.message}`);
     }
 }
 
@@ -2819,13 +2819,13 @@ async createInputArea() {
         this.plugin.saveState();
       } else {
         // If no content at all, show an error
-        streamingMsg.textContent = '✖ No response received';
+        streamingMsg.textContent = '⨉ No response received';
       }
       
     } catch (e) {
       console.error("Chat Error:", e);
       
-      let errorMessage = '✖ Error occurred';
+      let errorMessage = '⨉ Error occurred';
       if (e.message.includes('429')) {
         errorMessage = '⏳ Rate limit exceeded. Please wait a moment and try again Or Try changing the model.';
       } else if (e.message.includes('401') || e.message.includes('403')) {
@@ -2835,7 +2835,7 @@ async createInputArea() {
       } else if (e.message.includes('fetch') || e.message.includes('Failed to fetch')) {
         errorMessage = '🌐 Cannot connect to Local AI. Please check if the server is running at ' + this.plugin.settings.baseUrl;
       } else {
-        errorMessage = `✖ Error: ${e.message}`;
+        errorMessage = `⨉ Error: ${e.message}`;
       }
       
       streamingMsg.textContent = errorMessage;
@@ -3073,10 +3073,10 @@ class SettingsModal extends Modal {
         if (health.ok) {
           new Notice('✓ ' + health.message);
         } else {
-          new Notice('✖ ' + health.message);
+          new Notice('⨉ ' + health.message);
         }
       } catch (e) {
-        new Notice('✖ Error: ' + e.message);
+        new Notice('⨉ Error: ' + e.message);
       } finally {
         testBtn.disabled = false;
         testBtn.empty();
@@ -3841,7 +3841,7 @@ class SettingsModal extends Modal {
         new Notice(`✓ Conversation saved to: ${fullPath}`);
     } catch (error) {
         console.error('Error saving conversation:', error);
-        new Notice(`✖ Error saving conversation: ${error.message}`);
+        new Notice(`⨉ Error saving conversation: ${error.message}`);
     }
 }
 
@@ -4180,7 +4180,7 @@ module.exports = class AIPlugin extends Plugin {
         new Notice(`✓ Conversation saved to: ${fullPath}`);
     } catch (error) {
         console.error('Error saving conversation:', error);
-        new Notice(`✖ Error saving conversation: ${error.message}`);
+        new Notice(`⨉ Error saving conversation: ${error.message}`);
     }
 }
 
@@ -4211,7 +4211,7 @@ module.exports = class AIPlugin extends Plugin {
       editor.replaceSelection("\n\n---\n\n");
       new Notice('✓ Response completed');
     } catch (e) {
-      editor.replaceSelection(`\n\n✖ Error: ${e.message}\n\n`);
+      editor.replaceSelection(`\n\n⨉ Error: ${e.message}\n\n`);
       new Notice('AI Error: ' + e.message);
     }
   }

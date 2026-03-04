@@ -39,15 +39,31 @@ views:
 > [!link]- Real Links (Base)
 > - [[Quran]]
 > - [[Rebuild icons]]
+> - [[log - 2026-02-27]]
+> - [[log - 2026-02-28]]
+> - [[log - 2026-03-01]]
+> - [[log - 2026-03-02]]
 > - [[Interesting topic]]
 > - [[Log - How to learn]]
 > - [[Mawaidh]]
+> - [[كيف نستثمر اوقاتنا]]
 > - [[My YouTube Channels]]
 > - [[Poem]]
 > - [[Quotes]]
 > - [[Tathakar]]
 > - [[سلسلة أحداث يوم الحساب]]
 > - [[سلسلة الموت]]
+> - [[Fully Ai Game]]
+> - [[Prompt]]
+> - [[User experience]]
+> - [[noise in the images]]
+> - [[Termux commands Ai]]
+> - [[Termux commands Pomo]]
+> - [[To Learn]]
+
+
+
+
 
 
 

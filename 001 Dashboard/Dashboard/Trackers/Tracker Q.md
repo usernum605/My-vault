@@ -31,7 +31,7 @@ if (!currentFile) {
 // استخراج تاريخ اليوم
 const todayMatch = currentFile.name.match(/(\d{4}-\d{2}-\d{2})/);
 if (!todayMatch) {
-    new Notice('❌ اسم الملف لا يحتوي على تاريخ صحيح');
+    new Notice('⨉ اسم الملف لا يحتوي على تاريخ صحيح');
     return;
 }
 const todayDate = todayMatch[1];
@@ -142,7 +142,7 @@ modalDiv.querySelector('#modal-submit').addEventListener('click', async () => {
     const pageNum = parseInt(input.value);
     
     if (isNaN(pageNum) || pageNum < 0) {
-        new Notice('❌ الرجاء إدخال رقم صحيح');
+        new Notice('⨉ الرجاء إدخال رقم صحيح');
         return;
     }
     
@@ -174,7 +174,7 @@ modalDiv.querySelector('#modal-submit').addEventListener('click', async () => {
     
     // عرض رسالة مع رابط للصفحة الجديدة
     setTimeout(() => {
-        new Notice(`✅ يمكنك الآن الاستمرار من صفحة ${pageNum}`);
+        new Notice(`✓ يمكنك الآن الاستمرار من صفحة ${pageNum}`);
     }, 1500);
 });
 

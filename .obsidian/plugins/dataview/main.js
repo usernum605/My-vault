@@ -9398,7 +9398,7 @@ function setEmojiShorthandCompletionField(source, value) {
     if (existingKeys.length > 2 || (existingKeys.length == 0 && !value))
         return source;
     /* No wrapper, add own spacing at start */
-    const annotation = value ? ` ✅ ${value}` : "";
+    const annotation = value ? ` ✓ ${value}` : "";
     let existingKey = existingKeys[0];
     if (existingKey) {
         const prefix = source.substring(0, existingKey.start);
@@ -20793,7 +20793,7 @@ class GeneralSettingsTab extends obsidian.PluginSettingTab {
                 .setDesc(createFragment(el => {
                 el.appendText('If enabled, will use emoji shorthand instead of inline field formatting to fill out implicit task field "completion".');
                 el.createEl("br");
-                el.appendText("Example: - [x] my task ✅ 2022-01-01");
+                el.appendText("Example: - [x] my task ✓ 2022-01-01");
                 el.createEl("br");
                 el.appendText("Disable this to customize the completion date format or field name, or to use Dataview inline field formatting.");
                 el.createEl("br");
