@@ -10,6 +10,7 @@ banner: https://www.litmus.com/wp-content/uploads/2023/09/template_hero.svg
 icon: lucide-layout-grid
 links pages:
   - "[[000 Ultimate Base]]"
+  - "[[My tools]]"
 banner_y: 33
 ui: preview-force
 ---

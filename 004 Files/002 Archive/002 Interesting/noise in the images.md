@@ -1,7 +1,8 @@
 ---
-"link sourse": "https://www.zhouhua.site/2025/noise"
-"The Topic":
-  - "图像噪点生成技术简介 | 周骅的博客"
+link sourse: https://www.zhouhua.site/2025/noise
+The Topic:
+  - Dev
+  - Web
 Translate: true
 ---
 # THE SUBJECT
