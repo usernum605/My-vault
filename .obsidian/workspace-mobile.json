@@ -124,7 +124,8 @@
         }
       }
     ],
-    "currentTab": 0
+    "currentTab": 0,
+    "pinned": true
   },
   "right": {
     "id": "82e1ec58a196f876",
@@ -136,7 +137,7 @@
         "state": {
           "type": "outline",
           "state": {
-            "file": "003 Daily/001 Active Diaries/2026-03-03.md",
+            "file": "003 Daily/001 Active Diaries/2026-03-04.md",
             "followCursor": false,
             "showSearch": false,
             "searchQuery": ""
@@ -171,7 +172,7 @@
         "state": {
           "type": "localgraph",
           "state": {
-            "file": "003 Daily/001 Active Diaries/2026-03-03.md",
+            "file": "003 Daily/001 Active Diaries/2026-03-04.md",
             "options": {
               "collapse-filter": true,
               "search": "",
@@ -203,7 +204,7 @@
         }
       },
       {
-        "id": "ade1f671023e7af0",
+        "id": "af903cf463d69246",
         "type": "leaf",
         "state": {
           "type": "prayer-panel-view",
@@ -213,7 +214,8 @@
         }
       }
     ],
-    "currentTab": 4
+    "currentTab": 4,
+    "pinned": true
   },
   "left-ribbon": {
     "hiddenItems": {
