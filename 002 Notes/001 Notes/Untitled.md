@@ -1,1 +1,0 @@
-<img src="https://i.pinimg.com/474x/dc/57/71/dc57711afad4066e7222cabe7a36e132.jpg">
