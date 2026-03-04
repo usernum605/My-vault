@@ -37,7 +37,6 @@ views:
 ```
 
 > [!link]- Real Links (Base)
-> - [[Quotes]]
 > - [[Quran]]
 > - [[Rebuild icons]]
 > - [[log - 2026-02-27]]
@@ -50,6 +49,7 @@ views:
 > - [[كيف نستثمر اوقاتنا]]
 > - [[My YouTube Channels]]
 > - [[Poem]]
+> - [[Quotes]]
 > - [[Tathakar]]
 > - [[سلسلة أحداث يوم الحساب]]
 > - [[سلسلة الموت]]
@@ -58,6 +58,16 @@ views:
 > - [[Termux commands Ai]]
 > - [[Termux commands Pomo]]
 > - [[To Learn]]
+
+
+
+
+
+
+
+
+
+
 
 
 

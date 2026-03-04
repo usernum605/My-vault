@@ -10,6 +10,6 @@
     "node_size": "number",
     "The Topic": "multitext",
     "translate": "checkbox",
-    "links pages": "links"
+    "links pages": "multitext"
   }
 }

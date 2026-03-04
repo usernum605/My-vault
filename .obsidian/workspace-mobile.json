@@ -20,6 +20,21 @@
             }
           },
           {
+            "id": "cb1cd2c79f08a948",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "003 Daily/001 Active Diaries/2026-03-04.md",
+                "mode": "preview",
+                "source": true,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "2026-03-04"
+            }
+          },
+          {
             "id": "0166075ef394cc31",
             "type": "leaf",
             "state": {
@@ -29,7 +44,8 @@
               "title": "New tab"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -215,13 +231,14 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "debff3a7e9ccc296",
+  "active": "cb1cd2c79f08a948",
   "lastOpenFiles": [
+    "004 Files/001 Attach/warsh.pdf",
+    "003 Daily/001 Active Diaries/2026-03-04.md",
     "002 Notes/003 Saved Notes/Quotes.md",
     "002 Notes/003 Saved Notes/Poem.md",
     "004 Files/002 Archive/Attach Embedded/أذكار المساء.md",
     "001 Dashboard/Azkaru.md",
-    "004 Files/001 Attach/warsh.pdf",
     "003 Daily/001 Active Diaries/2026-03-03.md",
     "002 Notes/001 Notes/Untitled.md",
     "001 Dashboard/Dashboard/Bases/005 Diaries.md",
@@ -242,8 +259,6 @@
     "002 Notes/002 Lessons/002 Game dev.md",
     "001 Dashboard/Dashboard/Bases/002 My projects.md",
     "001 Dashboard/Dashboard/Bases/003 Notes.md",
-    "001 Dashboard/Dashboard/Bases/004 My notes.md",
-    "002 Notes/001 Notes/Rebuild icons.md",
     "004 Files/001 Attach/Sounds/Takwa.mp3",
     "004 Files/001 Attach/Sounds/Rec-Tazkira.m4a",
     "004 Files/001 Attach/Sounds/Ayam.m4a"

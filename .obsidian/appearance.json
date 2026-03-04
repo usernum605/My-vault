@@ -6,7 +6,9 @@
     "Arrange",
     "Coller",
     "dashboard",
-    "Cards"
+    "Cards",
+    "Dashboard",
+    "links"
   ],
   "interfaceFontFamily": "Noto Naskh Arabic",
   "monospaceFontFamily": "IBM Plex Mono",
