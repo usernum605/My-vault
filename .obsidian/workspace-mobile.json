@@ -11,10 +11,15 @@
             "id": "803585108f6a8eae",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "001 Dashboard/Azkaru.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "Azkaru"
             }
           }
         ]
@@ -205,17 +210,17 @@
   },
   "active": "803585108f6a8eae",
   "lastOpenFiles": [
+    "001 Dashboard/My tools.md",
+    "001 Dashboard/Dashboard/Dashboard.md",
     "004 Files/002 Archive/002 Interesting/noise in the images.md",
     "004 Files/002 Archive/002 Interesting/就事论事的智慧  周骅的博客.md",
     "002 Notes/001 Notes/حكم.md",
-    "001 Dashboard/My tools.md",
     "003 Daily/001 Active Diaries/2026-03-04.md",
     "004 Files/001 Attach/Pass.md",
     "004 Files/002 Archive/001 Attach Embedded/أذكار المساء.md",
     "001 Dashboard/Azkaru.md",
     "002 Notes/003 Saved Notes/Quotes.md",
     "002 Notes/001 Notes/Quran.md",
-    "001 Dashboard/Dashboard/Dashboard.md",
     "001 Dashboard/Self Education.md",
     "الفصل 147 - الفصل 147_ إخلاء الناغا العمال.cbz",
     "004 Files/002 Archive/002 Interesting/User experience.md",
