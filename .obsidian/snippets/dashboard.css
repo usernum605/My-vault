@@ -372,9 +372,10 @@ img.circle-image.large {
 }
 
 /* Optional: Hover effect for circle images */
+.img-grid img:hover,
 .circle-images img:hover,
 img.circle-image:hover {
-    transform: scale(1.05) !important;
+    transform: scale(1.03) !important;
     transition: transform 0.3s ease !important;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
 }
