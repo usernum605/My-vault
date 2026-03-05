@@ -11,8 +11,10 @@ cssclasses:
   - rtl-everything
   - Headless
 The Topic:
+  - Web
   - Dev
   - Learning
+  - Skill
 ---
 ### 📚 Learning Log - 2026-02-24
 
@@ -37,8 +39,9 @@ The Topic:
 
 #### 🔄 Next Steps
 
-- [ ] التطبيق وبدأ تعلم برمجة لغة JavaScript
+- [x] التطبيق وبدأ تعلم برمجة لغة JavaScript
 
 #### 🔗 Reference
 
 - [link](https://www.freecodecamp.org/learn/javascript-v9/lecture-introduction-to-javascript/what-is-javascript)
+- [[log - 2026-03-03]]

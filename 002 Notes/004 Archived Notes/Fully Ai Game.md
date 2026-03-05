@@ -18,4 +18,4 @@ The Topic:
 - يظهر على شكل رقعة شطرنج
 
 ##### Links
-- [[002 Game dev]]
+- [[002 Programing]]

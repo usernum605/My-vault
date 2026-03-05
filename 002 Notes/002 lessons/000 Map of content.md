@@ -8,7 +8,6 @@ cssclasses:
   - invert-dark
   - Headless
   - list-cards
-  - cards-cols-2
 node_size: 20
 ---
 ##### Main Files
@@ -27,6 +26,6 @@ views:
 
 > [!link]- Real Links (Base)
 > - [[001 The Courses]]
-> - [[002 Game dev]]
+> - [[002 Programing]]
 > - [[003 Math]]
 

@@ -8,6 +8,7 @@ cssclasses:
 The Topic:
   - Learning
   - Skill
+aliases:
 ---
 ### 📚 Learning Log - {{DATE:YYYY-MM-DD}}
 

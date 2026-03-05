@@ -55,5 +55,8 @@ views:
 > - [[Prompt]]
 > - [[Termux commands Ai]]
 > - [[Termux commands Pomo]]
+> - [[How]]
+> - [[Server]]
 > - [[To Learn]]
+> - [[Var vs Let]]
 

@@ -24,4 +24,4 @@ views:
 > [!link]- Real Links (Base)
 > [[Poem]]
 > [[Rebuild icons]]
-> [[Quran]]
+> [[002 Notes/001 Notes/Quran]]

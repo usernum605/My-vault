@@ -1,6 +1,7 @@
 ---
 The Topic:
   - Learning
+  - Skill
 Translate: true
 links pages:
   - "[[Learn]]"

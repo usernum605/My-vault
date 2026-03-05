@@ -2,6 +2,9 @@
 Translate: true
 tags:
   - Self↑up/knowledge
+The Topic:
+  - Learning
+  - Skill
 ---
 
 # Default Conversation
