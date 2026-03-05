@@ -8,7 +8,7 @@ cssclasses:
   - invert-dark-apt
 ui: edit
 ---
-<!--
+
 ```dataviewjs
 // كود متقدم لتتبع صفحات القرآن - مع منع التكرار لمدة ساعتين
 
@@ -184,8 +184,4 @@ input.addEventListener('keypress', (e) => {
         modalDiv.querySelector('#modal-submit').click();
     }
 });
-```
--->
-```dataviewjs
-
 ```

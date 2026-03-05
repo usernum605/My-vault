@@ -184,6 +184,7 @@ div.markdown-preview-section>div>ul.has-list-bullet>li {
     row-gap: 0px !important;
     list-style-type: disc !important;
 }
+
 /* image-grid feature */
 body {
   --image-grid-fit: cover;
@@ -197,10 +198,183 @@ body {
   }
 }
 
-/* Optional: Class to make images use 'contain' instead of 'cover' */
 .img-grid-ratio {
   --image-grid-fit: contain;
 }
+.img-grid .image-embed.is-loaded {
+  line-height: 0;
+  display: flex;
+  align-items: stretch;
+}
+
+.img-grid .image-embed.is-loaded img {
+  background-color: var(--image-grid-background);
+}
+
+.img-grid .image-embed.is-loaded img:active {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+.img-grid .markdown-preview-section>div:has(img) .image-embed~br,
+.img-grid .markdown-preview-section>div:has(img) img~br,
+.img-grid .markdown-preview-section>div:has(img) p:empty {
+  display: none;
+}
+
+.img-grid .markdown-preview-section div:has(>.image-embed~.image-embed),
+.img-grid .markdown-preview-section div:has(>img~img),
+.img-grid .markdown-preview-section p:has(>.image-embed~.image-embed),
+.img-grid .markdown-preview-section p:has(>.image-embed~img),
+.img-grid .markdown-preview-section p:has(>img~.image-embed),
+.img-grid .markdown-preview-section p:has(>img~img) {
+  display: grid;
+  border-radius: 8px !important; 
+  margin-block-start: var(--img-grid-gap);
+  margin-block-end: var(--img-grid-gap);
+  grid-column-gap: var(--img-grid-gap);
+  grid-row-gap: 0;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+}
+
+.img-grid .markdown-preview-section div:has(>.image-embed~.image-embed)>img,
+.img-grid .markdown-preview-section div:has(>img~img)>img,
+.img-grid .markdown-preview-section p:has(>.image-embed~.image-embed)>img,
+.img-grid .markdown-preview-section p:has(>.image-embed~img)>img,
+.img-grid .markdown-preview-section p:has(>img~.image-embed)>img,
+.img-grid .markdown-preview-section p:has(>img~img)>img {
+  object-fit: var(--image-grid-fit);
+  align-self: stretch;
+  border-radius: 8px !important; 
+}
+
+.img-grid .markdown-preview-section div:has(>.image-embed~.image-embed)>.internal-embed img,
+.img-grid .markdown-preview-section div:has(>img~img)>.internal-embed img,
+.img-grid .markdown-preview-section p:has(>.image-embed~.image-embed)>.internal-embed img,
+.img-grid .markdown-preview-section p:has(>.image-embed~img)>.internal-embed img,
+.img-grid .markdown-preview-section p:has(>img~.image-embed)>.internal-embed img,
+.img-grid .markdown-preview-section p:has(>img~img)>.internal-embed img {
+  object-fit: var(--image-grid-fit);
+  align-self: center;
+  border-radius: 8px !important; 
+}
+
+.img-grid .markdown-preview-section>div:has(img)>p {
+  display: grid;
+  margin-block-start: var(--img-grid-gap);
+  margin-block-end: var(--img-grid-gap);
+  grid-column-gap: var(--img-grid-gap);
+  grid-row-gap: 0;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  border-radius: 8px !important; 
+}
+
+.img-grid .markdown-preview-section>div:has(img)>p>br {
+  display: none;
+  border-radius: 8px !important; 
+}
+
+/* ===== CIRCLE IMAGES FEATURE ===== */
+.circle-images img,
+.circle-images .image-embed img,
+.circle-images .internal-embed img {
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    aspect-ratio: 1/1 !important;
+}
+
+img.circle-image,
+.image-embed.circle-image img,
+.internal-embed.circle-image img {
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    aspect-ratio: 1/1 !important;
+}
+
+.dashboard .circle-images img,
+.dashboard-list .circle-images img {
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    aspect-ratio: 1/1 !important;
+}
+
+.circle-images.with-border img,
+img.circle-image.with-border {
+    border: 3px solid var(--text-accent) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.circle-images.small img,
+img.circle-image.small {
+    width: 50px !important;
+    height: 50px !important;
+}
+
+.circle-images.medium img,
+img.circle-image.medium {
+    width: 100px !important;
+    height: 100px !important;
+}
+
+.circle-images.large img,
+img.circle-image.large {
+    width: 150px !important;
+    height: 150px !important;
+}
+
+.img-grid img:hover,
+.circle-images img:hover,
+img.circle-image:hover {
+    transform: scale(1.03) !important;
+    transition: transform 0.3s ease !important;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* link icon for links property */
+.metadata-property[data-property-key*="link"] .metadata-property-icon {
+  background: transparent !important;
+}
+
+.metadata-property[data-property-key*="link"] .metadata-property-icon svg {
+  display: none !important;
+}
+.metadata-property[data-property-key*="link"] .metadata-property-icon::after {
+  content: "";
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background: currentColor; /* القيمة الافتراضية */
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'%3E%3C/path%3E%3Cpath d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'%3E%3C/path%3E%3C/svg%3E");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  transition: background 0.2s ease;
+}
+
+.metadata-property[data-property-key*="link"] .metadata-property-icon.accent-available::after {
+  background: color-mix(in srgb, var(--accent-color) 60%, transparent 40%);
+}
+
+
+/* DISAPPEAR PROPERTIES FEATURE */
+.markdown-preview-view.Disappear .metadata-properties-heading,
+.markdown-preview-view.Disappear .metadata-add-button,
+.markdown-source-view.Disappear .metadata-properties-heading,
+.markdown-source-view.Disappear .metadata-add-button {
+    display: none !important;
+}
+
+.markdown-preview-view.no-plus .metadata-add-button,
+.markdown-source-view.no-plus .metadata-add-button {
+    display: none !important;
+}
+
+.markdown-preview-view.Headless .metadata-properties-heading,
+.markdown-source-view.Headless .metadata-properties-heading {
+    display: none !important;
+}
+
+
 /* BANNER COLOR INVERSION FEATURE */
 .invert-banner .banner-image img {
     filter: invert(1) hue-rotate(180deg);
@@ -224,182 +398,4 @@ body {
 .invert-banner.invert-dark-apt .banner-image img {
     mix-blend-mode: multiply;
     filter: brightness(0.7) grayscale(0.7) opacity(0.6);
-}
-/* Styling for image embeds to remove extra line height */
-.img-grid .image-embed.is-loaded {
-  line-height: 0;
-  display: flex;
-  align-items: stretch;
-}
-
-.img-grid .image-embed.is-loaded img {
-  background-color: var(--image-grid-background);
-}
-
-.img-grid .image-embed.is-loaded img:active {
-  background-color: rgba(0, 0, 0, 0);
-}
-
-/* Hide unnecessary elements like <br> tags and empty paragraphs next to images */
-.img-grid .markdown-preview-section>div:has(img) .image-embed~br,
-.img-grid .markdown-preview-section>div:has(img) img~br,
-.img-grid .markdown-preview-section>div:has(img) p:empty {
-  display: none;
-}
-
-/* The core grid logic: target elements (div or p) that contain at least two images (image-embed or img).
-   These elements are turned into a CSS grid. */
-.img-grid .markdown-preview-section div:has(>.image-embed~.image-embed),
-.img-grid .markdown-preview-section div:has(>img~img),
-.img-grid .markdown-preview-section p:has(>.image-embed~.image-embed),
-.img-grid .markdown-preview-section p:has(>.image-embed~img),
-.img-grid .markdown-preview-section p:has(>img~.image-embed),
-.img-grid .markdown-preview-section p:has(>img~img) {
-  display: grid;
-  margin-block-start: var(--img-grid-gap);
-  margin-block-end: var(--img-grid-gap);
-  grid-column-gap: var(--img-grid-gap);
-  grid-row-gap: 0;
-  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-}
-
-/* Style for direct <img> children inside a grid container */
-.img-grid .markdown-preview-section div:has(>.image-embed~.image-embed)>img,
-.img-grid .markdown-preview-section div:has(>img~img)>img,
-.img-grid .markdown-preview-section p:has(>.image-embed~.image-embed)>img,
-.img-grid .markdown-preview-section p:has(>.image-embed~img)>img,
-.img-grid .markdown-preview-section p:has(>img~.image-embed)>img,
-.img-grid .markdown-preview-section p:has(>img~img)>img {
-  object-fit: var(--image-grid-fit);
-  align-self: stretch;
-}
-
-/* Style for images inside internal embeds (<div class="internal-embed">) within a grid container */
-.img-grid .markdown-preview-section div:has(>.image-embed~.image-embed)>.internal-embed img,
-.img-grid .markdown-preview-section div:has(>img~img)>.internal-embed img,
-.img-grid .markdown-preview-section p:has(>.image-embed~.image-embed)>.internal-embed img,
-.img-grid .markdown-preview-section p:has(>.image-embed~img)>.internal-embed img,
-.img-grid .markdown-preview-section p:has(>img~.image-embed)>.internal-embed img,
-.img-grid .markdown-preview-section p:has(>img~img)>.internal-embed img {
-  object-fit: var(--image-grid-fit);
-  align-self: center;
-}
-
-/* Handle cases where images are inside a <p> tag that is a direct child of a <div> */
-.img-grid .markdown-preview-section>div:has(img)>p {
-  display: grid;
-  margin-block-start: var(--img-grid-gap);
-  margin-block-end: var(--img-grid-gap);
-  grid-column-gap: var(--img-grid-gap);
-  grid-row-gap: 0;
-  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-}
-
-.img-grid .markdown-preview-section>div:has(img)>p>br {
-  display: none;
-}
-
-.markdown-preview-view.Disappear .metadata-properties-heading,
-.markdown-preview-view.Disappear .metadata-add-button,
-.markdown-source-view.Disappear .metadata-properties-heading,
-.markdown-source-view.Disappear .metadata-add-button {
-    display: none !important;
-}
-
-.markdown-preview-view.no-plus .metadata-add-button,
-.markdown-source-view.no-plus .metadata-add-button {
-    display: none !important;
-}
-
-.markdown-preview-view.Headless .metadata-properties-heading,
-.markdown-source-view.Headless .metadata-properties-heading {
-    display: none !important;
-}
-
-/* ===== CIRCLE IMAGES FEATURE ===== */
-/* Makes images circular - apply .circle-images class to any container or use standalone */
-
-/* Option 1: Apply to all images in a container with .circle-images class */
-.circle-images img,
-.circle-images .image-embed img,
-.circle-images .internal-embed img {
-    border-radius: 50% !important;
-    object-fit: cover !important;
-    aspect-ratio: 1/1 !important; /* Ensures perfect circle even with rectangular images */
-}
-
-/* Option 2: Standalone class for individual images */
-img.circle-image,
-.image-embed.circle-image img,
-.internal-embed.circle-image img {
-    border-radius: 50% !important;
-    object-fit: cover !important;
-    aspect-ratio: 1/1 !important;
-}
-
-/* Option 3: For dashboard-specific image circles */
-.dashboard .circle-images img,
-.dashboard-list .circle-images img {
-    border-radius: 50% !important;
-    object-fit: cover !important;
-    aspect-ratio: 1/1 !important;
-}
-
-/* Optional: Add border and shadow for better visibility */
-.circle-images.with-border img,
-img.circle-image.with-border {
-    border: 3px solid var(--text-accent) !important;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Optional: Different sizes for circle images */
-.circle-images.small img,
-img.circle-image.small {
-    width: 50px !important;
-    height: 50px !important;
-}
-
-.circle-images.medium img,
-img.circle-image.medium {
-    width: 100px !important;
-    height: 100px !important;
-}
-
-.circle-images.large img,
-img.circle-image.large {
-    width: 150px !important;
-    height: 150px !important;
-}
-
-/* Optional: Hover effect for circle images */
-.img-grid img:hover,
-.circle-images img:hover,
-img.circle-image:hover {
-    transform: scale(1.03) !important;
-    transition: transform 0.3s ease !important;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
-}
-
-/* link icon for links property */
-.metadata-property[data-property-key*="link"] .metadata-property-icon {
-  background: transparent !important;
-}
-
-.metadata-property[data-property-key*="link"] .metadata-property-icon svg {
-  display: none !important;
-}
-
-.metadata-property[data-property-key*="link"] .metadata-property-icon::after {
-  content: "";
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  background: currentColor;
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'%3E%3C/path%3E%3Cpath d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'%3E%3C/path%3E%3C/svg%3E");
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  color: var(--text-muted);
-  transition: color 0.2s ease;
 }

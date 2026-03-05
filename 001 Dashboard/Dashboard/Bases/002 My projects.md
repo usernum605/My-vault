@@ -17,6 +17,7 @@ filters:
         - file.folder != "002 Notes/002 Lessons"
         - file.name != "Sync"
         - '!file.name.contains("Tem")'
+        - file.folder != "002 Notes/002 Lessons/Logs"
 views:
   - type: table
     name: Table
@@ -39,10 +40,7 @@ views:
 > [!link]- Real Links (Base)
 > - [[Quran]]
 > - [[Rebuild icons]]
-> - [[log - 2026-02-27]]
-> - [[log - 2026-02-28]]
-> - [[log - 2026-03-01]]
-> - [[log - 2026-03-02]]
+> - [[Search]]
 > - [[Interesting topic]]
 > - [[Log - How to learn]]
 > - [[Mawaidh]]
@@ -60,6 +58,21 @@ views:
 > - [[Termux commands Ai]]
 > - [[Termux commands Pomo]]
 > - [[To Learn]]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

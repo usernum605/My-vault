@@ -1,6 +1,7 @@
 ---
 cssclasses:
-  - Disappear
+  - Headless
+node_size: 15
 ---
 ```base
 filters:

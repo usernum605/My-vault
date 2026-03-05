@@ -6,6 +6,7 @@ cssclasses:
   - dashboard
 links pages:
   - "[[Tracker B]]"
+node_size: 15
 ---
 # Tracker Read Quran
 

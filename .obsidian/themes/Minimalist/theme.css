@@ -842,12 +842,7 @@ body {
 .metadata-container {
     --input-height:calc(var(--font-adaptive-small) * 2.2)
 }
-body.metadata-heading-off .metadata-properties-heading {
-    display:none
-}
-.metadata-add-property-off .mod-root .metadata-add-button {
-    display:none
-}
+
 .metadata-dividers {
     --metadata-divider-width:1px;
     --metadata-gap:0px

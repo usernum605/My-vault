@@ -6,10 +6,10 @@ cssclasses:
   - card
   - rtl-everything
   - no-plus
-Number of Pages (reading):
-Read Quran:
-Number of Pages (Memorizing):
-Memorizing the Quran:
+Number of Pages (reading): 0
+Read Quran: false
+Number of Pages (Memorizing): 0
+Memorizing the Quran: false
 links pages:
   - "[[warsh.pdf]]"
   - "[[005 Diaries]]"
