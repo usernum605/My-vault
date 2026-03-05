@@ -16,4 +16,5 @@ The Topic:
 ### Tasks: Edits code
 - مشاكل عديدة مع plugin stylesh Vault (مؤجلة حتى انقضاء رمضان) وهي كالتالي:
     - مشكلة ان preview-force or edit-force لا يفرضها على الملاحظة التي تحتوي على هذه الخاصية بل على العديد من الملاحظات الاخرى التي لا علاقة لها
-    - 
+##### Links
+- [[Prompt]]

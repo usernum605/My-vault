@@ -1,9 +1,10 @@
 ---
-ui: preview-forceممت
+ui: preview-force
 cssclasses:
   - dashboard
   - Disappear
   - list-cards
+  - Link
 ---
 
 ```base
