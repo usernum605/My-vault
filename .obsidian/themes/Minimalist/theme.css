@@ -383,6 +383,13 @@ body {
      --ui1: #9B6767;
      --ui2: #8D5353;
      --ui3: #964B4B;
+     --nor: #8D5463;
+    --h1-color:                      var(--nor);
+    --h2-color:                      var(--nor);
+    --h3-color:                      var(--nor);
+    --h4-color:                      var(--nor);
+    --h5-color:                      var(--nor);
+    --h6-color:                      var(--nor);
      --blockquote-color: steelblue;
      --blockquote-border-color: steelblue;
      --code-background: #F3F3F3;

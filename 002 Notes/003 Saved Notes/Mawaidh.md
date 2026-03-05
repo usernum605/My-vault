@@ -1,16 +1,16 @@
 ---
-banner: Ihttps://admango.cdn.mangomolo.com/analytics/uploads/168/68de14006b.jpg
+banner: https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%2Fid%2FOIP.OuaTpP91grSTXHiaeDh7ewHaFY%3Fpid%3DApi&f=1&ipt=1d931b4e25f555b43fc5886c7602cea29fe5c3badf85ec5b1f2d879130b0db2f&ipo=images
 icon: lucide-speech
 links pages:
   - "[[My tools#وضع الفيديو في اوبسيديان]]"
   - "[[warsh.pdf]]"
-banner_y: 59
+banner_y: 12
 cssclasses:
   - center-everything
   - pen-blue
-  - invert-dark-apt
   - invert-dark
   - invert-banner
+  - invert-dark-apt
 tags:
   - Islamic/Dine
   - Islamic/Mawaidh
