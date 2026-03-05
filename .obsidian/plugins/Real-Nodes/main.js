@@ -146,11 +146,11 @@ module.exports = class RealNodesPlugin extends Plugin {
     async processFile(file, forceAppendToEnd) {
         console.log(`Processing file: ${file.path}`);
         const content = await this.app.vault.read(file);
-        
+
         const cleanContent = this.removeExistingLinks(content);
-        
+
         const newContent = await this.transformContent(cleanContent, file, forceAppendToEnd ?? !this.settings.appendAfterBlock);
-        
+
         if (newContent !== cleanContent) {
             this.isManualChange = true;
             await this.app.vault.modify(file, newContent);
@@ -170,7 +170,7 @@ module.exports = class RealNodesPlugin extends Plugin {
     async transformContent(content, file, appendToEnd) {
         const baseRegex = /```base\n([\s\S]*?)```/g;
         const dataviewRegex = /```dataview\n([\s\S]*?)```/g;
-        
+
         let match;
         let lastIndex = 0;
         const parts = [];
@@ -210,7 +210,7 @@ module.exports = class RealNodesPlugin extends Plugin {
 
         if (this.settings.enableDataview) {
             dataviewRegex.lastIndex = lastIndex;
-            
+
             while ((match = dataviewRegex.exec(content)) !== null) {
                 const fullMatch = match[0];
                 const queryText = match[1].trim();
@@ -218,7 +218,7 @@ module.exports = class RealNodesPlugin extends Plugin {
                 const blockEnd = blockStart + fullMatch.length;
 
                 console.log(`Found Dataview block at index ${blockStart}`);
-                
+
                 parts.push(content.slice(lastIndex, blockStart));
                 parts.push(fullMatch);
 
@@ -257,7 +257,7 @@ module.exports = class RealNodesPlugin extends Plugin {
         try {
             const conditions = this.parseBaseConditions(yamlText);
             console.log('Parsed conditions:', JSON.stringify(conditions, null, 2));
-            
+
             const allFiles = this.app.vault.getMarkdownFiles();
             console.log(`Total files in vault: ${allFiles.length}`);
 
@@ -277,28 +277,28 @@ module.exports = class RealNodesPlugin extends Plugin {
         const conditions = {
             or: []
         };
-        
+
         const lines = yamlText.split('\n');
         let i = 0;
-        
+
         while (i < lines.length && !lines[i].trim().startsWith('filters:')) i++;
         i++;
-        
+
         while (i < lines.length && !lines[i].trim().startsWith('or:')) i++;
         i++;
-        
+
         let currentAnd = null;
-        
+
         while (i < lines.length) {
             const line = lines[i].trim();
             const fullLine = lines[i];
             const indent = fullLine.search(/\S/);
-            
+
             if (line.startsWith('views:')) break;
-            
+
             if (line.startsWith('-')) {
                 const item = line.substring(1).trim();
-                
+
                 if (item === 'and:') {
                     currentAnd = { and: [] };
                     conditions.or.push(currentAnd);
@@ -311,16 +311,16 @@ module.exports = class RealNodesPlugin extends Plugin {
                     currentAnd = null;
                 }
             }
-            
+
             i++;
         }
-        
+
         return conditions;
     }
 
     evaluateBaseConditions(file, conditions) {
         if (!conditions || !conditions.or) return false;
-        
+
         return conditions.or.some(condition => {
             if (typeof condition === 'string') {
                 return this.evaluateBaseCondition(file, condition);
@@ -393,16 +393,16 @@ module.exports = class RealNodesPlugin extends Plugin {
             }
 
             console.log('Executing Dataview query:', queryText);
-            
+
             const result = await dataview.api.query(queryText);
-            
+
             if (!result.successful) {
                 console.log('Dataview query failed:', result.error);
                 return [];
             }
 
             const files = [];
-            
+
             if (result.value.type === 'table' && result.value.headers) {
                 if (result.value.headers[0] === 'File') {
                     result.value.values.forEach(row => {
@@ -430,14 +430,14 @@ module.exports = class RealNodesPlugin extends Plugin {
         if (filePaths.length === 0) return '';
         const sourceText = source ? ` (${source})` : '';
         let result = `> [!link]- Real Links${sourceText}\n`;
-        
+
         const sortedPaths = [...filePaths].sort();
-        
+
         sortedPaths.forEach(path => {
             const fileName = path.split('/').pop().replace('.md', '') || path;
             result += `> - [[${fileName}]]\n`;
         });
-        
+
         return result;
     }
 };
@@ -510,7 +510,7 @@ class RealNodesSettingTab extends PluginSettingTab {
 
         // قائمة الملفات المحددة
         containerEl.createEl('h3', { text: 'Selected Files for Auto Update' });
-        
+
         if (this.plugin.settings.autoUpdateFiles.length === 0) {
             containerEl.createEl('p', { 
                 text: 'No files selected. Use commands to add files:',
@@ -526,7 +526,7 @@ class RealNodesSettingTab extends PluginSettingTab {
                 const fileSetting = new Setting(fileList)
                     .setName(filePath.split('/').pop())
                     .setDesc(filePath);
-                
+
                 fileSetting.addButton(btn => btn
                     .setButtonText('Remove')
                     .onClick(async () => {

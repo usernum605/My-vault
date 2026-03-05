@@ -10,6 +10,8 @@ cssclasses:
   - cards-cols-2
   - dashboard
   - Disappear
+  - invert-dark
+  - invert-banner
 icon: lucide-languages
 ---
 > انت تعرف أهمية الإنجليزية ولكنك كسول وهذه هي مشكلتك لذا استعن بالله ولا تعجز

@@ -38,7 +38,7 @@ const todayDate = todayMatch[1];
 
 // ===== التحقق من آخر وقت إدخال =====
 const LAST_INPUT_KEY = `[[quran]]-pages-last-input-${currentFile.path}`;
-const COOLDOWN_HOURS = 0.002; // ساعتان
+const COOLDOWN_HOURS = 2; // ساعتان
 const COOLDOWN_MS = COOLDOWN_HOURS * 60 * 60 * 1000;
 
 // التحقق من وجود إدخال سابق خلال ساعتين

@@ -4,8 +4,9 @@ tags:
   - Type/Main-Files
 banner: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7T4t4fPZESjszUwZET91figWM1toOfRorodZrC9JXrg&s=10
 cssclasses:
-  - Link
   - Disappear
+  - cards-cols-2
+  - list-cards
 ---
 ```base
 filters:
@@ -24,6 +25,50 @@ views:
 
 ```
 
-> [!link]- Bases Links
-> [[Fully Ai Game]]
-> [[Noise in the games]]
+> [!link]- Real Links (Base)
+> - [[Noise in the games]]
+> - [[Fully Ai Game]]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

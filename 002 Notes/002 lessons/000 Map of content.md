@@ -6,8 +6,9 @@ banner: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRzIg8KgmlGtYJif9lb
 cssclasses:
   - invert-banner
   - invert-dark
-  - Link
   - Headless
+  - list-cards
+  - cards-cols-2
 node_size: 20
 ---
 ##### Main Files
@@ -23,8 +24,3 @@ views:
       - file.name
 
 ```
-
-> [!link]- Bases Links
-> [[003 Math]]
-> [[002 Game dev]]
-> [[001 The Courses]]
