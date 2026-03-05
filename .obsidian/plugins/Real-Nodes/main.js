@@ -5,166 +5,261 @@ const DEFAULT_SETTINGS = {
     autoRunOnChange: false,
     enableBases: true,
     enableDataview: true,
-    autoUpdateFiles: [],   // الملفات المحددة للتحديث التلقائي
-    autoUpdateAll: false,  // تحديث تلقائي لكل الملفات
+    autoUpdateFiles: [],
+    autoUpdateAll: false,
 };
 
 module.exports = class RealNodesPlugin extends Plugin {
+    constructor(app, manifest) {
+        super(app, manifest);
+        this.pendingChanges = 0;
+        this.settings = Object.assign({}, DEFAULT_SETTINGS);
+    }
+
     async onload() {
-        await this.loadSettings();
+        try {
+            console.log('RealNodesPlugin: Loading...');
+            
+            await this.loadSettingsSafe();
+            this.registerCommands();
+            this.setupAutoUpdate();
+            this.addSettingTab(new RealNodesSettingTab(this.app, this));
+            
+            console.log('RealNodesPlugin: Loaded successfully');
+        } catch (e) {
+            console.error('RealNodesPlugin: Failed to load', e);
+            new Notice('Real Nodes plugin failed to load. Check console for details.');
+        }
+    }
 
-        // أوامر يدوية
-        this.addCommand({
-            id: 'append-bases-links-after-block',
-            name: 'Real Nodes: Append after block',
-            callback: () => this.processCurrentFile(false),
-        });
+    async loadSettingsSafe() {
+        try {
+            if (!this.app) {
+                console.warn('RealNodesPlugin: this.app is undefined, using default settings');
+                return;
+            }
+            
+            const savedData = await this.loadData();
+            this.settings = Object.assign({}, DEFAULT_SETTINGS, savedData);
+            console.log('RealNodesPlugin: Settings loaded', this.settings);
+        } catch (e) {
+            console.error('RealNodesPlugin: Error loading settings, using defaults', e);
+            this.settings = Object.assign({}, DEFAULT_SETTINGS);
+        }
+    }
 
-        this.addCommand({
-            id: 'append-bases-links-to-end',
-            name: 'Real Nodes: Append to end',
-            callback: () => this.processCurrentFile(true),
-        });
+    registerCommands() {
+        try {
+            if (!this.app) {
+                console.error('RealNodesPlugin: Cannot register commands - app is undefined');
+                return;
+            }
 
-        // أمر لإضافة الملف الحالي إلى قائمة التحديث التلقائي
-        this.addCommand({
-            id: 'add-current-file-to-auto-update',
-            name: 'Real Nodes: Add current file to auto update list',
-            callback: () => this.addCurrentFileToAutoUpdate(),
-        });
+            this.addCommand({
+                id: 'append-bases-links-after-block',
+                name: 'Real Nodes: Append after block',
+                callback: () => this.processCurrentFile(false),
+            });
 
-        // تفعيل المراقبة التلقائية
-        this.setupAutoUpdate();
+            this.addCommand({
+                id: 'append-bases-links-to-end',
+                name: 'Real Nodes: Append to end',
+                callback: () => this.processCurrentFile(true),
+            });
 
-        this.addSettingTab(new RealNodesSettingTab(this.app, this));
+            this.addCommand({
+                id: 'add-current-file-to-auto-update',
+                name: 'Real Nodes: Add current file to auto update list',
+                callback: () => this.addCurrentFileToAutoUpdate(),
+            });
+
+            this.addCommand({
+                id: 'remove-current-file-from-auto-update',
+                name: 'Real Nodes: Remove current file from auto update list',
+                callback: () => this.removeCurrentFileFromAutoUpdate(),
+            });
+        } catch (e) {
+            console.error('RealNodesPlugin: Error registering commands', e);
+        }
     }
 
     onunload() {
         console.log('RealNodesPlugin unloaded');
     }
 
-    async loadSettings() {
-        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-    }
-
     async saveSettings() {
-        await this.saveData(this.settings);
+        try {
+            if (!this.app) {
+                console.error('RealNodesPlugin: Cannot save settings - app is undefined');
+                return;
+            }
+            await this.saveData(this.settings);
+        } catch (e) {
+            console.error('RealNodesPlugin: Error saving settings', e);
+        }
     }
 
     // ======================== دوال التحديث التلقائي ========================
     setupAutoUpdate() {
-        // مراقبة تغييرات الملفات
-        this.registerEvent(
-            this.app.vault.on('modify', (file) => {
-                if (!this.isManualChange && file.extension === 'md') {
-                    this.checkAndProcessFile(file);
-                }
-            })
-        );
+        try {
+            if (!this.app || !this.app.vault) {
+                console.error('RealNodesPlugin: Cannot setup auto update - vault is undefined');
+                return;
+            }
 
-        // مراقبة إنشاء ملفات جديدة
-        this.registerEvent(
-            this.app.vault.on('create', (file) => {
-                if (!this.isManualChange && file.extension === 'md') {
-                    this.checkAndProcessFile(file);
-                }
-            })
-        );
+            this.registerEvent(
+                this.app.vault.on('modify', (file) => {
+                    if (this.pendingChanges === 0 && file && file.extension === 'md') {
+                        this.checkAndProcessFile(file);
+                    }
+                })
+            );
 
-        // مراقبة تغيير اسم الملف
-        this.registerEvent(
-            this.app.vault.on('rename', (file, oldPath) => {
-                if (!this.isManualChange && file.extension === 'md') {
-                    this.checkAndProcessFile(file);
-                }
-            })
-        );
+            this.registerEvent(
+                this.app.vault.on('create', (file) => {
+                    if (this.pendingChanges === 0 && file && file.extension === 'md') {
+                        this.checkAndProcessFile(file);
+                    }
+                })
+            );
+
+            this.registerEvent(
+                this.app.vault.on('rename', (file, oldPath) => {
+                    if (this.pendingChanges === 0 && file && file.extension === 'md') {
+                        this.checkAndProcessFile(file);
+                    }
+                })
+            );
+        } catch (e) {
+            console.error('RealNodesPlugin: Error setting up auto update', e);
+        }
     }
 
     checkAndProcessFile(file) {
-        // التحقق مما إذا كان التحديث التلقائي مفعل
-        if (!this.settings.autoRunOnChange) return;
+        try {
+            if (!this.settings.autoRunOnChange) return;
 
-        // التحقق من تفعيل التحديث لكل الملفات
-        if (this.settings.autoUpdateAll) {
-            console.log(`Auto updating all files: ${file.path}`);
-            this.processFile(file);
-            return;
-        }
+            if (this.settings.autoUpdateAll) {
+                console.log(`Auto updating all files: ${file.path}`);
+                this.processFile(file);
+                return;
+            }
 
-        // التحقق مما إذا كان الملف في قائمة الملفات المحددة
-        if (this.settings.autoUpdateFiles.includes(file.path)) {
-            console.log(`Auto updating specific file: ${file.path}`);
-            this.processFile(file);
-            return;
+            if (this.settings.autoUpdateFiles.includes(file.path)) {
+                console.log(`Auto updating specific file: ${file.path}`);
+                this.processFile(file);
+                return;
+            }
+        } catch (e) {
+            console.error('RealNodesPlugin: Error in checkAndProcessFile', e);
         }
     }
 
     async addCurrentFileToAutoUpdate() {
-        const activeFile = this.app.workspace.getActiveFile();
-        if (!activeFile) {
-            new Notice('No active file');
-            return;
-        }
+        try {
+            if (!this.app) {
+                new Notice('Plugin not properly initialized');
+                return;
+            }
 
-        if (!this.settings.autoUpdateFiles.includes(activeFile.path)) {
-            this.settings.autoUpdateFiles.push(activeFile.path);
-            await this.saveSettings();
-            new Notice(`Added ${activeFile.name} to auto update list`);
-        } else {
-            new Notice(`${activeFile.name} is already in auto update list`);
+            const activeFile = this.app.workspace.getActiveFile();
+            if (!activeFile) {
+                new Notice('No active file');
+                return;
+            }
+
+            if (!this.settings.autoUpdateFiles.includes(activeFile.path)) {
+                this.settings.autoUpdateFiles.push(activeFile.path);
+                await this.saveSettings();
+                new Notice(`Added ${activeFile.name} to auto update list`);
+            } else {
+                new Notice(`${activeFile.name} is already in auto update list`);
+            }
+        } catch (e) {
+            console.error('RealNodesPlugin: Error adding file to auto update', e);
+            new Notice('Error adding file to auto update list');
         }
     }
 
     async removeCurrentFileFromAutoUpdate() {
-        const activeFile = this.app.workspace.getActiveFile();
-        if (!activeFile) {
-            new Notice('No active file');
-            return;
-        }
+        try {
+            if (!this.app) {
+                new Notice('Plugin not properly initialized');
+                return;
+            }
 
-        const index = this.settings.autoUpdateFiles.indexOf(activeFile.path);
-        if (index > -1) {
-            this.settings.autoUpdateFiles.splice(index, 1);
-            await this.saveSettings();
-            new Notice(`Removed ${activeFile.name} from auto update list`);
-        } else {
-            new Notice(`${activeFile.name} is not in auto update list`);
+            const activeFile = this.app.workspace.getActiveFile();
+            if (!activeFile) {
+                new Notice('No active file');
+                return;
+            }
+
+            const index = this.settings.autoUpdateFiles.indexOf(activeFile.path);
+            if (index > -1) {
+                this.settings.autoUpdateFiles.splice(index, 1);
+                await this.saveSettings();
+                new Notice(`Removed ${activeFile.name} from auto update list`);
+            } else {
+                new Notice(`${activeFile.name} is not in auto update list`);
+            }
+        } catch (e) {
+            console.error('RealNodesPlugin: Error removing file from auto update', e);
+            new Notice('Error removing file from auto update list');
         }
     }
 
     // ======================== دوال معالجة الملفات ========================
     async processCurrentFile(forceAppendToEnd) {
-        const activeFile = this.app.workspace.getActiveFile();
-        if (!activeFile) {
-            new Notice('No active file');
-            return;
+        try {
+            if (!this.app) {
+                new Notice('Plugin not properly initialized');
+                return;
+            }
+
+            const activeFile = this.app.workspace.getActiveFile();
+            if (!activeFile) {
+                new Notice('No active file');
+                return;
+            }
+            await this.processFile(activeFile, forceAppendToEnd);
+        } catch (e) {
+            console.error('RealNodesPlugin: Error processing current file', e);
+            new Notice('Error processing file');
         }
-        await this.processFile(activeFile, forceAppendToEnd);
     }
 
     async processFile(file, forceAppendToEnd) {
-        console.log(`Processing file: ${file.path}`);
-        const content = await this.app.vault.read(file);
+        try {
+            if (!this.app || !this.app.vault) {
+                console.error('RealNodesPlugin: Cannot process file - vault is undefined');
+                return;
+            }
 
-        const cleanContent = this.removeExistingLinks(content);
+            console.log(`Processing file: ${file.path}`);
+            const content = await this.app.vault.read(file);
+            const cleanContent = this.removeExistingLinks(content);
+            const newContent = await this.transformContent(cleanContent, file, forceAppendToEnd ?? !this.settings.appendAfterBlock);
 
-        const newContent = await this.transformContent(cleanContent, file, forceAppendToEnd ?? !this.settings.appendAfterBlock);
-
-        if (newContent !== cleanContent) {
-            this.isManualChange = true;
-            await this.app.vault.modify(file, newContent);
-            this.isManualChange = false;
-            new Notice(`Real Nodes updated in ${file.name}`);
-            console.log('File updated successfully');
-        } else {
-            console.log('No changes detected');
+            if (newContent !== cleanContent) {
+                this.pendingChanges++;
+                await this.app.vault.modify(file, newContent);
+                this.pendingChanges--;
+                new Notice(`Real Nodes updated in ${file.name}`);
+                console.log('File updated successfully');
+            } else {
+                console.log('No changes detected for', file.path);
+            }
+        } catch (e) {
+            console.error(`Error processing file ${file.path}:`, e);
+            new Notice(`Error updating ${file.name}: ${e.message}`);
         }
     }
 
     removeExistingLinks(content) {
         const linkBlockRegex = /> \[!link\]- Real Links.*\n(> .*\n)*/g;
-        return content.replace(linkBlockRegex, '');
+        let newContent = content.replace(linkBlockRegex, '');
+        newContent = newContent.replace(/\n{3,}/g, '\n\n');
+        return newContent;
     }
 
     async transformContent(content, file, appendToEnd) {
@@ -249,10 +344,12 @@ module.exports = class RealNodesPlugin extends Plugin {
             console.log(`Appended ${uniqueLinks.length} unique links to end`);
         }
 
-        return parts.join('');
+        let result = parts.join('');
+        result = result.replace(/\n{3,}/g, '\n\n');
+        return result;
     }
 
-    // ======================== دوال Bases ========================
+    // ======================== دوال Bases المتكاملة ========================
     getFilesFromBaseQuery(yamlText, currentFile) {
         try {
             const conditions = this.parseBaseConditions(yamlText);
@@ -266,6 +363,14 @@ module.exports = class RealNodesPlugin extends Plugin {
             });
 
             console.log(`Matched files: ${matchedFiles.length}`);
+            
+            if (matchedFiles.length > 0) {
+                console.log('Matched files list:');
+                matchedFiles.forEach((f, index) => {
+                    console.log(`  ${index + 1}. ${f.path}`);
+                });
+            }
+            
             return matchedFiles.map(f => f.path);
         } catch (e) {
             console.error('Error in getFilesFromBaseQuery:', e);
@@ -274,19 +379,36 @@ module.exports = class RealNodesPlugin extends Plugin {
     }
 
     parseBaseConditions(yamlText) {
-        const conditions = {
-            or: []
-        };
-
+        const conditions = {};
         const lines = yamlText.split('\n');
         let i = 0;
 
+        // البحث عن filters:
         while (i < lines.length && !lines[i].trim().startsWith('filters:')) i++;
         i++;
 
-        while (i < lines.length && !lines[i].trim().startsWith('or:')) i++;
-        i++;
+        // تحديد نوع الفلتر الرئيسي (or أو and)
+        while (i < lines.length) {
+            const line = lines[i].trim();
+            
+            if (line === 'or:') {
+                conditions.or = [];
+                this.parseFilterBlock(lines, i + 1, 'or', conditions);
+                break;
+            } else if (line === 'and:') {
+                conditions.and = [];
+                this.parseFilterBlock(lines, i + 1, 'and', conditions);
+                break;
+            }
+            i++;
+        }
 
+        console.log('Final conditions:', JSON.stringify(conditions, null, 2));
+        return conditions;
+    }
+
+    parseFilterBlock(lines, startIndex, type, conditions) {
+        let i = startIndex;
         let currentAnd = null;
 
         while (i < lines.length) {
@@ -301,99 +423,286 @@ module.exports = class RealNodesPlugin extends Plugin {
 
                 if (item === 'and:') {
                     currentAnd = { and: [] };
-                    conditions.or.push(currentAnd);
+                    if (type === 'or') {
+                        conditions.or.push(currentAnd);
+                    } else if (type === 'and') {
+                        // and داخل and (نادر)
+                        conditions.and.push(currentAnd);
+                    }
                 }
                 else if (currentAnd && indent > 4) {
                     currentAnd.and.push(item);
                 }
                 else {
-                    conditions.or.push(item);
+                    if (type === 'or') {
+                        conditions.or.push(item);
+                    } else if (type === 'and') {
+                        conditions.and.push(item);
+                    }
                     currentAnd = null;
                 }
             }
-
             i++;
         }
-
-        return conditions;
     }
 
     evaluateBaseConditions(file, conditions) {
-        if (!conditions || !conditions.or) return false;
+        if (!conditions) return false;
 
-        return conditions.or.some(condition => {
-            if (typeof condition === 'string') {
-                return this.evaluateBaseCondition(file, condition);
-            }
-            else if (condition.and && Array.isArray(condition.and)) {
-                return condition.and.every(subCond => 
-                    this.evaluateBaseCondition(file, subCond)
-                );
-            }
-            return false;
-        });
-    }
-
-    evaluateBaseCondition(file, condition) {
-        const folderEqMatch = condition.match(/file\.folder\s*==\s*["']([^"']+)["']/);
-        if (folderEqMatch) {
-            const targetFolder = folderEqMatch[1];
-            const fileFolder = file.path.includes('/') ? 
-                file.path.substring(0, file.path.lastIndexOf('/')) : '';
-            return fileFolder === targetFolder;
+        // إذا كان هناك شرط and رئيسي
+        if (conditions.and && Array.isArray(conditions.and)) {
+            return conditions.and.every(condition => {
+                if (typeof condition === 'string') {
+                    return this.evaluateBaseCondition(file, condition);
+                }
+                else if (condition.and && Array.isArray(condition.and)) {
+                    return condition.and.every(subCond => 
+                        this.evaluateBaseCondition(file, subCond)
+                    );
+                }
+                return false;
+            });
         }
-
-        const folderNeMatch = condition.match(/file\.folder\s*!=\s*["']([^"']+)["']/);
-        if (folderNeMatch) {
-            const targetFolder = folderNeMatch[1];
-            const fileFolder = file.path.includes('/') ? 
-                file.path.substring(0, file.path.lastIndexOf('/')) : '';
-            return fileFolder !== targetFolder;
-        }
-
-        const nameNeMatch = condition.match(/file\.name\s*!=\s*["']([^"']+)["']/);
-        if (nameNeMatch) {
-            const forbiddenName = nameNeMatch[1];
-            return file.basename !== forbiddenName;
-        }
-
-        const hasPropMatch = condition.match(/file\.hasProperty\(["']([^"']+)["']\)/);
-        if (hasPropMatch) {
-            const prop = hasPropMatch[1];
-            const cache = this.app.metadataCache.getFileCache(file);
-            return cache?.frontmatter?.hasOwnProperty(prop) || false;
-        }
-
-        if (condition.includes('!file.name.contains("Tem")')) {
-            return !file.basename.includes('Tem') && !file.basename.includes('tem') && !file.basename.includes('TEM');
-        }
-
-        const nameContainsMatch = condition.match(/file\.name\.contains\(["']([^"']+)["']\)/);
-        if (nameContainsMatch) {
-            const text = nameContainsMatch[1];
-            return file.basename.includes(text);
-        }
-
-        const nameNotContainsMatch = condition.match(/!file\.name\.contains\(["']([^"']+)["']\)/);
-        if (nameNotContainsMatch) {
-            const text = nameNotContainsMatch[1];
-            return !file.basename.includes(text);
+        
+        // إذا كان هناك شرط or رئيسي
+        if (conditions.or && Array.isArray(conditions.or)) {
+            return conditions.or.some(condition => {
+                if (typeof condition === 'string') {
+                    return this.evaluateBaseCondition(file, condition);
+                }
+                else if (condition.and && Array.isArray(condition.and)) {
+                    return condition.and.every(subCond => 
+                        this.evaluateBaseCondition(file, subCond)
+                    );
+                }
+                return false;
+            });
         }
 
         return false;
     }
 
+    evaluateBaseCondition(file, condition) {
+        console.log(`Evaluating condition: "${condition}" for file: ${file.path}`);
+        
+        // ============ شروط Frontmatter ============
+        
+        // pattern: note["The Topic"].contains("Games")
+        const frontmatterContainsMatch = condition.match(/(\w+)\[["']([^"']+)["']\]\.contains\(["']([^"']+)["']\)/);
+        if (frontmatterContainsMatch) {
+            const field = frontmatterContainsMatch[2];
+            const value = frontmatterContainsMatch[3];
+            const frontmatter = this.getFrontmatter(file);
+            
+            if (frontmatter && frontmatter[field] !== undefined) {
+                const result = String(frontmatter[field]).toLowerCase().includes(value.toLowerCase());
+                console.log(`frontmatter[${field}] contains "${value}"? ${result}`);
+                return result;
+            }
+            return false;
+        }
+        
+        // pattern: note["The Topic"] == "Games"
+        const frontmatterEqMatch = condition.match(/(\w+)\[["']([^"']+)["']\]\s*==\s*["']([^"']+)["']/);
+        if (frontmatterEqMatch) {
+            const field = frontmatterEqMatch[2];
+            const value = frontmatterEqMatch[3];
+            const frontmatter = this.getFrontmatter(file);
+            
+            if (frontmatter && frontmatter[field] !== undefined) {
+                const result = String(frontmatter[field]) === value;
+                console.log(`frontmatter[${field}] == "${value}"? ${result}`);
+                return result;
+            }
+            return false;
+        }
+        
+        // pattern: note["The Topic"] != "Games"
+        const frontmatterNeMatch = condition.match(/(\w+)\[["']([^"']+)["']\]\s*!=\s*["']([^"']+)["']/);
+        if (frontmatterNeMatch) {
+            const field = frontmatterNeMatch[2];
+            const value = frontmatterNeMatch[3];
+            const frontmatter = this.getFrontmatter(file);
+            
+            if (frontmatter && frontmatter[field] !== undefined) {
+                const result = String(frontmatter[field]) !== value;
+                console.log(`frontmatter[${field}] != "${value}"? ${result}`);
+                return result;
+            }
+            return true; // إذا لم يوجد الحقل، يعتبر غير متساوٍ
+        }
+        
+        // ============ شروط الملف الأساسية ============
+        
+        // file.folder ==
+        const folderEqMatch = condition.match(/file\.folder\s*==\s*["']([^"']+)["']/);
+        if (folderEqMatch) {
+            const targetFolder = folderEqMatch[1];
+            const fileFolder = file.path.includes('/') ? 
+                file.path.substring(0, file.path.lastIndexOf('/')) : '';
+            console.log(`folder == "${targetFolder}"? ${fileFolder === targetFolder}`);
+            return fileFolder === targetFolder;
+        }
+
+        // file.folder !=
+        const folderNeMatch = condition.match(/file\.folder\s*!=\s*["']([^"']+)["']/);
+        if (folderNeMatch) {
+            const targetFolder = folderNeMatch[1];
+            const fileFolder = file.path.includes('/') ? 
+                file.path.substring(0, file.path.lastIndexOf('/')) : '';
+            console.log(`folder != "${targetFolder}"? ${fileFolder !== targetFolder}`);
+            return fileFolder !== targetFolder;
+        }
+
+        // file.name !=
+        const nameNeMatch = condition.match(/file\.name\s*!=\s*["']([^"']+)["']/);
+        if (nameNeMatch) {
+            const forbiddenName = nameNeMatch[1];
+            console.log(`name != "${forbiddenName}"? ${file.basename !== forbiddenName}`);
+            return file.basename !== forbiddenName;
+        }
+
+        // file.hasProperty()
+        const hasPropMatch = condition.match(/file\.hasProperty\(["']([^"']+)["']\)/);
+        if (hasPropMatch) {
+            const prop = hasPropMatch[1];
+            const frontmatter = this.getFrontmatter(file);
+            const result = frontmatter?.hasOwnProperty(prop) || false;
+            console.log(`hasProperty("${prop}")? ${result}`);
+            return result;
+        }
+
+        // !file.name.contains("Tem") - حالة خاصة
+        if (condition.includes('!file.name.contains("Tem")')) {
+            const result = !file.basename.includes('Tem') && !file.basename.includes('tem') && !file.basename.includes('TEM');
+            console.log(`!name.contains("Tem")? ${result}`);
+            return result;
+        }
+
+        // file.name.contains()
+        const nameContainsMatch = condition.match(/file\.name\.contains\(["']([^"']+)["']\)/);
+        if (nameContainsMatch) {
+            const text = nameContainsMatch[1];
+            const result = file.basename.includes(text);
+            console.log(`name.contains("${text}")? ${result}`);
+            return result;
+        }
+
+        // !file.name.contains() - عام
+        const nameNotContainsMatch = condition.match(/!file\.name\.contains\(["']([^"']+)["']\)/);
+        if (nameNotContainsMatch) {
+            const text = nameNotContainsMatch[1];
+            const result = !file.basename.includes(text);
+            console.log(`!name.contains("${text}")? ${result}`);
+            return result;
+        }
+
+        // file.inFolder()
+        const inFolderMatch = condition.match(/file\.inFolder\(["']([^"']+)["']\)/);
+        if (inFolderMatch) {
+            return this.isFileInFolder(file, inFolderMatch[1]);
+        }
+
+        // file.hasTag()
+        const hasTagMatch = condition.match(/file\.hasTag\(["']([^"']+)["']\)/);
+        if (hasTagMatch) {
+            return this.fileHasTag(file, hasTagMatch[1]);
+        }
+
+        console.log(`No pattern matched for: "${condition}"`);
+        return false;
+    }
+
+    // ======================== دوال مساعدة محسنة ========================
+    isFileInFolder(file, folderPath) {
+        // مسار مجلد الملف (بدون اسم الملف)
+        const fileFolder = file.path.includes('/') ? file.path.substring(0, file.path.lastIndexOf('/')) : '';
+        // إذا كان الملف في الجذر، fileFolder = ''
+        
+        // تنظيف المجلد المطلوب من الشرطة المائلة في النهاية
+        const normalizedFolder = folderPath.endsWith('/') ? folderPath.slice(0, -1) : folderPath;
+        
+        // التحقق: إما أن يكون مجلد الملف مساوياً للمجلد المطلوب، أو يبدأ به متبوعاً بـ /
+        const result = fileFolder === normalizedFolder || fileFolder.startsWith(normalizedFolder + '/');
+        
+        console.log(`isFileInFolder: ${file.path} in "${folderPath}"? ${result} (fileFolder: "${fileFolder}")`);
+        return result;
+    }
+
+    fileHasTag(file, tag) {
+        try {
+            const cache = this.app.metadataCache.getFileCache(file);
+            if (!cache) {
+                console.log(`fileHasTag: ${file.path} - no cache`);
+                return false;
+            }
+            
+            // تنظيف التاغ من علامات التنصيص والمسافات
+            const cleanTag = tag.replace(/["']/g, '').trim();
+            // إزالة # من البداية إن وجدت
+            const searchTag = cleanTag.startsWith('#') ? cleanTag.slice(1) : cleanTag;
+            
+            // 1. البحث في frontmatter
+            if (cache.frontmatter) {
+                // يمكن أن يكون frontmatter.tags مصفوفة أو سلسلة مفصولة بفواصل
+                const fmTags = cache.frontmatter.tags || cache.frontmatter.tag;
+                if (fmTags) {
+                    let tagsArray = [];
+                    if (typeof fmTags === 'string') {
+                        tagsArray = fmTags.split(',').map(s => s.trim());
+                    } else if (Array.isArray(fmTags)) {
+                        tagsArray = fmTags;
+                    }
+                    // التحقق من وجود التاغ (مع أو بدون #)
+                    if (tagsArray.includes(searchTag) || tagsArray.includes(`#${searchTag}`)) {
+                        console.log(`fileHasTag: ${file.path} has tag "${tag}" in frontmatter`);
+                        return true;
+                    }
+                }
+            }
+            
+            // 2. البحث في cache.tags (التاغات من النص)
+            if (cache.tags) {
+                const hasTag = cache.tags.some(t => {
+                    const tagname = t.tag.startsWith('#') ? t.tag.slice(1) : t.tag;
+                    return tagname === searchTag;
+                });
+                if (hasTag) {
+                    console.log(`fileHasTag: ${file.path} has tag "${tag}" in text`);
+                    return true;
+                }
+            }
+            
+            console.log(`fileHasTag: ${file.path} does NOT have tag "${tag}"`);
+            return false;
+        } catch (e) {
+            console.error('Error checking tag:', e);
+            return false;
+        }
+    }
+
+    getFrontmatter(file) {
+        try {
+            if (!this.app || !this.app.metadataCache) {
+                return {};
+            }
+            const cache = this.app.metadataCache.getFileCache(file);
+            const frontmatter = cache?.frontmatter || {};
+            console.log(`getFrontmatter for ${file.path}:`, frontmatter);
+            return frontmatter;
+        } catch (e) {
+            console.error('Error getting frontmatter:', e);
+            return {};
+        }
+    }
+
     // ======================== دوال Dataview ========================
     async getFilesFromDataviewQuery(queryText, currentFile) {
         try {
-            const dataview = this.app.plugins.getPlugin('dataview');
-            if (!dataview) {
-                console.log('Dataview plugin not found');
-                return [];
-            }
+            const dataview = this.getDataviewPlugin();
+            if (!dataview) return [];
 
             console.log('Executing Dataview query:', queryText);
-
             const result = await dataview.api.query(queryText);
 
             if (!result.successful) {
@@ -426,6 +735,23 @@ module.exports = class RealNodesPlugin extends Plugin {
         }
     }
 
+    getDataviewPlugin() {
+        try {
+            if (!this.app || !this.app.plugins) {
+                return null;
+            }
+            const dataview = this.app.plugins.getPlugin('dataview');
+            if (!dataview) {
+                console.warn('Dataview plugin is not enabled');
+                return null;
+            }
+            return dataview;
+        } catch (e) {
+            console.error('Error getting Dataview plugin:', e);
+            return null;
+        }
+    }
+
     formatLinks(filePaths, source = '') {
         if (filePaths.length === 0) return '';
         const sourceText = source ? ` (${source})` : '';
@@ -452,7 +778,6 @@ class RealNodesSettingTab extends PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
 
-        // الإعدادات الأساسية
         containerEl.createEl('h2', { text: 'General Settings' });
 
         new Setting(containerEl)
@@ -485,7 +810,6 @@ class RealNodesSettingTab extends PluginSettingTab {
                     await this.plugin.saveSettings();
                 }));
 
-        // إعدادات التحديث التلقائي
         containerEl.createEl('h2', { text: 'Auto Update Settings' });
 
         new Setting(containerEl)
@@ -508,11 +832,10 @@ class RealNodesSettingTab extends PluginSettingTab {
                     await this.plugin.saveSettings();
                 }));
 
-        // قائمة الملفات المحددة
         containerEl.createEl('h3', { text: 'Selected Files for Auto Update' });
 
         if (this.plugin.settings.autoUpdateFiles.length === 0) {
-            containerEl.createEl('p', { 
+            containerEl.createEl('p', {
                 text: 'No files selected. Use commands to add files:',
                 cls: 'setting-item-description'
             });

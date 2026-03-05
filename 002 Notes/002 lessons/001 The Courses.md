@@ -20,19 +20,3 @@ views:
 > [!link]- Real Links (Base)
 > - [[Ai course]]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -562,7 +562,11 @@ STYLESH CALLOUT FEATURE
     background-color: rgba(0, 120, 255, 0.1) !important;
     border-left-color: #0078ff !important;
 }
-
+.callout[data-callout="link"] .callout-title, .callout-content {
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+    font-size: 1.01rem;
+}
 /* --------------
 CARDLINKS FEATURE
 -----------------*/

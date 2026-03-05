@@ -24,3 +24,9 @@ views:
       - file.name
 
 ```
+
+> [!link]- Real Links (Base)
+> - [[001 The Courses]]
+> - [[002 Game dev]]
+> - [[003 Math]]
+
