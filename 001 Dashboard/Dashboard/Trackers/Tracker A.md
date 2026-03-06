@@ -3,7 +3,6 @@ banner: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT04Qfg17fYOhAm0JdP
 icon: lucide-line-chart
 cssclasses:
   - card
-  - dashboard
 links pages:
   - "[[Tracker B]]"
 node_size: 15
@@ -811,12 +810,12 @@ const bpages = dv.pages(bfolder)
 let bulletBox=dashboard.createDiv({cls:"q-box"});
 bulletBox.createDiv({cls:"q-bullet-title",text:"التقدم في حفظ كلام ربي"});
 
-let monthStart=currentMonth.startOf("month");
-let monthEnd=currentMonth.endOf("month");
+let yearStart=currentMonth.startOf("year");
+let yearEnd=currentMonth.endOf("year");
 
 let monthPages2=bpages.where(p=>
-  p.file.name>=monthStart.toFormat("yyyy-MM-dd") &&
-  p.file.name<=monthEnd.toFormat("yyyy-MM-dd")
+  p.file.name>=yearStart.toFormat("yyyy-MM-dd") &&
+  p.file.name<=yearEnd.toFormat("yyyy-MM-dd")
 );
 
 let total=0;

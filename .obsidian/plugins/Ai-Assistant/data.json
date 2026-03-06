@@ -20,7 +20,7 @@
   "openaiApiKey": "",
   "openaiModel": "gpt-3.5-turbo",
   "openaiEndpoint": "https://api.openai.com/v1/chat/completions",
-  "geminiApiKey": "",
+  "geminiApiKey": "AIzaSyAifI8MWAoUy5lf_zlahvniYWhnd35RRhc",
   "geminiModel": "gemini-2.5-flash",
   "geminiEndpoint": "https://generativelanguage.googleapis.com/v1beta/models",
   "anthropicApiKey": "",
@@ -40,7 +40,14 @@
       "id": "1772751215951",
       "name": "Default Conversation",
       "systemPrompt": "",
-      "messages": [],
+      "messages": [
+        {
+          "role": "user",
+          "content": "ما معنى كلمة نجوى",
+          "attachments": [],
+          "timestamp": 1772785928929
+        }
+      ],
       "isTemporary": false
     }
   ]

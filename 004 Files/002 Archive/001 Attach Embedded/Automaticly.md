@@ -11,6 +11,8 @@ cssclasses:
 
 ![[RandomAya]]
 ![[Tracker Q]]
+###### <span style="display: none; height:-10px;">Automation</span>
+
 ```dataviewjs
 const DiariesFolder = "003 Daily/001 Active Diaries";
 const archiveFolder = "003 Daily/002 Archived Diaries";
