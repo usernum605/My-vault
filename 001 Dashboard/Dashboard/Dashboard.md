@@ -11,6 +11,7 @@ icon: lucide-layout-grid
 links pages:
   - "[[000 Ultimate Base]]"
   - "[[My tools]]"
+  - "[[000 Ultimate Base]]"
 banner_y: 33
 ui: preview-force
 ---
