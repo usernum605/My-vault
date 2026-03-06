@@ -286,18 +286,18 @@
             "type": "tabs",
             "children": [
               {
-                "id": "863ff58c52a10923",
+                "id": "b5ec599cbe045be6",
                 "type": "leaf",
                 "state": {
                   "type": "markdown",
                   "state": {
-                    "file": "003 Daily/001 Active Diaries/2026-03-05.md",
+                    "file": "003 Daily/001 Active Diaries/2026-03-06.md",
                     "mode": "preview",
-                    "source": false,
+                    "source": true,
                     "backlinks": false
                   },
                   "icon": "lucide-file",
-                  "title": "2026-03-05"
+                  "title": "2026-03-06"
                 }
               },
               {
@@ -502,8 +502,8 @@
           "workspaces:Manage workspace layouts": false
         }
       },
-      "active": "863ff58c52a10923",
-      "mtime": "2026-03-05T22:14:03+01:00"
+      "active": "b5ec599cbe045be6",
+      "mtime": "2026-03-06T09:03:09+01:00"
     },
     "Just write": {
       "main": {
@@ -692,7 +692,8 @@
             }
           }
         ],
-        "currentTab": 2
+        "currentTab": 2,
+        "pinned": true
       },
       "left-ribbon": {
         "hiddenItems": {
@@ -711,7 +712,7 @@
         }
       },
       "active": "460e7c9d74ed920c",
-      "mtime": "2026-03-04T21:36:11+01:00"
+      "mtime": "2026-03-06T09:05:20+01:00"
     }
   },
   "active": "Diarie"

@@ -44,4 +44,4 @@ The Topic:
 #### 🔗 Reference
 
 - [link](https://www.freecodecamp.org/learn/javascript-v9/lecture-introduction-to-javascript/what-is-javascript)
-- [[log - 2026-03-03]]
+- [[log - 2026-03-03|My first step in backend]]
