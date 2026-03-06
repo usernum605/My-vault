@@ -14,7 +14,7 @@ cssclasses:
 ```dataviewjs
 const DiariesFolder = "003 Daily/001 Active Diaries";
 const archiveFolder = "003 Daily/002 Archived Diaries";
-const threeDaysAgo = moment().subtract(15, 'days');
+const threeDaysAgo = moment().subtract(150, 'days');
 
 // الحصول على جميع الملفات في مجلد المهام
 const files = app.vault.getFiles()

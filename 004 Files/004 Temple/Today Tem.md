@@ -13,7 +13,6 @@ Memorizing the Quran: false
 links pages:
   - "[[warsh.pdf]]"
   - "[[005 Diaries]]"
-  - "[[Mawaidh]]"
   - "[[Tracker A]]"
 ui: preview
 banner_y: 40

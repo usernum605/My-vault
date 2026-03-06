@@ -94,7 +94,7 @@
       "Fajr": "05:57",
       "Sunrise": "07:21",
       "Dhuhr": "13:09",
-      "Asr": "16:26",
+      "Asr": "16:25",
       "Maghrib": "18:57",
       "Isha": "20:17",
       "Midnight": "01:09"
@@ -122,7 +122,7 @@
       "adjustedHolidays": [],
       "method": "HJCoSA"
     },
-    "fetchedAtISO": "2026-03-05T23:00:13.735Z"
+    "fetchedAtISO": "2026-03-06T06:02:13.097Z"
   },
   "enableDailyNotes": true,
   "dailyNotesFolder": "003 Daily/001 Active Diaries",

@@ -87,6 +87,8 @@ if (document.querySelector('.quran-modal')) {
     return;
 }
 
+const pdfLink = "obsidian://open?vault=My-vault&file=004%20Files%2F001%20Attach%2Fwarsh.pdf#page=${pageNum}";
+
 // ===== نافذة منبثقة جميلة =====
 const modalHtml = `
 <div class="quran-modal modal-container" style="direction: rtl;position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 1000; background-color: rgba(0, 0, 0, 0.5);">
@@ -94,15 +96,14 @@ const modalHtml = `
         <h3 style="margin-top: 0; margin-bottom: 15px; color: var(--text-normal); font-size: 18px;">إلى أين وصلت في تلاوة القرآن؟</h3>
         
         ${lastPage > 0 ? `
-        <div style="margin-bottom: 15px; padding: 12px; background-color: var(--background-secondary); border-radius: 12px; text-align: center;">
-            <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 5px;">آخر صفحة وصلت لها سابقاً:</div>
-            <div style="font-size: 24px; font-weight: bold; color: var(--text-accent); margin-bottom: 8px;">${lastPage}</div>
-            <a href="obsidian://open?vault=My-vault&file=004%20Files%2F001%20Attach%2Fwarsh.pdf"
-               style="display: inline-block; padding: 8px 16px; background-color: var(--interactive-accent); color: var(--text-on-accent); text-decoration: none; border-radius: 20px; font-size: 14px; font-weight: 500;">
-                استمر من حيث توقفت
-            </a>
-        </div>
-        ` : ''}
+<div style="margin-bottom: 15px; padding: 12px; background-color: var(--background-secondary); border-radius: 12px; text-align: center;">
+    <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 5px;">آخر صفحة وصلت لها سابقاً:</div>
+    <div style="font-size: 24px; font-weight: bold; color: var(--text-accent); margin-bottom: 8px;">${lastPage}</div>
+    <button id="modal-continue-btn" style="display: inline-block; padding: 8px 16px; background-color: var(--interactive-accent); color: var(--text-on-accent); border: none; border-radius: 20px; font-size: 14px; font-weight: 500; cursor: pointer;">
+        استمر من حيث توقفت
+    </button>
+</div>
+` : ''}
         
         <input type="number" id="modal-page-input" style="direction: right; width: 100%; padding: 10px; border-radius: 12px; border: 1px solid var(--background-modifier-border); background-color: var(--background-secondary); color: var(--text-normal); font-size: 16px; box-sizing: border-box; margin-bottom: 15px;" placeholder="رقم الصفحة الجديدة التي وصلت إليها" autofocus>
         
@@ -136,6 +137,15 @@ function closeModal() {
 modalDiv.querySelector('#modal-cancel').addEventListener('click', () => {
     closeModal();
 });
+
+// معالج زر الاستمرار
+const continueBtn = modalDiv.querySelector('#modal-continue-btn');
+if (continueBtn) {
+    continueBtn.addEventListener('click', () => {
+        closeModal();
+        window.open(pdfLink, '_blank');
+    });
+}
 
 // معالج زر الحفظ
 modalDiv.querySelector('#modal-submit').addEventListener('click', async () => {
