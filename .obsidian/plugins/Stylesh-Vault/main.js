@@ -57,7 +57,7 @@ module.exports = class StyleshVault extends Plugin {
         this.addSettingTab(new StyleshVaultSettingTab(this.app, this));
         this.updateCssVariables();
         this.updateHiddenPropertiesCSS();
-        
+
         this.registerEvent(this.app.workspace.on("file-open", (file) => {
         setTimeout(() => {
         this.handleViewMode(file);
@@ -471,7 +471,7 @@ module.exports = class StyleshVault extends Plugin {
 
     this.toggleNewFileNotice(currentFile, isNewlyCreated);
 }
-    
+
 
     addShowFullPropertiesButtons() {
         const propertiesContainers = document.querySelectorAll('.metadata-container');
@@ -1292,12 +1292,12 @@ module.exports = class StyleshVault extends Plugin {
             }
         }
     }
-    
+
     hideBacklinksOnStartup() {
     setTimeout(() => {
         this.closeBacklinksLeaf();
     }, 1000);
-    
+
     this.registerEvent(
         this.app.workspace.on('layout-change', () => {
             this.closeBacklinksLeaf();
