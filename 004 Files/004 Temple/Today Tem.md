@@ -43,26 +43,4 @@ icon: lucide-calendar-minus-2
 - [ ] <strong style='color: steelblue'>٢٥ دقيقة</strong> أداء صلاة العشاء مع النوافل والشفع والوتر <!-- (@{{date}} after-isha 20m) -->
 - [ ] <strong style='color: steelblue'>٨ دقائق</strong> قراءة [[أذكار النوم]] <!-- (@{{date}} after-isha 30m) -->
 
-## المراجعة النهائية
-
-#### المحاسبة
-##### الحمد لله الذي وفقني في: 
-- 
-- 
-
-##### __نفسي التي امرتتي بالسوء وغفلاتي:__ 
-- 
-- 
-
-##### <span class="backdrop-blur-xl2" style="color: #ffffff" ><u>ماذا يجب أن نعمل من أجل التحسن مستقبلا:</u></span> 
-- 
-- 
-
-#### في هذا اليوم من الراجح سكة الحسنات ام سكة الذنوب
-##### حسنة
-- [ ] <span class="backdrop-blur-xl2"><u>سكة الحسنات</u></span>
-
-#####  <span style="color: #8b1000;">ذنب</span>
-- [ ] <span style="color: #8A0000;"><u>سكة الذنوب أو الغفلة</u></span>
-
 {{SPECIAL_DAYS}}
