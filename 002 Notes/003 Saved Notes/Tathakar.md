@@ -7,6 +7,7 @@ The Topic:
 cssclasses:
   - pen-red
   - page-grid
+  - no-plus
 tags:
   - Islamic/Mawaidh
   - Islamic/Dine

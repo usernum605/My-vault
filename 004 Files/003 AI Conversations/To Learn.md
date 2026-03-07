@@ -8,6 +8,8 @@ links pages:
   - "[[How]]"
 tags:
   - Self↑up/knowledge
+cssclasses:
+  - no-plus
 ---
 # Temporary Chat
 

@@ -3,6 +3,9 @@ banner: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT04Qfg17fYOhAm0JdP
 icon: lucide-line-chart
 cssclasses:
   - card
+  - center-title
+  - dashboard
+  - no-plus
 links pages:
   - "[[Tracker B]]"
 node_size: 15

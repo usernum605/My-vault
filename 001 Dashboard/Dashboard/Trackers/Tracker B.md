@@ -4,6 +4,7 @@ icon: lucide-line-chart
 cssclasses:
   - card
   - invert-banner
+  - Disappear
 banner_y: 68
 ---
 ```dataviewjs

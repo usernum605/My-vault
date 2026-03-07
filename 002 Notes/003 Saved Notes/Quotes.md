@@ -3,6 +3,7 @@ cssclasses:
   - img-grid
   - center-images
   - Headless
+  - no-plus
 icon: lucide-images
 tags:
   - Islamic/Dine

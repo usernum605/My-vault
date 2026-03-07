@@ -6,6 +6,7 @@ cssclasses:
   - invert-banner
   - invert-dark
   - invert-dark-apt
+  - Disappear
 ui: edit
 ---
 

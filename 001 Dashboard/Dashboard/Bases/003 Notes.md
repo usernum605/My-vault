@@ -4,6 +4,9 @@ links pages:
 cssclasses:
   - Link
   - Disappear
+  - invert-banner
+  - invert-dark-apt
+banner: https://images.pexels.com/photos/5104694/pexels-photo-5104694.jpeg
 ---
 ```base
 filters:

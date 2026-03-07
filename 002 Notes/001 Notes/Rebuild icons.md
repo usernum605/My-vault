@@ -4,11 +4,12 @@ banner: https://images.unsplash.com/photo-1517842645767-c639042777db?w=500&auto=
 cssclasses:
   - card
   - IBM
+  - no-plus
 tags:
   - Self↑up/Programing
   - Type/Quick-Notes
 The Topic:
-  - Obsidian projects 
+  - Obsidian projects
 ---
 ### Note About Rebuild icons
 - يتم حذف ثم اعادة رندرة الأيقونة كلما تم التبديل من وضع البريفيو الى الاديت او العكس

@@ -528,5 +528,6 @@
   "Note: You can reassign a let variable, just not redeclare it.": "ملاحظة: يمكنك إعادة تعيين متغير Let، وليس إعادة تعريفه.",
   "let declared globally does NOT become a property of the global object:\nGlobally declared let variables do not attach to the global object. This keeps the global scope cleaner.\n\nExample (let in browser):": "السماح المعلن عالميًا لا يصبح ملكًا للكائن العمومي:\nلا يتم إرفاق متغيرات السماح المُعلن عنها عالميًا بالكائن العمومي. وهذا يحافظ على نظافة النطاق العالمي.\n\nمثال (السماح بالدخول إلى المتصفح):",
   "Request Headers: For metadata like content type, authentication tokens, or client preferences.": "رؤوس الطلب: للبيانات التعريفية مثل نوع المحتوى أو رموز المصادقة المميزة أو تفضيلات العميل.",
-  "The server then responds, typically with data in its response body (most often JSON for APIs) and relevant response headers (like Content-Type and Status Code).": "يستجيب الخادم بعد ذلك، عادةً بالبيانات الموجودة في نص الاستجابة الخاص به (في أغلب الأحيان JSON لواجهات برمجة التطبيقات) ورؤوس الاستجابة ذات الصلة (مثل نوع المحتوى ورمز الحالة)."
+  "The server then responds, typically with data in its response body (most often JSON for APIs) and relevant response headers (like Content-Type and Status Code).": "يستجيب الخادم بعد ذلك، عادةً بالبيانات الموجودة في نص الاستجابة الخاص به (في أغلب الأحيان JSON لواجهات برمجة التطبيقات) ورؤوس الاستجابة ذات الصلة (مثل نوع المحتوى ورمز الحالة).",
+  "I. المقدمة": "I. المقدمة"
 }

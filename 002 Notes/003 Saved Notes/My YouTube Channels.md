@@ -8,6 +8,7 @@ cssclasses:
   - page-black
   - center-title
   - dashboard
+  - Disappear
 ui: preview
 ---
 [YouTube](https://www.youtube.com/)

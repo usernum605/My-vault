@@ -3,6 +3,8 @@ The Topic:
   - Web
   - Dev
 Translate: true
+cssclasses:
+  - no-plus
 ---
 # Default Conversation
 

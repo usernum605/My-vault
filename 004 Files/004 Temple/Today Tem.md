@@ -34,8 +34,8 @@ icon: lucide-calendar-minus-2
 ### ==مهام المساء==
 
 - [ ] <strong style='color: steelblue'>١٠ دقائق</strong> أداء صلاة العصر <!-- (@{{date}} after-asr 20m) -->
-- [ ] <strong style='color: steelblue'>٢٠ دقيقة</strong> قراءة [[أذكار المساء]] <!-- (@{{date}} before-maghrib 30m) -->
-- [ ] <strong style='color: steelblue'>١٠ دقيقة</strong> قراءة [القرآن الكريم](warsh.pdf) <!-- (@{{date}} before-maghrib 10m) -->
+- [ ] <strong style='color: steelblue'>٢٠ دقيقة</strong> قراءة [[أذكار المساء]] <!-- (@{{date}} before-maghrib 30m) & (@{{date}} after-asr 30m) -->
+- [ ] <strong style='color: steelblue'>١٠ دقيقة</strong> قراءة [القرآن الكريم](warsh.pdf) <!-- (@{{date}} after-maghrib 10m) -->
 - [ ] <strong style='color: steelblue'>٣٠ دقيقة</strong> خوض تجربة مفيدة أو ممارسة هواية ممتعة جديدة للترويح عن النفس<!-- (@{{date}}) -->
 - [ ] <strong style='color: steelblue'>١٥ دقيقة</strong> لصلاة المغرب مع النوافل<!-- (@{{date}} after-maghrib 30m) -->
 - [ ] <strong style='color: steelblue'>٣٠ دقيقة</strong> حفظ القرآن الكريم <!-- (@{{date}} after-maghrib 20m) -->

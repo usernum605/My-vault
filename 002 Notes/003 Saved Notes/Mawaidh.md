@@ -4,7 +4,8 @@ icon: lucide-speech
 links pages:
   - "[[My tools#وضع الفيديو في اوبسيديان]]"
   - "[[warsh.pdf]]"
-banner_y: 12
+  - "[[Diny]]"
+banner_y: 23
 cssclasses:
   - center-everything
   - pen-blue
@@ -46,7 +47,7 @@ The Topic:
 ###### رسالة ابن أبي سفيان
 
 ![[Takwa.mp3]]
-
+![](https://youtu.be/FuM6-iJxgGc?si=JOMwOciyLf1vI-am)
 ###### أحداث بعد الموت
 ![[Tathakar]]
 

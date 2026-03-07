@@ -8,11 +8,12 @@ cssclasses:
   - invert-banner
   - recolor-images
   - dashboard
+  - no-plus
 The Topic:
   - Learning
 ---
 ##### فيديوهات سوف اشاهدها
-- ![](
+- ![](https://www.youtube.com/live/U9zLZTFeiBM?si=w4rfSJQkenQxCM3m)
 ##### تذكر
 
 ![[Tathakar]]

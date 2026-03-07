@@ -5,6 +5,7 @@ cssclasses:
   - Disappear
   - list-cards
   - Link
+banner: https://images.pexels.com/photos/5380642/pexels-photo-5380642.jpeg
 ---
 
 ```base
@@ -42,9 +43,11 @@ views:
 > [!link]- Real Links (Base)
 > - [[Quran]]
 > - [[Rebuild icons]]
+> - [[Content create]]
 > - [[Interesting topic]]
 > - [[Log - How to learn]]
 > - [[Mawaidh]]
+> - [[كيف تستقبل]]
 > - [[كيف نستثمر اوقاتنا]]
 > - [[My YouTube Channels]]
 > - [[Poem]]

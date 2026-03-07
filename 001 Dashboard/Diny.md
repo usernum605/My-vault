@@ -7,6 +7,7 @@ cssclasses:
   - card
   - page-grid
   - no-plus
+  - center-everything
 aliases:
   - ديني
 links pages:
@@ -23,13 +24,13 @@ where file.day = date(today) AND !completed
 
 ***
 #### فضل الصلاة
-<div style='font-size:26px ; color:skyblue '>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;من عظم  الصلاة عند الله تعالى
+<div style='font-size:26px ; color:skyblue '>:من عظم  الصلاة عند الله تعالى
 </div>
-
-<div style='color:skyblue; font-size:20px'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:قال الله تعالى
-<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;﴾إِنَّ ٱلصَّلَوٰةَ كَانَتۡ عَلَى ٱلۡمُؤۡمِنِينَ كِتَٰبٗا مَّوۡقُوتٗا﴿</div>
-<div style='color: skyblue; font-size: 15px'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{سورة النساء /الآية١٠٣}<br></div>١( فالصلاة هي القنبلة الموقوتة التي تتفجر في الآخرة إما ثوابا وأنهارا وسرورا أو عذابا أليما مرهقا, الصلاة هي العبادة الوحيدة التي  اوحيت إلى الرسول ﷺ  في السماء)١</div>
+<br>
+<div style='color:skyblue; font-size:20px'>:قال الله تعالى
+<div>﴾إِنَّ ٱلصَّلَوٰةَ كَانَتۡ عَلَى ٱلۡمُؤۡمِنِينَ كِتَٰبٗا مَّوۡقُوتٗا﴿</div>
+<br>
+<div style='color: skyblue; font-size: 15px'>{سورة النساء /الآية١٠٣}<br></div> فالصلاة هي القنبلة الموقوتة التي تتفجر في الآخرة إما ثوابا وأنهارا وسرورا أو عذابا أليما مرهقا, الصلاة هي العبادة الوحيدة التي  اوحيت إلى الرسول ﷺ  في السماء</div>
 <br>
 <div style='color: skyblue;font-size: 20px'>الحديث الصحيح : العهد الذي بيننا وبينهم الصلاةُ فمن تركها فقد كفرَ</div>
 <br>
@@ -101,6 +102,11 @@ dv.el("div", `
 [ترتيل للحفظ](https://download.tarteel.ai/)
 ![[Tracker A#Tracker Read Quran]]
 ***
+#### بعض الرسائل الجميلة
+١. [[كيف تستقبل|كيف تستقبل يومك]]
+٢. [[كيف نستثمر اوقاتنا]]
+٣. [[نصائح هامة للفلاح]]
+***
 #### قنواتي الإسلامية
 ١.قناة [هيثم طاعت](https://www.youtube.com/@Dr.Haitham_Talaat/videos)
 ٢.قناة [إياد القنيبي](https://www.youtube.com/@eyadqunaibi/videos)
@@ -117,9 +123,9 @@ dv.el("div", `
 
 #### احكام الدين
 ##### 1.الصلاة
-###### 1. الترقيع
+###### 1. ما تيسر جمعه من أحكام الترقيع
 - اذا نسي الإنسان ركن من أركان الصلاة بعد ركعة يرجع إلى الوضعية التي قبله ثم يقوم به
     - إذا كان ذاك الركن هو الركوع فيعود الرجل صاعدا للأعلى في وضعية الانحناء أي الوضعية التي هي قبل الركوع
 - وأما إذا كان الركن المنسي قبل أكثر من ركعة فيلغى ذاك الركن وتعاد الركعة أي لا تحسب ركعة الركن ويجب إعادتها وطبعا هناك سجود سهو بعدي
-###### 2. أدعية الصلاة
+###### 2. أدعية من صلاة اانبي ﷺ
 ![[Athkar & Adia#صلاته ﷺ]]

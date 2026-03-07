@@ -5,6 +5,8 @@ tags:
 The Topic:
   - Learning
   - Skill
+cssclasses:
+  - no-plus
 ---
 
 # Default Conversation
