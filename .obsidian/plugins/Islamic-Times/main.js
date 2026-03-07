@@ -754,6 +754,14 @@ module.exports = class PrayerAthanPlugin extends Plugin {
 					}
 				}));
 			}
+
+			// ⭐ NEW: Auto‑open Islamic note on startup if enabled
+			if (this.settings.autoOpenIslamicNoteOnStartup) {
+				// Small delay to ensure vault is fully ready
+				setTimeout(() => {
+					this.createOrOpenHijriDailyNote();
+				}, 1000);
+			}
 		});
 
 		// Register intervals — tuned for better battery usage
@@ -778,31 +786,6 @@ module.exports = class PrayerAthanPlugin extends Plugin {
 				this.fetchPrayerTimes();
 			}
 		}, 60_000));
-		this.app.workspace.onLayoutReady(async () => {
-    this.fetchPrayerTimes();
-    if (this.settings.tryWakeLockOnMobile) console.log("Prayer Times: Wake Lock enabled.");
-    
-    // Initialize Reminders if enabled
-    if (this.settings.enableReminders) {
-        await this.scanVaultForReminders();
-        this.registerEvent(this.app.vault.on("modify", (file) => this.scanFileForReminders(file)));
-        this.registerEvent(this.app.vault.on("delete", (file) => this.reminders.delete(file.path)));
-        this.registerEvent(this.app.vault.on("rename", (file, oldPath) => {
-            if (this.reminders.has(oldPath)) {
-                this.reminders.set(file.path, this.reminders.get(oldPath));
-                this.reminders.delete(oldPath);
-            }
-        }));
-    }
-
-    // ⭐ NEW: Auto‑open Islamic note on startup if enabled
-    if (this.settings.autoOpenIslamicNoteOnStartup) {
-        // Small delay to ensure vault is fully ready
-        setTimeout(() => {
-            this.createOrOpenHijriDailyNote();
-        }, 1000);
-    }
-});
 	}
 
 	onunload() {
@@ -884,7 +867,7 @@ module.exports = class PrayerAthanPlugin extends Plugin {
 
 			const raw = json.data.timings;
 			const clean = {};
-			for (const k of ["Fajr","Sunrise","Dhuhr","Asr","Maghrib","Isha","Midnight"]) {
+			for (const k of["Fajr","Sunrise","Dhuhr","Asr","Maghrib","Isha","Midnight"]) {
 				if (raw[k]) {
 					const cleaned = this._cleanTimeString(raw[k]);
 					
@@ -1019,7 +1002,7 @@ module.exports = class PrayerAthanPlugin extends Plugin {
 	   Fasting & supplications
 	----------------------------*/
 	_parseHijriDayList(txt) {
-		if (!txt) return [];
+		if (!txt) return[];
 		return txt.split(",").map(s => Number(s.trim())).filter(n => Number.isFinite(n) && n >= 1 && n <= 30);
 	}
 
@@ -1075,7 +1058,7 @@ module.exports = class PrayerAthanPlugin extends Plugin {
 	_analyzeFastingStatus(dateObj, hijriObj, dayOffset = 0) {
 		if (!hijriObj || !hijriObj.day) return null;
 
-		const weekdayKey = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][dateObj.getDay()];
+		const weekdayKey =["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][dateObj.getDay()];
 		
 		// Calculate Hijri Day based on offset (approximate)
 		let hDay = Number(hijriObj.day) + dayOffset;
@@ -1146,14 +1129,8 @@ module.exports = class PrayerAthanPlugin extends Plugin {
 	_checkFastingAlerts(now) {
 		if (!this.settings.fastingEnabled) return;
 
-		// Use the new centralized analyzer for Tomorrow (since alerts usually happen the night before)
-		// Or Today depending on when this runs. Usually alerts run at a specific prayer time.
-		
 		const tomorrow = new Date(now);
 		tomorrow.setDate(now.getDate() + 1);
-		
-		// We typically alert for *Tomorrow's* fast at Maghrib/Isha of *Today*
-		// Or alert for *Today's* fast at Fajr.
 		
 		const alertCfg = this.settings.fastingAlert || { prayer: "Fajr", offsetMinutes: 10, direction: "before" };
 		const refPrayer = alertCfg.prayer || "Fajr";
@@ -1169,18 +1146,13 @@ module.exports = class PrayerAthanPlugin extends Plugin {
 		const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
 		if (nowMinutes === alertMinutes) {
-			 // Analyze based on when the alert is set for. 
-			 // If alert is at Maghrib/Isha, we are likely warning for TOMORROW.
-			 // If alert is at Fajr, we are warning for TODAY.
 			 const isWarningForTomorrow = (refPrayer === "Maghrib" || refPrayer === "Isha");
 			 
 			 const targetDate = isWarningForTomorrow ? tomorrow : now;
 			 const offsetDay = isWarningForTomorrow ? 1 : 0;
 
-			 const status = this._analyzeFastingStatus(targetDate, this.hijri, offsetDay);
+			 const status = this._analyzeFastingStatus(targetDate, this._getCalculatedHijri(now), offsetDay);
 
-			 // Only trigger AUDIO alert if it is a Valid Fasting day (User, Recommended, Mandatory)
-			 // Do NOT trigger audio for Forbidden days.
 			 if (status && status.isFasting && !status.isForbidden) {
 				const key = `fasting_${this._dayKeyForFasting(now)}_${alertMinutes}`;
 				if (this.lastTriggered.fasting !== key) {
@@ -1196,7 +1168,8 @@ module.exports = class PrayerAthanPlugin extends Plugin {
 
 	_dayKeyForFasting(now) {
 		let key = now.toISOString().slice(0,10);
-		if (this.hijri && this.hijri.day) key += `_h${this.hijri.day}_${(this.hijri.month && this.hijri.month.en) || ""}`;
+		const h = this._getCalculatedHijri(now);
+		if (h && h.day) key += `_h${h.day}_${(h.month && h.month.en) || ""}`;
 		return key;
 	}
 
@@ -1255,12 +1228,13 @@ module.exports = class PrayerAthanPlugin extends Plugin {
 	   Holy day detection & notification
 	----------------------------*/
 	_checkHolyDayNotification() {
-		if (!this.hijri) return;
-		const dayNum = Number(this.hijri.day || (this.hijri.date && this.hijri.date.split("-")[0]) || NaN);
-		const monthName = (this.hijri.month && (this.hijri.month.en || this.hijri.month)) || "";
+		const h = this._getCalculatedHijri(new Date());
+		if (!h) return;
+		const dayNum = Number(h.day || (h.date && h.date.split("-")[0]) || NaN);
+		const monthName = (h.month && (h.month.en || h.month)) || "";
 		if (!Number.isFinite(dayNum)) return;
 
-		const holidays = [];
+		const holidays =[];
 		if (monthName.toLowerCase().includes("shawwal") && dayNum === 1) holidays.push("Eid al-Fitr");
 		if (monthName.toLowerCase().includes("dhul") && monthName.toLowerCase().includes("hijjah") && dayNum === 10) holidays.push("Eid al-Adha");
 		if (monthName.toLowerCase().includes("dhul") && monthName.toLowerCase().includes("hijjah") && dayNum === 9) holidays.push("Day of Arafah");
@@ -1482,7 +1456,7 @@ module.exports = class PrayerAthanPlugin extends Plugin {
 			const now = new Date();
 			const nowMin = now.getHours() * 60 + now.getMinutes();
 			let best = null;
-			for (const name of ["Fajr","Dhuhr","Asr","Maghrib","Isha"]) {
+			for (const name of["Fajr","Dhuhr","Asr","Maghrib","Isha"]) {
 				const t = this.prayerTimes[name];
 				if (!t) continue;
 				const pm = this._hmToMinutes(t);
@@ -1495,12 +1469,81 @@ module.exports = class PrayerAthanPlugin extends Plugin {
 		} catch (err) { return { name: "—", time: "--:--", inMinutes: "--" }; }
 	}
 
-	_formatHijri() {
-		if (!this.hijri) return null;
-		const year = this.hijri.year;
-		const monthNum = this.hijri.month?.number || this.hijri.month || null;
-		const monthName = this.hijri.month?.en || this.hijri.month?.ar || "";
-		const day = Number(this.hijri.day);
+	_getCalculatedHijri(targetDate = new Date()) {
+		if (!this.hijri || !this.fetchedAt) return this.hijri;
+		
+		const targetMidnight = new Date(targetDate);
+		targetMidnight.setHours(0,0,0,0);
+		
+		const fetchedMidnight = new Date(this.fetchedAt);
+		fetchedMidnight.setHours(0,0,0,0);
+		
+		const diffDays = Math.round((targetMidnight - fetchedMidnight) / (1000 * 60 * 60 * 24));
+		if (diffDays === 0) return this.hijri;
+		
+		// Deep copy hijri to safely modify properties offline
+		const calcHijri = JSON.parse(JSON.stringify(this.hijri));
+		
+		let d = Number(calcHijri.day);
+		if (Number.isFinite(d)) {
+			d += diffDays;
+			let m = Number(calcHijri.month?.number || 1);
+			let y = Number(calcHijri.year || 1445);
+			
+			// Simple rollover logic (assume 30 days for simplicity when offline)
+			while (d > 30) {
+				d -= 30;
+				m += 1;
+				if (m > 12) {
+					m = 1;
+					y += 1;
+				}
+			}
+			while (d < 1) {
+				d += 30; // Approximation for moving backwards
+				m -= 1;
+				if (m < 1) {
+					m = 12;
+					y -= 1;
+				}
+			}
+			
+			calcHijri.day = String(d).padStart(2, '0');
+			if (calcHijri.month) {
+				if (calcHijri.month.number) calcHijri.month.number = m;
+				const mIndex = m - 1;
+				if (mIndex >= 0 && mIndex < 12) {
+					const HIJRI_MONTHS =[
+						{ en: "Muharram", ar: "المحرم" },
+						{ en: "Safar", ar: "صفر" },
+						{ en: "Rabi' al-Awwal", ar: "ربيع الأول" },
+						{ en: "Rabi' al-Thani", ar: "ربيع الآخر" },
+						{ en: "Jumada al-Ula", ar: "جمادى الأولى" },
+						{ en: "Jumada al-Akhirah", ar: "جمادى الآخرة" },
+						{ en: "Rajab", ar: "رجب" },
+						{ en: "Sha'ban", ar: "شعبان" },
+						{ en: "Ramadan", ar: "رمضان" },
+						{ en: "Shawwal", ar: "شوال" },
+						{ en: "Dhu al-Qa'dah", ar: "ذو القعدة" },
+						{ en: "Dhu al-Hijjah", ar: "ذو الحجة" }
+					];
+					calcHijri.month.en = HIJRI_MONTHS[mIndex].en;
+					calcHijri.month.ar = HIJRI_MONTHS[mIndex].ar;
+				}
+			}
+			if (calcHijri.year) calcHijri.year = String(y);
+		}
+		
+		return calcHijri;
+	}
+
+	_formatHijri(targetDate = new Date()) {
+		const h = this._getCalculatedHijri(targetDate);
+		if (!h) return null;
+		const year = h.year;
+		const monthNum = h.month?.number || h.month || null;
+		const monthName = h.month?.en || h.month?.ar || "";
+		const day = Number(h.day);
 		if (!year || !monthNum || !day) return null;
 		if (this.settings.hijriDateFormat === "iso") {
 			const mm = String(monthNum).padStart(2, "0");
@@ -1580,19 +1623,20 @@ module.exports = class PrayerAthanPlugin extends Plugin {
             return;
         }
 
-        const now = this.fetchedAt ? new Date(this.fetchedAt) : new Date();
+        const now = new Date();
         const todayGregorian = new Date(now);
         const tomorrowGregorian = new Date(now);
         tomorrowGregorian.setDate(todayGregorian.getDate() + 1);
         const todayISO = todayGregorian.toISOString().slice(0, 10);
-        const weekdayKey = d => ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()];
+        const weekdayKey = d =>["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()];
         const todayWeekday = weekdayKey(todayGregorian);
         const tomorrowWeekday = weekdayKey(tomorrowGregorian);
 
-        const hijriText = this._formatHijri() || "";
+        const calculatedHijri = this._getCalculatedHijri(now);
+        const hijriText = this._formatHijri(now) || "";
         let hijriDay = null;
-        if (this.hijri) {
-            const raw = this.hijri.day || (this.hijri.date && this.hijri.date.split("-")[0]);
+        if (calculatedHijri) {
+            const raw = calculatedHijri.day || (calculatedHijri.date && calculatedHijri.date.split("-")[0]);
             const n = Number(raw);
             if (Number.isFinite(n)) hijriDay = n;
         }
@@ -1601,7 +1645,8 @@ module.exports = class PrayerAthanPlugin extends Plugin {
             tomorrowHijriDay = hijriDay + 1;
             if (tomorrowHijriDay > 30) tomorrowHijriDay -= 30;
         }
-        const hijriMonth = (this.hijri?.month && (this.hijri.month.en || this.hijri.month)) || "";
+        const hijriMonth = (calculatedHijri?.month && (calculatedHijri.month.en || calculatedHijri.month)) || "";
+        const hijriYear = calculatedHijri?.year ? String(calculatedHijri.year) : "";
 
         const hijriFastingDays = this._parseHijriDayList(this.settings.fastingHijriDays || "");
         const weekdayFasting = this.settings.fastingWeekdays || {};
@@ -1609,9 +1654,9 @@ module.exports = class PrayerAthanPlugin extends Plugin {
         const tomorrowIsFasting = (Number.isFinite(tomorrowHijriDay) && hijriFastingDays.includes(tomorrowHijriDay)) || !!weekdayFasting[tomorrowWeekday];
 
         const detectHolyDays = (dayNum) => {
-            if (!Number.isFinite(dayNum) || !hijriMonth) return [];
+            if (!Number.isFinite(dayNum) || !hijriMonth) return[];
             const m = hijriMonth.toLowerCase();
-            const out = [];
+            const out =[];
             if (m.includes("shawwal") && dayNum === 1) out.push("Eid al-Fitr");
             if (m.includes("dhul") && m.includes("hijjah") && dayNum === 9) out.push("Day of Arafah");
             if (m.includes("dhul") && m.includes("hijjah") && dayNum === 10) out.push("Eid al-Adha");
@@ -1636,9 +1681,9 @@ module.exports = class PrayerAthanPlugin extends Plugin {
         const path = `${folder}/${safeTitle}.md`;
 
         // Build the content sections
-        const prayerTimesSection = [];
+        const prayerTimesSection =[];
         prayerTimesSection.push(`## ${this.t("note_prayer_times")}`);
-        for (const p of ["Fajr","Dhuhr","Asr","Maghrib","Isha"]) {
+        for (const p of["Fajr","Dhuhr","Asr","Maghrib","Isha"]) {
             if (this.prayerTimes?.[p]) {
                 prayerTimesSection.push(`- [ ] ${this.tPrayer(p)} — ${this._formatTime(this.prayerTimes[p])}`);
             }
@@ -1647,14 +1692,14 @@ module.exports = class PrayerAthanPlugin extends Plugin {
 
         const prayerTimesTableContent = this._generatePrayerTimesTable();
 
-        const checklistSection = [];
+        const checklistSection =[];
         checklistSection.push(`## ${this.t("note_checklist")}`);
         checklistSection.push(`- [ ] ${this.t("note_morning")}`);
         checklistSection.push(`- [ ] ${this.t("note_evening")}`);
         checklistSection.push(`- [ ] ${this.t("note_bedtime")}`);
         const checklistContent = checklistSection.join("\n");
 
-        const specialDaysSection = [];
+        const specialDaysSection =[];
         if (todayHoly.length || tomorrowHoly.length || todayIsFasting || tomorrowIsFasting) {
             specialDaysSection.push(`## ${this.t("note_special_days")}`);
             if (todayHoly.length) specialDaysSection.push(`- <b style="font-size: 1.0em">${this.t("note_today_holy")}:</b> ${todayHoly.join(", ")}`);
@@ -1710,8 +1755,8 @@ module.exports = class PrayerAthanPlugin extends Plugin {
             '{{hijri_day}}': hijriDay ? String(hijriDay) : "",
             '{{HIJRI_MONTH}}': hijriMonth,
             '{{hijri_month}}': hijriMonth,
-            '{{HIJRI_YEAR}}': this.hijri?.year ? String(this.hijri.year) : "",
-            '{{hijri_year}}': this.hijri?.year ? String(this.hijri.year) : "",
+            '{{HIJRI_YEAR}}': hijriYear,
+            '{{hijri_year}}': hijriYear,
             '{{GREGORIAN_DATE}}': todayISO,
             '{{gregorian_date}}': todayISO,
             '{{PRAYER_TIMES_TABLE}}': prayerTimesTableContent,
@@ -1788,7 +1833,7 @@ module.exports = class PrayerAthanPlugin extends Plugin {
 			table = "| Prayer | Time |\n|--------|------|\n";
 		}
 		
-		for (const p of ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]) {
+		for (const p of["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]) {
 			if (times[p]) {
 				table += `| ${this.tPrayer(p)} | ${this._formatTime(times[p])} |\n`;
 			}
@@ -1863,7 +1908,7 @@ module.exports = class PrayerAthanPlugin extends Plugin {
 		try {
 			const content = await this.app.vault.read(file);
 			const lines = content.split(/\r?\n/);
-			const fileReminders = [];
+			const fileReminders =[];
 
 			// Regex 1: Specific Time (@YYYY-MM-DD HH:mm)
 			// Regex 2: Relative Prayer (@YYYY-MM-DD before/after-prayer offsetm)
@@ -1972,7 +2017,7 @@ module.exports = class PrayerAthanPlugin extends Plugin {
 	getUpcomingRemindersForToday() {
 		const now = new Date();
 		const todayISO = now.toISOString().slice(0, 10);
-		const upcoming = [];
+		const upcoming =[];
 		
 		this.reminders.forEach((list, filePath) => {
 			list.forEach(reminder => {
@@ -2024,8 +2069,8 @@ module.exports = class PrayerAthanPlugin extends Plugin {
 
 	_getDateFromTimeString(dateStr, timeStr) {
 		if(!timeStr) return null;
-		const [y, m, d] = dateStr.split('-').map(Number);
-		const [hr, min] = timeStr.split(':').map(Number);
+		const[y, m, d] = dateStr.split('-').map(Number);
+		const[hr, min] = timeStr.split(':').map(Number);
 		return new Date(y, m - 1, d, hr, min, 0);
 	}
 
@@ -2174,7 +2219,7 @@ module.exports = class PrayerAthanPlugin extends Plugin {
 		const m = mins % 60;
 		return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
 	}
-};
+}
 
 /* ============================
    Panel View
@@ -2185,7 +2230,7 @@ class PrayerPanelView extends ItemView {
 		super(leaf);
 		this.plugin = plugin;
 		// Initialize refOptions. If reminders enabled, add it to the cycle.
-		this.refOptions = ["sunrise", "midnight", "lastThird"];
+		this.refOptions =["sunrise", "midnight", "lastThird"];
 		if (this.plugin.settings.enableReminders) {
 			this.refOptions.push("reminders");
 		}
@@ -2228,7 +2273,7 @@ class PrayerPanelView extends ItemView {
 
 		btn.addEventListener("click", async () => {
 			// Re-evaluate options in case settings changed
-			this.refOptions = ["sunrise", "midnight", "lastThird"];
+			this.refOptions =["sunrise", "midnight", "lastThird"];
 			if (this.plugin.settings.enableReminders) {
 				this.refOptions.push("reminders");
 			}
@@ -2270,13 +2315,13 @@ class PrayerPanelView extends ItemView {
 
 		/* ----- fasting note ABOVE buttons ----- */
 
-		const nowDate = this.plugin.fetchedAt ? new Date(this.plugin.fetchedAt) : new Date();
+		const nowDate = new Date();
 		const tomorrowDate = new Date(nowDate);
 		tomorrowDate.setDate(nowDate.getDate() + 1);
 
 		// Analyze Today and Tomorrow
-		const statusToday = this.plugin._analyzeFastingStatus(nowDate, this.plugin.hijri, 0);
-		const statusTomorrow = this.plugin._analyzeFastingStatus(tomorrowDate, this.plugin.hijri, 1);
+		const statusToday = this.plugin._analyzeFastingStatus(nowDate, this.plugin._getCalculatedHijri(nowDate), 0);
+		const statusTomorrow = this.plugin._analyzeFastingStatus(tomorrowDate, this.plugin._getCalculatedHijri(nowDate), 1);
 		const isAr = this.plugin.settings.language === "ar";
 
 		let combinedText = "";
@@ -2394,7 +2439,7 @@ class PrayerPanelView extends ItemView {
 		const next = this.plugin._getNextPrayer();
 
 		let currentName = null;
-		for (const name of ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]) {
+		for (const name of["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]) {
 			const t = times[name];
 			if (!t) continue;
 			if (this.plugin._hmToMinutes(t) === nowMin) {

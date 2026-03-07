@@ -41,6 +41,7 @@ views:
 ```
 
 > [!link]- Real Links (Base)
+> - [[Islamic time plugin issue]]
 > - [[Quran]]
 > - [[Rebuild icons]]
 > - [[Content create]]
