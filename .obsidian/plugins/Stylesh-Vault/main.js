@@ -25,9 +25,7 @@ const DEFAULT_SETTINGS = {
     uiProperty: "ui",
     enableCache: true,
     cacheExpiryDays: 30,
-    hideScrollbars: true,
-    showPropertiesOnCreate: true,
-    showPropertiesOnCreateDuration: 60
+    hideScrollbars: true
 };
 
 module.exports = class StyleshVault extends Plugin {
@@ -36,85 +34,52 @@ module.exports = class StyleshVault extends Plugin {
 
         this.hideBacklinksOnStartup();
 
+        // ========== إدارة الحالة ==========
         this.editingProperties = new Set();
         this.propertyEditTimeout = null;
 
+        // تخزين حالة العرض المؤقت للخصائص لكل ملف
+        // المفتاح: مسار الملف، القيمة: { props: Set, timeout: timeoutId }
         this.temporaryVisibleProps = new Map();
 
+        // لإدارة المؤقتات المركزية
+        this.activeTimeouts = new Map();
+        this.activeIntervals = new Map();
+
+        // لإدارة أيقونات الصور
         this.iconRenderPromises = new Map();
         this.iconRenderTimeouts = new Map();
         this.renderedIcons = new Map();
         this.pendingIconRenders = new Set();
 
-        // Track which files have had their icons rendered to avoid re-rendering on mode switch
+        // لمنع إعادة الرسم غير الضرورية
         this.renderedFiles = new Set();
         this.currentRenderedFile = null;
 
-        this.newlyCreatedFiles = new Map();
-        this.newFileTimer = null;
-
+        // ========== إعدادات أولية ==========
         this.addSettingTab(new StyleshVaultSettingTab(this.app, this));
         this.updateCssVariables();
         this.updateHiddenPropertiesCSS();
 
-        // ========== FORCE VIEW MODE (Event‑based, no setInterval) ==========
-        this.registerEvent(
-    this.app.workspace.on('layout-change', () => {
-        const markdownLeaves = this.app.workspace.getLeavesOfType("markdown");
-        markdownLeaves.forEach(leaf => {
-            const file = leaf.view?.file;
-            if (!file) return;
-            const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
-            const uiMode = fm?.[this.settings.uiProperty];
-            if (uiMode === 'preview-force' || uiMode === 'edit-force') {
-                this.checkForceModeForLeaf(leaf);
-            }
-        });
-    })
-);
+        // ========== تسجيل جميع الأحداث ==========
+        this.registerAllEvents();
 
-        this.registerEvent(
-    this.app.workspace.on('active-leaf-change', (leaf) => {
-        if (!leaf) return;
-        const file = leaf.view?.file;
-        if (!file) return;
-        const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
-        const uiMode = fm?.[this.settings.uiProperty];
-        if (uiMode === 'preview-force' || uiMode === 'edit-force') {
-            this.checkForceModeForLeaf(leaf);
-        }
-    })
-);
-
-        this.registerEvent(
-    this.app.metadataCache.on('changed', (file) => {
-        if (this.app.workspace.getActiveFile()?.path === file.path) {
-            const activeLeaf = this.app.workspace.activeLeaf;
-            if (!activeLeaf) return;
-            const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
-            const uiMode = fm?.[this.settings.uiProperty];
-            if (uiMode === 'preview-force' || uiMode === 'edit-force') {
-                this.checkForceModeForLeaf(activeLeaf);
-            }
-        }
-    })
-);
-        // ===================================================================
-
+        // ========== حدث فتح ملف (مع تأخير بسيط) ==========
         this.registerEvent(this.app.workspace.on("file-open", (file) => {
             setTimeout(() => {
+                this.cleanupDuplicates(file);
                 const activeLeaf = this.app.workspace.activeLeaf;
                 if (activeLeaf) this.checkForceModeForLeaf(activeLeaf);
-                this.cleanupDuplicates(file);
                 this.debouncedUpdate();
                 this.addShowFullPropertiesButtons();
-                this.checkNewlyCreatedFile(file);
                 this.updateHiddenPropertiesCSS();
             }, 100);
         }));
 
+        // ========== تهيئة الكاش ==========
         await this.initCache();
 
+        // ========== الأوامر ==========
         this.addCommand({
             id: 'select-icon',
             name: 'Select Icon',
@@ -155,6 +120,39 @@ module.exports = class StyleshVault extends Plugin {
             }
         });
 
+        // أمر عرض جميع الخصائص المخفية مؤقتاً
+        this.addCommand({
+            id: 'show-all-hidden-properties',
+            name: 'Show All Hidden Properties Temporarily',
+            checkCallback: (checking) => {
+                const file = this.app.workspace.getActiveFile();
+                if (file instanceof TFile) {
+                    if (!checking) {
+                        this.showTemporaryProperties(file, this.settings.hiddenProperties);
+                    }
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        // أمر عرض الخصائص المحددة في temporaryHiddenProperties
+        this.addCommand({
+            id: 'show-temporary-properties',
+            name: 'Show Temporary Properties',
+            checkCallback: (checking) => {
+                const file = this.app.workspace.getActiveFile();
+                if (file instanceof TFile) {
+                    if (!checking) {
+                        this.showTemporaryProperties(file, this.settings.temporaryHiddenProperties);
+                    }
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        // ========== قوائم السياق ==========
         this.registerEvent(
             this.app.workspace.on("file-menu", (menu, file) => {
                 if (file instanceof TFile || file instanceof TFolder) {
@@ -177,7 +175,7 @@ module.exports = class StyleshVault extends Plugin {
             this.setupPropertyContextMenus();
             this.addShowFullPropertiesButtons();
 
-            // Apply force mode to all already open markdown leaves at startup
+            // تطبيق وضع القوة على جميع الأوراق المفتوحة عند بدء التشغيل
             const markdownLeaves = this.app.workspace.getLeavesOfType("markdown");
             markdownLeaves.forEach(leaf => this.checkForceModeForLeaf(leaf));
         });
@@ -209,11 +207,59 @@ module.exports = class StyleshVault extends Plugin {
             }
         });
 
+        // ========== دالة debounce للتحديثات ==========
         this.debouncedUpdate = debounce(() => {
             this.updateAllViews();
             this.updateTabIcons();
         }, 300, true);
 
+        // ========== إعداد مستمعي تحرير الخصائص ==========
+        this.setupPropertyEditListeners();
+
+        // ========== تحديث نمط شريط التمرير ==========
+        this.updateScrollbarStyle();
+    }
+
+    // ========== تسجيل جميع الأحداث (مركزياً) ==========
+    registerAllEvents() {
+        // أحداث وضع القوة (فعلية للأوضاع القسرية فقط)
+        this.registerEvent(this.app.workspace.on('layout-change', () => {
+            const markdownLeaves = this.app.workspace.getLeavesOfType("markdown");
+            markdownLeaves.forEach(leaf => {
+                const file = leaf.view?.file;
+                if (!file) return;
+                const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
+                const uiMode = fm?.[this.settings.uiProperty];
+                if (uiMode === 'preview-force' || uiMode === 'edit-force') {
+                    this.checkForceModeForLeaf(leaf);
+                }
+            });
+        }));
+
+        this.registerEvent(this.app.workspace.on('active-leaf-change', (leaf) => {
+            if (!leaf) return;
+            const file = leaf.view?.file;
+            if (!file) return;
+            const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
+            const uiMode = fm?.[this.settings.uiProperty];
+            if (uiMode === 'preview-force' || uiMode === 'edit-force') {
+                this.checkForceModeForLeaf(leaf);
+            }
+        }));
+
+        this.registerEvent(this.app.metadataCache.on('changed', (file) => {
+            if (this.app.workspace.getActiveFile()?.path === file.path) {
+                const activeLeaf = this.app.workspace.activeLeaf;
+                if (!activeLeaf) return;
+                const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
+                const uiMode = fm?.[this.settings.uiProperty];
+                if (uiMode === 'preview-force' || uiMode === 'edit-force') {
+                    this.checkForceModeForLeaf(activeLeaf);
+                }
+            }
+        }));
+
+        // أحداث التحديث (debounced)
         this.registerEvent(this.app.workspace.on("layout-change", () => this.debouncedUpdate()));
         this.registerEvent(this.app.workspace.on("active-leaf-change", () => {
             this.debouncedUpdate();
@@ -232,14 +278,13 @@ module.exports = class StyleshVault extends Plugin {
                 this.cleanupDuplicates(file);
                 this.debouncedUpdate();
                 this.addShowFullPropertiesButtons();
-                this.checkNewlyCreatedFile(file);
             }, 100);
         }));
 
+        // أحداث vault
         this.registerEvent(this.app.vault.on("create", (file) => {
             if (file instanceof TFile) {
                 setTimeout(() => {
-                    this.checkNewlyCreatedFile(file);
                     if (this.app.workspace.getActiveFile()?.path === file.path) {
                         this.updateHiddenPropertiesCSS();
                     }
@@ -247,33 +292,18 @@ module.exports = class StyleshVault extends Plugin {
             }
         }));
 
-        this.addCommand({
-            id: 'show-temporary-properties',
-            name: 'Show Hidden Properties Temporarily',
-            checkCallback: (checking) => {
-                const file = this.app.workspace.getActiveFile();
-                if (file instanceof TFile) {
-                    if (!checking) {
-                        this.showTemporaryProperties(file);
-                    }
-                    return true;
-                }
-                return false;
-            }
-        });
-
-        this.updateScrollbarStyle();
-
-        this.setupPropertyEditListeners();
+        // إغلاق backlinks
+        this.registerEvent(this.app.workspace.on('layout-change', () => {
+            this.closeBacklinksLeaf();
+        }));
     }
 
-    // ========== FORCE MODE FUNCTION ==========
+    // ========== دالة وضع القوة ==========
     checkForceModeForLeaf(leaf) {
         if (!leaf || !(leaf.view instanceof MarkdownView) || !leaf.view.file) return;
-
         const file = leaf.view.file;
         const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
-        const uiMode = fm?.[this.settings.uiProperty]; // e.g., 'preview-force', 'edit-force', 'preview', 'edit'
+        const uiMode = fm?.[this.settings.uiProperty];
         if (!uiMode) return;
 
         let targetMode = null;
@@ -297,137 +327,18 @@ module.exports = class StyleshVault extends Plugin {
             }).catch(err => console.error('Error enforcing force mode:', err));
         }
     }
-    // =========================================
 
-    checkNewlyCreatedFile(file) {
-        if (!file || !file.path || !this.settings.showPropertiesOnCreate) return false;
-
-        const filePath = file.path;
-        const now = Date.now();
-
-        if (this.newlyCreatedFiles.has(filePath)) {
-            const expiryTime = this.newlyCreatedFiles.get(filePath);
-            if (now < expiryTime) {
-                return true;
-            } else {
-                this.newlyCreatedFiles.delete(filePath);
-                return false;
-            }
-        }
-
-        try {
-            const stat = this.app.vault.getAbstractFileByPath(filePath)?.stat;
-            if (stat && stat.ctime) {
-                const fileAge = now - stat.ctime;
-                const durationMs = this.settings.showPropertiesOnCreateDuration * 1000;
-
-                if (fileAge < durationMs) {
-                    this.newlyCreatedFiles.set(filePath, stat.ctime + durationMs);
-
-                    setTimeout(() => {
-                        if (this.newlyCreatedFiles.has(filePath)) {
-                            this.newlyCreatedFiles.delete(filePath);
-                            this.updateHiddenPropertiesCSS();
-
-                            if (this.app.workspace.getActiveFile()?.path === filePath) {
-                                new Notice('New file grace period ended - hidden properties are now hidden');
-                            }
-                        }
-                    }, durationMs - (now - stat.ctime));
-
-                    return true;
-                }
-            }
-        } catch (error) {
-            console.error('Error checking file creation time:', error);
-        }
-
-        return false;
-    }
-
-    toggleNewFileNotice(file, isNewlyCreated) {
-        if (!file) return;
-
-        const container = document.querySelector('.metadata-container');
-        if (!container) return;
-
-        let noticeEl = container.querySelector('.new-file-notice');
-
-        if (isNewlyCreated) {
-            if (!noticeEl) {
-                const stat = file.stat;
-                const now = Date.now();
-                const expiryTime = stat.ctime + (this.settings.showPropertiesOnCreateDuration * 1000);
-                const remainingSeconds = Math.max(0, Math.ceil((expiryTime - now) / 1000));
-
-                noticeEl = document.createElement('div');
-                noticeEl.classList.add('new-file-notice');
-
-                const iconSpan = document.createElement('span');
-                iconSpan.classList.add('new-file-notice-icon');
-                iconSpan.innerHTML = '✨';
-
-                const textSpan = document.createElement('span');
-                textSpan.classList.add('new-file-notice-text');
-                textSpan.textContent = `New file: showing all properties for ${remainingSeconds}s`;
-
-                noticeEl.appendChild(iconSpan);
-                noticeEl.appendChild(textSpan);
-
-                const metadataContent = container.querySelector('.metadata-content');
-                if (metadataContent) {
-                    container.insertBefore(noticeEl, metadataContent);
-                } else {
-                    container.appendChild(noticeEl);
-                }
-
-                if (this.newFileTimer) clearInterval(this.newFileTimer);
-                this.newFileTimer = setInterval(() => {
-                    if (!this.newlyCreatedFiles.has(file.path)) {
-                        clearInterval(this.newFileTimer);
-                        this.newFileTimer = null;
-                        if (noticeEl) noticeEl.remove();
-                        return;
-                    }
-
-                    const now = Date.now();
-                    const expiryTime = this.newlyCreatedFiles.get(file.path);
-                    const remainingSeconds = Math.max(0, Math.ceil((expiryTime - now) / 1000));
-
-                    if (remainingSeconds <= 0) {
-                        clearInterval(this.newFileTimer);
-                        this.newFileTimer = null;
-                        if (noticeEl) noticeEl.remove();
-                    } else {
-                        const textSpan = noticeEl.querySelector('.new-file-notice-text');
-                        if (textSpan) {
-                            textSpan.textContent = `New file: showing all properties for ${remainingSeconds}s`;
-                        }
-                    }
-                }, 1000);
-            }
-        } else {
-            if (noticeEl) {
-                noticeEl.remove();
-            }
-            if (this.newFileTimer) {
-                clearInterval(this.newFileTimer);
-                this.newFileTimer = null;
-            }
-        }
-    }
-
-    async showTemporaryProperties(file) {
+    // ========== إدارة العرض المؤقت للخصائص ==========
+    async showTemporaryProperties(file, propsArray) {
         if (!file || !file.path) return;
-
         const filePath = file.path;
-        const activeProps = this.settings.temporaryHiddenProperties;
 
-        if (activeProps.length === 0) {
-            new Notice('No properties configured for temporary view. Add properties in plugin settings.');
+        if (propsArray.length === 0) {
+            new Notice('No properties selected to show.');
             return;
         }
 
+        // إلغاء أي مؤقت سابق لهذا الملف
         if (this.temporaryVisibleProps.has(filePath)) {
             const previous = this.temporaryVisibleProps.get(filePath);
             if (previous.timeout) {
@@ -435,7 +346,7 @@ module.exports = class StyleshVault extends Plugin {
             }
         }
 
-        const propsSet = new Set(activeProps);
+        const propsSet = new Set(propsArray);
         this.temporaryVisibleProps.set(filePath, {
             props: propsSet,
             timeout: null
@@ -443,13 +354,17 @@ module.exports = class StyleshVault extends Plugin {
 
         this.updateHiddenPropertiesCSS();
 
-        new Notice(`Showing ${activeProps.length} hidden properties for ${this.settings.temporaryViewTimeout} seconds`);
+        new Notice(`Showing ${propsArray.length} properties for ${this.settings.temporaryViewTimeout} seconds`);
 
         const timeout = setTimeout(() => {
             this.hideTemporaryProperties(filePath);
         }, this.settings.temporaryViewTimeout * 1000);
 
+        // تخزين المؤقت
         this.temporaryVisibleProps.get(filePath).timeout = timeout;
+        const timeoutKey = `tempProps-${filePath}`;
+        if (this.activeTimeouts.has(timeoutKey)) clearTimeout(this.activeTimeouts.get(timeoutKey));
+        this.activeTimeouts.set(timeoutKey, timeout);
     }
 
     hideTemporaryProperties(filePath) {
@@ -459,13 +374,17 @@ module.exports = class StyleshVault extends Plugin {
                 clearTimeout(data.timeout);
             }
             this.temporaryVisibleProps.delete(filePath);
-
             this.updateHiddenPropertiesCSS();
-
             new Notice('Temporary properties have been hidden');
+        }
+        const timeoutKey = `tempProps-${filePath}`;
+        if (this.activeTimeouts.has(timeoutKey)) {
+            clearTimeout(this.activeTimeouts.get(timeoutKey));
+            this.activeTimeouts.delete(timeoutKey);
         }
     }
 
+    // ========== تحديث CSS لإخفاء/إظهار الخصائص ==========
     updateHiddenPropertiesCSS() {
         let styleEl = document.getElementById('pp-hidden-props') || document.head.createEl('style', { id: 'pp-hidden-props' });
 
@@ -473,80 +392,59 @@ module.exports = class StyleshVault extends Plugin {
         const currentFile = this.app.workspace.getActiveFile();
         const currentFilePath = currentFile ? currentFile.path : null;
 
-        const isNewlyCreated = currentFilePath ? this.checkNewlyCreatedFile(currentFile) : false;
         const hasTemporaryVisible = currentFilePath && this.temporaryVisibleProps.has(currentFilePath);
+        const tempProps = hasTemporaryVisible ? this.temporaryVisibleProps.get(currentFilePath).props : new Set();
 
         this.settings.hiddenProperties.forEach(prop => {
             let shouldShow = false;
 
-            if (isNewlyCreated) {
+            if (this.editingProperties.has(prop)) {
                 shouldShow = true;
-            }
-            else if (this.editingProperties.has(prop)) {
-                shouldShow = true;
-            }
-            else if (currentFilePath &&
-                this.temporaryVisibleProps.has(currentFilePath) &&
-                this.temporaryVisibleProps.get(currentFilePath).props.has(prop)) {
+            } else if (hasTemporaryVisible && tempProps.has(prop)) {
                 shouldShow = true;
             }
 
             if (shouldShow) {
                 rules.push(`
-                .metadata-property[data-property-key="${prop}"] {
-                    opacity: 1 !important;
-                    display: block !important;
-                }
-            `);
+                    .metadata-property[data-property-key="${prop}"] { 
+                        opacity: 1 !important;
+                        display: block !important;
+                    }
+                `);
             } else {
                 rules.push(`.metadata-property[data-property-key="${prop}"] { display: none !important; }`);
             }
         });
 
-        if (isNewlyCreated) {
-            rules.push(`
-            .new-file-notice {
-                display: flex !important;
-            }
-        `);
-        }
-
         styleEl.innerText = rules.join("\n");
-
-        this.toggleNewFileNotice(currentFile, isNewlyCreated);
     }
 
+    // ========== إضافة أزرار "Show Full Properties" ==========
     addShowFullPropertiesButtons() {
         const propertiesContainers = document.querySelectorAll('.metadata-container');
-
         propertiesContainers.forEach(container => {
             if (container.querySelector('.show-full-properties-btn')) return;
-
             const header = container.querySelector('.metadata-container-heading');
             if (!header) return;
-
             const file = this.app.workspace.getActiveFile();
             if (!file) return;
-
             const showFullBtn = document.createElement('button');
             showFullBtn.classList.add('show-full-properties-btn');
-            showFullBtn.textContent = 'Show Full Properties';
-            showFullBtn.title = 'Show temporary properties for 60 seconds';
-
+            showFullBtn.textContent = 'Show All Hidden';
+            showFullBtn.title = 'Show all hidden properties temporarily';
             showFullBtn.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                await this.showTemporaryProperties(file);
+                await this.showTemporaryProperties(file, this.settings.hiddenProperties);
             });
-
             header.appendChild(showFullBtn);
         });
     }
 
+    // ========== قوائم السياق للخصائص ==========
     handlePropertyContextMenu(evt, propertyEl) {
         evt.preventDefault();
         evt.stopPropagation();
-
         const propertyKey = propertyEl.getAttribute('data-property-key');
         if (!propertyKey) return;
 
@@ -554,7 +452,6 @@ module.exports = class StyleshVault extends Plugin {
         const isInTempView = this.settings.temporaryHiddenProperties.includes(propertyKey);
 
         const menu = new Menu();
-
         menu.addItem(item =>
             item
                 .setTitle(isHidden ? `Unhide property "${propertyKey}"` : `Hide property "${propertyKey}"`)
@@ -567,11 +464,9 @@ module.exports = class StyleshVault extends Plugin {
                     } else {
                         this.settings.hiddenProperties.push(propertyKey);
                         new Notice(`Property "${propertyKey}" is now hidden`);
-
                         this.editingProperties.add(propertyKey);
                         await this.saveSettings();
                         this.updateHiddenPropertiesCSS();
-
                         setTimeout(() => {
                             this.editingProperties.delete(propertyKey);
                             this.updateHiddenPropertiesCSS();
@@ -586,7 +481,7 @@ module.exports = class StyleshVault extends Plugin {
             menu.addItem(item =>
                 item
                     .setTitle(isInTempView ? `Remove from temporary view` : `Add to temporary view`)
-                    .setIcon(isInTempView ? "square-dashed-mouse-pointer" : "square-dashed-mouse-pointer")
+                    .setIcon("square-dashed-mouse-pointer")
                     .onClick(async () => {
                         if (isInTempView) {
                             this.settings.temporaryHiddenProperties.remove(propertyKey);
@@ -599,10 +494,15 @@ module.exports = class StyleshVault extends Plugin {
                     })
             );
         }
-
         menu.addSeparator();
-
         menu.showAtPosition({ x: evt.clientX, y: evt.clientY });
+    }
+
+    setupPropertyContextMenus() {
+        document.querySelectorAll('.metadata-property:not([data-pp-has-listener])').forEach(propertyEl => {
+            propertyEl.setAttribute('data-pp-has-listener', 'true');
+            propertyEl.addEventListener('contextmenu', (evt) => this.handlePropertyContextMenu(evt, propertyEl));
+        });
     }
 
     setupPropertyEditListeners() {
@@ -613,11 +513,9 @@ module.exports = class StyleshVault extends Plugin {
                 const propertyKey = propertyEl.getAttribute('data-property-key');
                 if (propertyKey && this.settings.hiddenProperties.includes(propertyKey)) {
                     this.editingProperties.add(propertyKey);
-
                     if (this.propertyEditTimeout) {
                         clearTimeout(this.propertyEditTimeout);
                     }
-
                     this.updateHiddenPropertiesCSS();
                 }
             }
@@ -638,15 +536,15 @@ module.exports = class StyleshVault extends Plugin {
         });
     }
 
+    // ========== تنظيف التكرارات (محسّن) ==========
     cleanupDuplicates(file) {
         const filePath = file?.path;
         if (!filePath) return;
-
         const cleanedContainers = new Set();
-
         const containers = [];
-        this.app.workspace.iterateAllLeaves((leaf) => {
-            if (leaf.view instanceof MarkdownView && leaf.view.file?.path === filePath) {
+        const markdownLeaves = this.app.workspace.getLeavesOfType("markdown");
+        markdownLeaves.forEach(leaf => {
+            if (leaf.view?.file?.path === filePath) {
                 const contentEl = leaf.view.contentEl;
                 const scroller = contentEl.querySelector(".markdown-source-view > .cm-editor > .cm-scroller");
                 const preview = contentEl.querySelector(".markdown-reading-view > .markdown-preview-view");
@@ -657,36 +555,29 @@ module.exports = class StyleshVault extends Plugin {
 
         containers.forEach(container => {
             if (cleanedContainers.has(container)) return;
-
             const iconWrappers = container.querySelectorAll(":scope > .icon-wrapper");
             if (iconWrappers.length > 1) {
                 const firstWrapper = iconWrappers[0];
                 for (let i = 1; i < iconWrappers.length; i++) {
                     const currentIcon = iconWrappers[i].getAttribute("data-icon");
                     const firstIcon = firstWrapper.getAttribute("data-icon");
-                    if (currentIcon === firstIcon) {
-                        iconWrappers[i].remove();
-                    }
+                    if (currentIcon === firstIcon) iconWrappers[i].remove();
                 }
             }
-
             const bannerImages = container.querySelectorAll(":scope > .banner-image");
             if (bannerImages.length > 1) {
                 const firstBanner = bannerImages[0];
                 for (let i = 1; i < bannerImages.length; i++) {
                     const currentSrc = bannerImages[i].getAttribute("data-src");
                     const firstSrc = firstBanner.getAttribute("data-src");
-                    if (currentSrc === firstSrc) {
-                        bannerImages[i].remove();
-                    }
+                    if (currentSrc === firstSrc) bannerImages[i].remove();
                 }
             }
-
             cleanedContainers.add(container);
         });
 
-        this.app.workspace.iterateAllLeaves((leaf) => {
-            if (leaf.view instanceof MarkdownView && leaf.view.file?.path === filePath) {
+        markdownLeaves.forEach(leaf => {
+            if (leaf.view?.file?.path === filePath) {
                 const contentEl = leaf.view.contentEl;
                 const titleIcons = contentEl.querySelectorAll(".pp-title-icon");
                 if (titleIcons.length > 1) {
@@ -702,6 +593,7 @@ module.exports = class StyleshVault extends Plugin {
         });
     }
 
+    // ========== إدارة الكاش ==========
     async initCache() {
         const data = await this.loadData();
         this.imageCache = data?.imageCache || {};
@@ -730,16 +622,13 @@ module.exports = class StyleshVault extends Plugin {
 
     async fetchAndCacheImage(url, sourcePath) {
         if (!url || !url.startsWith("http")) return url;
-
         const cacheKey = `${url}`;
         const now = Date.now();
         const expiryMs = this.settings.cacheExpiryDays * 24 * 60 * 60 * 1000;
 
         if (this.imageCache[cacheKey] && this.cacheTimestamps[cacheKey]) {
             const age = now - this.cacheTimestamps[cacheKey];
-            if (age < expiryMs) {
-                return this.imageCache[cacheKey];
-            }
+            if (age < expiryMs) return this.imageCache[cacheKey];
         }
 
         if (this.pendingFetches.has(cacheKey)) {
@@ -753,17 +642,13 @@ module.exports = class StyleshVault extends Plugin {
                     method: 'GET',
                     contentType: 'arraybuffer'
                 });
-
                 if (response.status >= 200 && response.status < 300) {
                     const contentType = response.headers['content-type'] || 'image/png';
                     const base64 = Buffer.from(response.arrayBuffer).toString('base64');
                     const dataUrl = `data:${contentType};base64,${base64}`;
-
                     this.imageCache[cacheKey] = dataUrl;
                     this.cacheTimestamps[cacheKey] = now;
-
                     await this.saveCache();
-
                     return dataUrl;
                 } else {
                     console.warn(`Failed to fetch image: ${response.status} ${url}`);
@@ -776,23 +661,29 @@ module.exports = class StyleshVault extends Plugin {
                 this.pendingFetches.delete(cacheKey);
             }
         })();
-
         this.pendingFetches.set(cacheKey, fetchPromise);
         return await fetchPromise;
     }
 
     async resolveLink(link, sourcePath) {
         if (!link) return "";
-
         if (link.startsWith("http")) {
-            if (this.settings.enableCache) {
-                return await this.fetchAndCacheImage(link, sourcePath);
-            }
+            if (this.settings.enableCache) return await this.fetchAndCacheImage(link, sourcePath);
             return link;
         }
-
         const file = this.app.metadataCache.getFirstLinkpathDest(link, sourcePath);
         return file ? this.app.vault.getResourcePath(file) : link;
+    }
+
+    // ========== عرض البانر والأيقونات (بدون تغيير كبير) ==========
+    formatImageLink(link) {
+        if (!link || typeof link !== 'string') return "";
+        return link.replace(/^!?\[\[|\]\]$/g, "");
+    }
+
+    isEmoji(str) {
+        const emojiRegex = /^\p{Emoji}$/u;
+        return emojiRegex.test(str) && !str.includes(".") && !str.includes("/");
     }
 
     async renderBanner(contentEl, containers, fm, sourcePath) {
@@ -821,24 +712,19 @@ module.exports = class StyleshVault extends Plugin {
 
                 try {
                     const img = document.createElement("img");
-
                     let imgSrc = bannerSrc;
                     if (bannerSrc.startsWith("http")) {
                         imgSrc = await this.resolveLink(bannerSrc, sourcePath);
                     } else if (!bannerSrc.startsWith("data:")) {
                         imgSrc = await this.resolveLink(bannerSrc, sourcePath);
                     }
-
                     img.src = imgSrc;
                     img.style.objectPosition = `center ${bannerPos}%`;
                     img.onerror = () => {
                         console.warn(`Failed to load banner: ${bannerSrc}`);
                         bannerEl.style.display = "none";
                     };
-                    img.onload = () => {
-                        bannerEl.style.display = "";
-                    };
-
+                    img.onload = () => { bannerEl.style.display = ""; };
                     bannerEl.appendChild(img);
                 } catch (error) {
                     console.error("Error rendering banner:", error);
@@ -846,15 +732,12 @@ module.exports = class StyleshVault extends Plugin {
                 }
             }
         }
-
         contentEl.classList.add("has-banner");
     }
 
     ensureIconsVisible(containers, contentEl, fm, sourcePath) {
         const iconValue = fm?.[this.settings.iconProperty];
-
         if (!iconValue) return;
-
         if (this.settings.iconInTitle) {
             const titleIcon = contentEl.querySelector(".pp-title-icon");
             if (!titleIcon && iconValue) {
@@ -877,19 +760,14 @@ module.exports = class StyleshVault extends Plugin {
     async processView(view) {
         const file = view.file;
         if (!file) return;
-
         try {
             await new Promise(resolve => setTimeout(resolve, 10));
-
             this.cleanupDuplicates(file);
-
             const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
             const contentEl = view.contentEl;
-
             const scroller = contentEl.querySelector(".markdown-source-view > .cm-editor > .cm-scroller");
             const preview = contentEl.querySelector(".markdown-reading-view > .markdown-preview-view");
             const containers = [scroller, preview].filter(c => c !== null);
-
             contentEl.querySelectorAll(".markdown-embed .banner-image, .markdown-embed .icon-wrapper, .markdown-embed .pp-title-icon").forEach(el => el.remove());
 
             const iconValue = fm?.[this.settings.iconProperty] || 'no-icon';
@@ -909,145 +787,9 @@ module.exports = class StyleshVault extends Plugin {
         }
     }
 
-    setupPropertyContextMenus() {
-        document.querySelectorAll('.metadata-property:not([data-pp-has-listener])').forEach(propertyEl => {
-            propertyEl.setAttribute('data-pp-has-listener', 'true');
-            propertyEl.addEventListener('contextmenu', (evt) => this.handlePropertyContextMenu(evt, propertyEl));
-        });
-    }
-
-    onunload() {
-        if (this.propertyEditTimeout) {
-            clearTimeout(this.propertyEditTimeout);
-        }
-
-        this.temporaryVisibleProps.forEach((data, filePath) => {
-            if (data.timeout) {
-                clearTimeout(data.timeout);
-            }
-        });
-        this.temporaryVisibleProps.clear();
-
-        this.iconRenderTimeouts.forEach(timeout => clearTimeout(timeout));
-        this.iconRenderTimeouts.clear();
-
-        if (this.newFileTimer) {
-            clearInterval(this.newFileTimer);
-        }
-
-        document.querySelectorAll(".banner-image, .icon-wrapper, .pp-title-icon, .pp-file-icon").forEach(el => el.remove());
-        document.getElementById('pp-hidden-props')?.remove();
-
-        document.querySelectorAll('.show-full-properties-btn').forEach(btn => btn.remove());
-
-        document.querySelectorAll(".pp-title-wrapper").forEach(w => {
-            const title = w.querySelector(".inline-title");
-            if (title) w.parentNode.insertBefore(title, w);
-            w.remove();
-        });
-
-        document.body.classList.remove("hider-scroll");
-
-        this.app.workspace.iterateAllLeaves((leaf) => {
-            if (leaf.tabHeaderEl) {
-                const iconContainer = leaf.tabHeaderEl.querySelector(".workspace-tab-header-inner-icon");
-                if (iconContainer) {
-                    iconContainer.style.display = "";
-                    setIcon(iconContainer, "lucide-file");
-                }
-                leaf.tabHeaderEl.removeAttribute("data-pp-icon");
-
-                const customIcon = leaf.tabHeaderEl.querySelector(".pp-tab-icon");
-                if (customIcon) customIcon.remove();
-            }
-        });
-
-        document.querySelectorAll('.metadata-property[data-pp-has-listener]').forEach(propertyEl => {
-            propertyEl.removeAttribute('data-pp-has-listener');
-        });
-
-        this.renderedIcons.clear();
-        this.iconRenderPromises.clear();
-        this.pendingIconRenders.clear();
-        this.renderedFiles.clear();
-    }
-
-    updateAllViews() {
-        this.app.workspace.iterateAllLeaves((leaf) => {
-            if (leaf.view instanceof MarkdownView) {
-                this.processView(leaf.view);
-            }
-        });
-        this.updateTabIcons();
-        if (this.settings.showFileExplorerIcons) this.updateFileExplorer();
-    }
-
-    updateTabIcons() {
-        if (!this.settings.enableIcon && !this.settings.showFileExplorerIcons) return;
-
-        this.app.workspace.iterateAllLeaves((leaf) => {
-            if (!(leaf.view instanceof MarkdownView) || !leaf.view.file) return;
-
-            const file = leaf.view.file;
-            const iconValue = this.app.metadataCache.getFileCache(file)?.frontmatter?.[this.settings.iconProperty];
-            const tabEl = leaf.tabHeaderEl;
-            if (!tabEl) return;
-
-            const isStacked = tabEl.closest(".mod-stacked");
-
-            if (isStacked) {
-                const iconContainer = tabEl.querySelector(".workspace-tab-header-inner-icon");
-                if (!iconContainer) return;
-
-                if (iconValue) {
-                    if (tabEl.getAttribute("data-pp-icon") !== iconValue) {
-                        tabEl.setAttribute("data-pp-icon", iconValue);
-                        this.appendIconContent(iconContainer, iconValue, file.path);
-                    }
-                } else {
-                    if (tabEl.hasAttribute("data-pp-icon")) {
-                        tabEl.removeAttribute("data-pp-icon");
-                        setIcon(iconContainer, "lucide-file");
-                    }
-                }
-            } else {
-                const container = tabEl.querySelector(".workspace-tab-header-inner");
-                if (!container) return;
-
-                const defaultIcon = container.querySelector(".workspace-tab-header-inner-icon");
-                let customIconEl = container.querySelector(".pp-tab-icon");
-
-                if (iconValue) {
-                    if (defaultIcon) defaultIcon.style.display = "none";
-
-                    if (!customIconEl) {
-                        customIconEl = document.createElement("div");
-                        customIconEl.classList.add("pp-tab-icon");
-                        const titleEl = container.querySelector(".workspace-tab-header-inner-title");
-                        if (titleEl) container.insertBefore(customIconEl, titleEl);
-                        else container.appendChild(customIconEl);
-                    }
-
-                    if (customIconEl.getAttribute("data-icon") !== iconValue) {
-                        customIconEl.setAttribute("data-icon", iconValue);
-                        this.appendIconContent(customIconEl, iconValue, file.path);
-                    }
-                } else {
-                    if (customIconEl) customIconEl.remove();
-                    if (defaultIcon) defaultIcon.style.display = "";
-                }
-            }
-        });
-    }
-
-    updateScrollbarStyle() {
-        document.body.classList.toggle("hider-scroll", this.settings.hideScrollbars);
-    }
-
     async renderIcon(contentEl, containers, fm, sourcePath) {
         const iconValue = fm?.[this.settings.iconProperty];
         const shouldRender = this.settings.enableIcon && iconValue;
-
         if (!shouldRender) {
             containers.forEach(c => c.querySelectorAll(":scope > .icon-wrapper").forEach(el => el.remove()));
             contentEl.querySelectorAll(".pp-title-icon").forEach(el => el.remove());
@@ -1055,7 +797,6 @@ module.exports = class StyleshVault extends Plugin {
         }
 
         const renderKey = `${sourcePath}-${iconValue}`;
-
         const existingIcons = this.settings.iconInTitle
             ? contentEl.querySelectorAll(".pp-title-icon").length
             : containers.some(c => c.querySelector(":scope > .icon-wrapper"));
@@ -1078,10 +819,7 @@ module.exports = class StyleshVault extends Plugin {
             return;
         }
 
-        if (this.pendingIconRenders.has(renderKey)) {
-            return;
-        }
-
+        if (this.pendingIconRenders.has(renderKey)) return;
         this.pendingIconRenders.add(renderKey);
 
         try {
@@ -1095,9 +833,7 @@ module.exports = class StyleshVault extends Plugin {
         } catch (error) {
             console.error("Error rendering icon:", error);
         } finally {
-            setTimeout(() => {
-                this.pendingIconRenders.delete(renderKey);
-            }, 100);
+            setTimeout(() => this.pendingIconRenders.delete(renderKey), 100);
         }
     }
 
@@ -1111,7 +847,6 @@ module.exports = class StyleshVault extends Plugin {
                 if (banner) banner.after(iconWrapper);
                 else container.prepend(iconWrapper);
             }
-
             if (iconWrapper.getAttribute("data-icon") !== iconValue) {
                 iconWrapper.setAttribute("data-icon", iconValue);
                 await this.appendIconContent(iconWrapper, iconValue, sourcePath, true);
@@ -1121,7 +856,6 @@ module.exports = class StyleshVault extends Plugin {
 
     async renderIconInTitle(contentEl, iconValue, sourcePath) {
         const inlineTitles = Array.from(contentEl.querySelectorAll(".inline-title")).filter(el => !el.closest(".markdown-embed"));
-
         for (const titleEl of inlineTitles) {
             let wrapper = titleEl.parentElement;
             if (!wrapper.classList.contains("pp-title-wrapper")) {
@@ -1130,14 +864,12 @@ module.exports = class StyleshVault extends Plugin {
                 titleEl.parentNode.insertBefore(wrapper, titleEl);
                 wrapper.appendChild(titleEl);
             }
-
             let iconEl = wrapper.querySelector(":scope > .pp-title-icon");
             if (!iconEl) {
                 iconEl = document.createElement("span");
                 iconEl.classList.add("pp-title-icon");
                 wrapper.prepend(iconEl);
             }
-
             if (iconEl.getAttribute("data-icon") !== iconValue) {
                 iconEl.setAttribute("data-icon", iconValue);
                 await this.appendIconContent(iconEl, iconValue, sourcePath);
@@ -1148,61 +880,46 @@ module.exports = class StyleshVault extends Plugin {
     async updateIconContent(container, iconValue, sourcePath) {
         container.setAttribute("data-icon", iconValue);
         container.empty();
-
         const lucideIcon = getIcon(iconValue);
         if (lucideIcon) {
             lucideIcon.classList.add("pp-svg-icon");
             container.appendChild(lucideIcon);
             return;
         }
-
         if (this.isEmoji(iconValue)) {
-            const emojiDiv = container.createDiv({ cls: "pp-text-icon" });
-            emojiDiv.innerText = iconValue;
+            container.createDiv({ cls: "pp-text-icon", text: iconValue });
             return;
         }
-
         const formattedSrc = this.formatImageLink(iconValue);
         if (!formattedSrc) {
             console.warn("Empty icon source:", iconValue);
             return;
         }
-
         const img = document.createElement("img");
         img.alt = "Icon";
-
         try {
             let imgSrc;
             if (formattedSrc.startsWith("http")) {
                 imgSrc = await Promise.race([
                     this.resolveLink(formattedSrc, sourcePath),
-                    new Promise((_, reject) =>
-                        setTimeout(() => reject(new Error("Image load timeout")), 5000)
-                    )
+                    new Promise((_, reject) => setTimeout(() => reject(new Error("Image load timeout")), 5000))
                 ]);
             } else if (formattedSrc.startsWith("data:")) {
                 imgSrc = formattedSrc;
             } else {
                 imgSrc = await this.resolveLink(formattedSrc, sourcePath);
             }
-
             img.src = imgSrc;
-
             img.onerror = () => {
                 console.warn(`Failed to load icon image: ${formattedSrc}`);
                 img.remove();
-
                 const fallbackIcon = getIcon("lucide-file");
                 if (fallbackIcon) {
                     fallbackIcon.classList.add("pp-svg-icon");
                     container.appendChild(fallbackIcon);
                 }
             };
-
-            img.onload = () => {
-                container.appendChild(img);
-            };
-
+            img.onload = () => container.appendChild(img);
         } catch (error) {
             console.error("Error resolving icon:", error);
             const fallbackIcon = getIcon("lucide-file");
@@ -1213,125 +930,59 @@ module.exports = class StyleshVault extends Plugin {
         }
     }
 
-    hideBacklinksOnStartup() {
-        setTimeout(() => {
-            this.closeBacklinksLeaf();
-        }, 1000);
-
-        this.registerEvent(
-            this.app.workspace.on('layout-change', () => {
-                this.closeBacklinksLeaf();
-            })
-        );
-    }
-
-    closeBacklinksLeaf() {
-        this.app.workspace.iterateAllLeaves((leaf) => {
-            if (leaf.view?.getViewType?.() === 'backlink') {
-                leaf.detach();
-                console.log('Closed backlinks leaf');
-            }
-        });
-    }
-
-    updateFileExplorer() {
-        if (!this.settings.showFileExplorerIcons) return;
-
-        const fileExplorers = this.app.workspace.getLeavesOfType("file-explorer");
-        fileExplorers.forEach(leaf => {
-            const items = leaf.view.containerEl.querySelectorAll(".tree-item-self[data-path]");
-            items.forEach(item => {
-                const path = item.getAttribute("data-path");
-                const file = this.app.vault.getAbstractFileByPath(path);
-                let iconValue = null;
-                let isFolder = false;
-
-                if (file instanceof TFile) {
-                    iconValue = this.app.metadataCache.getFileCache(file)?.frontmatter?.[this.settings.iconProperty];
-                } else if (file instanceof TFolder) {
-                    iconValue = this.settings.folderIcons[file.path] || 'lucide-folder';
-                    isFolder = true;
-                }
-
-                this.renderFileExplorerIcon(item, iconValue, path, isFolder);
-            });
-        });
-    }
-
     async appendIconContent(container, iconValue, sourcePath, isFloating = false) {
         if (!container || !iconValue) return;
-
         const renderKey = `${container.className}-${iconValue}-${sourcePath}-${Date.now()}`;
-
-        if (this.iconRenderPromises.has(renderKey)) {
-            return await this.iconRenderPromises.get(renderKey);
-        }
+        if (this.iconRenderPromises.has(renderKey)) return await this.iconRenderPromises.get(renderKey);
 
         const renderPromise = (async () => {
             try {
                 container.empty();
-
                 let contentContainer = isFloating ? container.createDiv({ cls: "icon-image" }) : container;
-
                 const lucideIcon = getIcon(iconValue);
                 if (lucideIcon) {
                     lucideIcon.classList.add("pp-svg-icon");
                     contentContainer.appendChild(lucideIcon);
                     return;
                 }
-
                 if (this.isEmoji(iconValue)) {
-                    const emojiDiv = contentContainer.createDiv({ cls: "pp-text-icon" });
-                    emojiDiv.innerText = iconValue;
+                    contentContainer.createDiv({ cls: "pp-text-icon", text: iconValue });
                     return;
                 }
-
                 const formattedSrc = this.formatImageLink(iconValue);
                 if (!formattedSrc) {
                     console.warn("Empty icon source:", iconValue);
                     return;
                 }
-
                 const img = document.createElement("img");
                 img.alt = "Icon";
-
                 try {
                     let imgSrc;
                     if (formattedSrc.startsWith("http")) {
                         imgSrc = await Promise.race([
                             this.resolveLink(formattedSrc, sourcePath),
-                            new Promise((_, reject) =>
-                                setTimeout(() => reject(new Error("Image load timeout")), 5000)
-                            )
+                            new Promise((_, reject) => setTimeout(() => reject(new Error("Image load timeout")), 5000))
                         ]);
                     } else if (formattedSrc.startsWith("data:")) {
                         imgSrc = formattedSrc;
                     } else {
                         imgSrc = await this.resolveLink(formattedSrc, sourcePath);
                     }
-
                     img.src = imgSrc;
-
                     img.onerror = () => {
                         console.warn(`Failed to load icon image: ${formattedSrc}`);
                         img.remove();
-
                         const fallbackIcon = getIcon("lucide-file");
                         if (fallbackIcon) {
                             fallbackIcon.classList.add("pp-svg-icon");
                             contentContainer.appendChild(fallbackIcon);
                         }
                     };
-
-                    img.onload = () => {
-                        contentContainer.appendChild(img);
-                    };
-
+                    img.onload = () => contentContainer.appendChild(img);
                     const loadTimeout = setTimeout(() => {
                         if (!img.parentElement) {
                             console.warn(`Icon image load timeout: ${formattedSrc}`);
                             img.remove();
-
                             const fallbackIcon = getIcon("lucide-file");
                             if (fallbackIcon) {
                                 fallbackIcon.classList.add("pp-svg-icon");
@@ -1339,9 +990,7 @@ module.exports = class StyleshVault extends Plugin {
                             }
                         }
                     }, 3000);
-
                     this.iconRenderTimeouts.set(renderKey, loadTimeout);
-
                 } catch (error) {
                     console.error("Error resolving icon:", error);
                     const fallbackIcon = getIcon("lucide-file");
@@ -1350,7 +999,6 @@ module.exports = class StyleshVault extends Plugin {
                         contentContainer.appendChild(fallbackIcon);
                     }
                 }
-
             } catch (error) {
                 console.error("Error in appendIconContent:", error);
             } finally {
@@ -1362,24 +1010,98 @@ module.exports = class StyleshVault extends Plugin {
                 }
             }
         })();
-
         this.iconRenderPromises.set(renderKey, renderPromise);
-
         await renderPromise;
+    }
+
+    // ========== تحديثات العرض ==========
+    updateAllViews() {
+        const markdownLeaves = this.app.workspace.getLeavesOfType("markdown");
+        markdownLeaves.forEach(leaf => {
+            if (leaf.view instanceof MarkdownView) this.processView(leaf.view);
+        });
+        this.updateTabIcons();
+        if (this.settings.showFileExplorerIcons) this.updateFileExplorer();
+    }
+
+    updateTabIcons() {
+        if (!this.settings.enableIcon && !this.settings.showFileExplorerIcons) return;
+        const markdownLeaves = this.app.workspace.getLeavesOfType("markdown");
+        markdownLeaves.forEach(leaf => {
+            if (!leaf.view?.file) return;
+            const file = leaf.view.file;
+            const iconValue = this.app.metadataCache.getFileCache(file)?.frontmatter?.[this.settings.iconProperty];
+            const tabEl = leaf.tabHeaderEl;
+            if (!tabEl) return;
+            const isStacked = tabEl.closest(".mod-stacked");
+            if (isStacked) {
+                const iconContainer = tabEl.querySelector(".workspace-tab-header-inner-icon");
+                if (!iconContainer) return;
+                if (iconValue) {
+                    if (tabEl.getAttribute("data-pp-icon") !== iconValue) {
+                        tabEl.setAttribute("data-pp-icon", iconValue);
+                        this.appendIconContent(iconContainer, iconValue, file.path);
+                    }
+                } else {
+                    if (tabEl.hasAttribute("data-pp-icon")) {
+                        tabEl.removeAttribute("data-pp-icon");
+                        setIcon(iconContainer, "lucide-file");
+                    }
+                }
+            } else {
+                const container = tabEl.querySelector(".workspace-tab-header-inner");
+                if (!container) return;
+                const defaultIcon = container.querySelector(".workspace-tab-header-inner-icon");
+                let customIconEl = container.querySelector(".pp-tab-icon");
+                if (iconValue) {
+                    if (defaultIcon) defaultIcon.style.display = "none";
+                    if (!customIconEl) {
+                        customIconEl = document.createElement("div");
+                        customIconEl.classList.add("pp-tab-icon");
+                        const titleEl = container.querySelector(".workspace-tab-header-inner-title");
+                        if (titleEl) container.insertBefore(customIconEl, titleEl);
+                        else container.appendChild(customIconEl);
+                    }
+                    if (customIconEl.getAttribute("data-icon") !== iconValue) {
+                        customIconEl.setAttribute("data-icon", iconValue);
+                        this.appendIconContent(customIconEl, iconValue, file.path);
+                    }
+                } else {
+                    if (customIconEl) customIconEl.remove();
+                    if (defaultIcon) defaultIcon.style.display = "";
+                }
+            }
+        });
+    }
+
+    updateFileExplorer() {
+        if (!this.settings.showFileExplorerIcons) return;
+        const fileExplorers = this.app.workspace.getLeavesOfType("file-explorer");
+        fileExplorers.forEach(leaf => {
+            const items = leaf.view.containerEl.querySelectorAll(".tree-item-self[data-path]");
+            items.forEach(item => {
+                const path = item.getAttribute("data-path");
+                const file = this.app.vault.getAbstractFileByPath(path);
+                let iconValue = null;
+                let isFolder = false;
+                if (file instanceof TFile) {
+                    iconValue = this.app.metadataCache.getFileCache(file)?.frontmatter?.[this.settings.iconProperty];
+                } else if (file instanceof TFolder) {
+                    iconValue = this.settings.folderIcons[file.path] || 'lucide-folder';
+                    isFolder = true;
+                }
+                this.renderFileExplorerIcon(item, iconValue, path, isFolder);
+            });
+        });
     }
 
     renderFileExplorerIcon(itemEl, iconValue, sourcePath, isFolder) {
         let iconEl = itemEl.querySelector(".pp-file-icon");
-
         if (!iconValue && !isFolder) {
             if (iconEl) iconEl.remove();
             return;
         }
-
-        if (isFolder && !iconValue) {
-            iconValue = 'lucide-folder';
-        }
-
+        if (isFolder && !iconValue) iconValue = 'lucide-folder';
         if (!iconEl) {
             iconEl = document.createElement("div");
             iconEl.classList.add("pp-file-icon");
@@ -1388,21 +1110,26 @@ module.exports = class StyleshVault extends Plugin {
             if (inner) itemEl.insertBefore(iconEl, inner);
             else itemEl.appendChild(iconEl);
         }
-
         if (iconEl.getAttribute("data-icon") !== iconValue) {
             iconEl.setAttribute("data-icon", iconValue || "");
             this.appendIconContent(iconEl, iconValue, sourcePath);
         }
     }
 
-    formatImageLink(link) {
-        if (!link || typeof link !== 'string') return "";
-        return link.replace(/^!?\[\[|\]\]$/g, "");
+    // ========== دوال أخرى (Backlinks, Scrollbar, Default Note, إلخ) ==========
+    hideBacklinksOnStartup() {
+        setTimeout(() => this.closeBacklinksLeaf(), 1000);
+        this.registerEvent(this.app.workspace.on('layout-change', () => this.closeBacklinksLeaf()));
     }
 
-    isEmoji(str) {
-        const emojiRegex = /^\p{Emoji}$/u;
-        return emojiRegex.test(str) && !str.includes(".") && !str.includes("/");
+    closeBacklinksLeaf() {
+        this.app.workspace.iterateAllLeaves((leaf) => {
+            if (leaf.view?.getViewType?.() === 'backlink') leaf.detach();
+        });
+    }
+
+    updateScrollbarStyle() {
+        document.body.classList.toggle("hider-scroll", this.settings.hideScrollbars);
     }
 
     updateCssVariables() {
@@ -1421,81 +1148,52 @@ module.exports = class StyleshVault extends Plugin {
     }
 
     async openDefaultNote() {
-        if (!this.settings.defaultNotePath) {
-            return;
-        }
-
+        if (!this.settings.defaultNotePath) return;
         await new Promise(resolve => setTimeout(resolve, 800));
-
         const file = this.app.vault.getAbstractFileByPath(this.settings.defaultNotePath);
         if (!(file instanceof TFile)) {
             console.log("Default note file not found:", this.settings.defaultNotePath);
             return;
         }
-
         let defaultNoteLeaf = null;
-        this.app.workspace.iterateAllLeaves((leaf) => {
-            if (leaf.view && leaf.view.file && leaf.view.file.path === file.path) {
-                defaultNoteLeaf = leaf;
-            }
+        const markdownLeaves = this.app.workspace.getLeavesOfType("markdown");
+        markdownLeaves.forEach(leaf => {
+            if (leaf.view?.file?.path === file.path) defaultNoteLeaf = leaf;
         });
-
         if (defaultNoteLeaf) {
             this.app.workspace.setActiveLeaf(defaultNoteLeaf);
             return;
         }
-
         let anyFileOpen = false;
-        this.app.workspace.iterateAllLeaves((leaf) => {
-            if (leaf.view && leaf.view.file && leaf.view.file.path !== file.path) {
-                anyFileOpen = true;
-            }
+        markdownLeaves.forEach(leaf => {
+            if (leaf.view?.file && leaf.view.file.path !== file.path) anyFileOpen = true;
         });
-
         if (anyFileOpen) {
             let activeLeaf = this.app.workspace.getLeaf();
-
             if (!activeLeaf || !(activeLeaf.view instanceof MarkdownView)) {
                 const markdownLeaves = this.app.workspace.getLeavesOfType("markdown");
-                if (markdownLeaves.length > 0) {
-                    activeLeaf = markdownLeaves[0];
-                }
+                if (markdownLeaves.length > 0) activeLeaf = markdownLeaves[0];
             }
-
             if (activeLeaf) {
                 try {
                     await activeLeaf.openFile(file);
                     this.app.workspace.setActiveLeaf(activeLeaf);
                     return;
-                } catch (error) {
-                    console.error("Error opening in existing leaf:", error);
-                }
+                } catch (error) { console.error("Error opening in existing leaf:", error); }
             }
         }
-
         try {
             const leaf = this.app.workspace.getLeaf(true);
             await leaf.openFile(file);
             this.app.workspace.setActiveLeaf(leaf);
-        } catch (error) {
-            console.error("Error opening default note:", error);
-        }
+        } catch (error) { console.error("Error opening default note:", error); }
     }
 
+    // ========== إعدادات ==========
     async loadSettings() {
         this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-        if (!this.settings.temporaryHiddenProperties) {
-            this.settings.temporaryHiddenProperties = [];
-        }
-        if (!this.settings.temporaryViewTimeout) {
-            this.settings.temporaryViewTimeout = 60;
-        }
-        if (this.settings.showPropertiesOnCreate === undefined) {
-            this.settings.showPropertiesOnCreate = true;
-        }
-        if (!this.settings.showPropertiesOnCreateDuration) {
-            this.settings.showPropertiesOnCreateDuration = 60;
-        }
+        if (!this.settings.temporaryHiddenProperties) this.settings.temporaryHiddenProperties = [];
+        if (!this.settings.temporaryViewTimeout) this.settings.temporaryViewTimeout = 60;
     }
 
     async saveSettings() {
@@ -1504,7 +1202,50 @@ module.exports = class StyleshVault extends Plugin {
         this.updateHiddenPropertiesCSS();
         this.debouncedUpdate();
     }
+
+    // ========== تفريغ ==========
+    onunload() {
+        if (this.propertyEditTimeout) clearTimeout(this.propertyEditTimeout);
+        for (let id of this.activeTimeouts.values()) clearTimeout(id);
+        for (let id of this.activeIntervals.values()) clearInterval(id);
+        this.activeTimeouts.clear();
+        this.activeIntervals.clear();
+        this.temporaryVisibleProps.forEach((data) => { if (data.timeout) clearTimeout(data.timeout); });
+        this.temporaryVisibleProps.clear();
+        this.iconRenderTimeouts.forEach(timeout => clearTimeout(timeout));
+        this.iconRenderTimeouts.clear();
+        document.querySelectorAll(".banner-image, .icon-wrapper, .pp-title-icon, .pp-file-icon").forEach(el => el.remove());
+        document.getElementById('pp-hidden-props')?.remove();
+        document.querySelectorAll('.show-full-properties-btn').forEach(btn => btn.remove());
+        document.querySelectorAll(".pp-title-wrapper").forEach(w => {
+            const title = w.querySelector(".inline-title");
+            if (title) w.parentNode.insertBefore(title, w);
+            w.remove();
+        });
+        document.body.classList.remove("hider-scroll");
+        this.app.workspace.iterateAllLeaves((leaf) => {
+            if (leaf.tabHeaderEl) {
+                const iconContainer = leaf.tabHeaderEl.querySelector(".workspace-tab-header-inner-icon");
+                if (iconContainer) {
+                    iconContainer.style.display = "";
+                    setIcon(iconContainer, "lucide-file");
+                }
+                leaf.tabHeaderEl.removeAttribute("data-pp-icon");
+                const customIcon = leaf.tabHeaderEl.querySelector(".pp-tab-icon");
+                if (customIcon) customIcon.remove();
+            }
+        });
+        document.querySelectorAll('.metadata-property[data-pp-has-listener]').forEach(propertyEl => {
+            propertyEl.removeAttribute('data-pp-has-listener');
+        });
+        this.renderedIcons.clear();
+        this.iconRenderPromises.clear();
+        this.pendingIconRenders.clear();
+        this.renderedFiles.clear();
+    }
 };
+
+// ========== الفئات المساعدة (بدون تغيير يذكر) ==========
 
 class IconSuggestModal extends SuggestModal {
     constructor(app, plugin, targetItem) {
@@ -1598,21 +1339,43 @@ class BannerSuggestModal extends SuggestModal {
     }
 
     isImageLink(value) {
-        if (value.startsWith("http") || value.startsWith("![[") || value.includes(".")) {
-            return true;
-        }
-        return false;
+        return value.startsWith("http") || value.startsWith("![[") || value.includes(".");
     }
 
     renderSuggestion(item, el) {
+        el.empty();
+        el.addClass("pp-banner-suggestion");
+
+        // حاوية النص (الرابط أو اسم الملف)
+        const textContainer = el.createDiv({ cls: "pp-banner-text" });
+
         if (typeof item === 'string' && item.startsWith("Custom: ")) {
             const customValue = item.substring(8);
-            el.createDiv({ text: "Custom image URL" });
-            el.createDiv({ text: customValue, cls: "pp-suggestion-sub" });
+            textContainer.createDiv({ text: "Custom image URL" });
+            textContainer.createDiv({ text: customValue, cls: "pp-suggestion-sub" });
+
+            // فقط للروابط الخارجية (http) نعرض المعاينة أسفل النص
+            if (customValue.startsWith("http")) {
+                // حاوية الصورة المصغرة (عرض كامل)
+                const imgContainer = el.createDiv({ cls: "pp-banner-preview-container" });
+                this.loadImagePreview(imgContainer, customValue);
+            }
         } else {
-            el.createDiv({ text: item.name });
-            el.createDiv({ text: item.path, cls: "pp-suggestion-sub" });
+            // اقتراح ملف داخلي - بدون معاينة
+            textContainer.createDiv({ text: item.name });
+            textContainer.createDiv({ text: item.path, cls: "pp-suggestion-sub" });
+            // لا نضيف معاينة للملفات الداخلية
         }
+    }
+
+    loadImagePreview(container, src) {
+        const img = container.createEl("img", { cls: "pp-banner-preview" });
+        img.setAttribute("loading", "lazy");
+        img.src = src;
+        img.onerror = () => {
+            container.empty(); // إخفاء الحاوية عند فشل التحميل
+            container.style.display = "none";
+        };
     }
 
     onChooseSuggestion(item, evt) {
@@ -1737,10 +1500,7 @@ class DefaultNoteSuggestModal extends SuggestModal {
 }
 
 class StyleshVaultSettingTab extends PluginSettingTab {
-    constructor(app, plugin) {
-        super(app, plugin);
-        this.plugin = plugin;
-    }
+    constructor(app, plugin) { super(app, plugin); this.plugin = plugin; }
 
     display() {
         const { containerEl } = this;
@@ -1754,231 +1514,92 @@ class StyleshVaultSettingTab extends PluginSettingTab {
         new Setting(containerEl).setName("Icon Size").addText(t => t.setValue(String(this.plugin.settings.iconSize)).onChange(async v => { this.plugin.settings.iconSize = Number(v); await this.plugin.saveSettings(); }));
 
         containerEl.createEl("h2", { text: "Image Cache" });
-        new Setting(containerEl)
-            .setName("Enable Image Cache")
-            .setDesc("Cache remote images locally for offline access")
-            .addToggle(t => t.setValue(this.plugin.settings.enableCache).onChange(async v => {
-                this.plugin.settings.enableCache = v;
-                await this.plugin.saveSettings();
-            }));
-        new Setting(containerEl)
-            .setName("Cache Expiry Days")
-            .setDesc("How many days to keep cached images")
-            .addText(t => t.setValue(String(this.plugin.settings.cacheExpiryDays)).onChange(async v => {
-                this.plugin.settings.cacheExpiryDays = Number(v);
-                await this.plugin.saveSettings();
-            }));
+        new Setting(containerEl).setName("Enable Image Cache").setDesc("Cache remote images locally for offline access").addToggle(t => t.setValue(this.plugin.settings.enableCache).onChange(async v => { this.plugin.settings.enableCache = v; await this.plugin.saveSettings(); }));
+        new Setting(containerEl).setName("Cache Expiry Days").setDesc("How many days to keep cached images").addText(t => t.setValue(String(this.plugin.settings.cacheExpiryDays)).onChange(async v => { this.plugin.settings.cacheExpiryDays = Number(v); await this.plugin.saveSettings(); }));
 
         containerEl.createEl("h2", { text: "UI Mode" });
-        new Setting(containerEl)
-            .setName("UI Mode Property Key")
-            .setDesc("Frontmatter key to force 'edit' or 'preview' mode. Use 'preview-force' or 'edit-force' to prevent user from changing the mode.")
-            .addText(t => t.setValue(this.plugin.settings.uiProperty).onChange(async v => {
-                this.plugin.settings.uiProperty = v;
-                await this.plugin.saveSettings();
-            }));
+        new Setting(containerEl).setName("UI Mode Property Key").setDesc("Frontmatter key to force 'edit' or 'preview' mode. Use 'preview-force' or 'edit-force' to prevent user from changing the mode.").addText(t => t.setValue(this.plugin.settings.uiProperty).onChange(async v => { this.plugin.settings.uiProperty = v; await this.plugin.saveSettings(); }));
 
         containerEl.createEl("h2", { text: "hide scrollbar" });
-        new Setting(containerEl)
-            .setName("hide Scrollbars")
-            .setDesc("enable to hide scrollbars")
-            .addToggle(t => t
-                .setValue(this.plugin.settings.hideScrollbars)
-                .onChange(async v => {
-                    this.plugin.settings.hideScrollbars = v;
-                    await this.plugin.saveSettings();
-                    this.plugin.updateScrollbarStyle();
-                })
-            );
+        new Setting(containerEl).setName("hide Scrollbars").setDesc("enable to hide scrollbars").addToggle(t => t.setValue(this.plugin.settings.hideScrollbars).onChange(async v => { this.plugin.settings.hideScrollbars = v; await this.plugin.saveSettings(); this.plugin.updateScrollbarStyle(); }));
 
         containerEl.createEl("h2", { text: "Default Note" });
-
         let currentNoteName = "None";
         if (this.plugin.settings.defaultNotePath) {
             const file = this.app.vault.getAbstractFileByPath(this.plugin.settings.defaultNotePath);
-            if (file) {
-                currentNoteName = file.name;
-            }
+            if (file) currentNoteName = file.name;
         }
-
-        const defaultNoteSetting = new Setting(containerEl)
-            .setName("Default Note")
-            .setDesc(`Note that opens automatically when Obsidian starts (Current: ${currentNoteName})`)
-            .addButton(btn => btn
-                .setButtonText("Choose Note")
-                .setCta()
-                .onClick(() => {
-                    new DefaultNoteSuggestModal(this.app, this.plugin, defaultNoteSetting).open();
-                }))
-            .addButton(btn => btn
-                .setButtonText("Clear")
-                .setWarning()
-                .onClick(async () => {
-                    this.plugin.settings.defaultNotePath = "";
-                    await this.plugin.saveSettings();
-                    defaultNoteSetting.settingEl.parentElement.querySelector('.setting-item-description').textContent =
-                        "Note that opens automatically when Obsidian starts (Current: None)";
-                    new Notice("Default note cleared");
-                }));
-
-        containerEl.createEl("h2", { text: "New Files" });
-
-        new Setting(containerEl)
-            .setName("Show all properties for new files")
-            .setDesc("Temporarily show all hidden properties when a file is newly created")
-            .addToggle(t => t
-                .setValue(this.plugin.settings.showPropertiesOnCreate)
-                .onChange(async v => {
-                    this.plugin.settings.showPropertiesOnCreate = v;
-                    await this.plugin.saveSettings();
-                    this.plugin.updateHiddenPropertiesCSS();
-                }));
-
-        new Setting(containerEl)
-            .setName("Grace period duration (seconds)")
-            .setDesc("How many seconds to show all properties after file creation")
-            .addText(t => t
-                .setValue(String(this.plugin.settings.showPropertiesOnCreateDuration))
-                .onChange(async v => {
-                    const seconds = parseInt(v);
-                    if (!isNaN(seconds) && seconds > 0) {
-                        this.plugin.settings.showPropertiesOnCreateDuration = seconds;
-                        await this.plugin.saveSettings();
-                    }
-                }));
+        const defaultNoteSetting = new Setting(containerEl).setName("Default Note").setDesc(`Note that opens automatically when Obsidian starts (Current: ${currentNoteName})`).addButton(btn => btn.setButtonText("Choose Note").setCta().onClick(() => { new DefaultNoteSuggestModal(this.app, this.plugin, defaultNoteSetting).open(); })).addButton(btn => btn.setButtonText("Clear").setWarning().onClick(async () => { this.plugin.settings.defaultNotePath = ""; await this.plugin.saveSettings(); defaultNoteSetting.settingEl.parentElement.querySelector('.setting-item-description').textContent = "Note that opens automatically when Obsidian starts (Current: None)"; new Notice("Default note cleared"); }));
 
         containerEl.createEl("h2", { text: "Hidden Properties" });
+        new Setting(containerEl).setName("Temporary View Timeout").setDesc("How many seconds to show properties in temporary view").addText(t => t.setValue(String(this.plugin.settings.temporaryViewTimeout)).onChange(async v => { const seconds = parseInt(v); if (!isNaN(seconds) && seconds > 0) { this.plugin.settings.temporaryViewTimeout = seconds; await this.plugin.saveSettings(); } }));
 
-        new Setting(containerEl)
-            .setName("Temporary View Timeout")
-            .setDesc("How many seconds to show properties in temporary view")
-            .addText(t => t
-                .setValue(String(this.plugin.settings.temporaryViewTimeout))
-                .onChange(async v => {
-                    const seconds = parseInt(v);
-                    if (!isNaN(seconds) && seconds > 0) {
-                        this.plugin.settings.temporaryViewTimeout = seconds;
-                        await this.plugin.saveSettings();
-                    }
-                }));
-
+        // قائمة hiddenProperties مع إدارة temporaryHiddenProperties
         const hiddenPropsContainer = containerEl.createDiv({ cls: "hidden-props-container" });
-
         const dropdownHeader = hiddenPropsContainer.createDiv({ cls: "hidden-props-dropdown-header" });
         dropdownHeader.createEl("h3", { text: "Hidden Properties" });
-
-        const countSpan = dropdownHeader.createEl("span", {
-            cls: "hidden-props-count",
-            text: `(${this.plugin.settings.hiddenProperties.length})`
-        });
-
-        const toggleIcon = dropdownHeader.createEl("span", {
-            cls: "hidden-props-toggle",
-            text: "▼"
-        });
-
+        const countSpan = dropdownHeader.createEl("span", { cls: "hidden-props-count", text: `(${this.plugin.settings.hiddenProperties.length})` });
+        const toggleIcon = dropdownHeader.createEl("span", { cls: "hidden-props-toggle", text: "▼" });
         let isExpanded = false;
         const hiddenList = hiddenPropsContainer.createDiv({ cls: "hidden-props-list" });
 
         const updateHiddenList = () => {
             hiddenList.empty();
-
             if (this.plugin.settings.hiddenProperties.length === 0) {
-                hiddenList.createEl("div", {
-                    text: "No hidden properties",
-                    cls: "hidden-props-empty"
-                });
+                hiddenList.createEl("div", { text: "No hidden properties", cls: "hidden-props-empty" });
             } else {
                 this.plugin.settings.hiddenProperties.forEach(prop => {
                     const propItem = hiddenList.createDiv({ cls: "hidden-prop-item" });
-
-                    propItem.createEl("span", {
-                        text: prop,
-                        cls: "hidden-prop-name"
-                    });
-
+                    propItem.createEl("span", { text: prop, cls: "hidden-prop-name" });
                     const buttonContainer = propItem.createDiv({ cls: "hidden-prop-buttons" });
-
                     const tempIcon = getIcon("square-dashed-mouse-pointer");
-
-                    const showInTempBtn = buttonContainer.createEl("button", {
-                        cls: "hidden-prop-show-temp",
-                        attr: { title: "Show this property in temporary view" }
-                    });
-
-                    if (tempIcon) {
-                        const clonedIcon = tempIcon.cloneNode(true);
-                        showInTempBtn.appendChild(clonedIcon);
-                    } else {
-                        showInTempBtn.textContent = "T";
-                    }
-
-                    const removeBtn = buttonContainer.createEl("button", {
-                        cls: "hidden-prop-remove"
-                    });
+                    const showInTempBtn = buttonContainer.createEl("button", { cls: "hidden-prop-show-temp", attr: { title: "Show this property in temporary view" } });
+                    if (tempIcon) showInTempBtn.appendChild(tempIcon.cloneNode(true));
+                    else showInTempBtn.textContent = "T";
+                    const removeBtn = buttonContainer.createEl("button", { cls: "hidden-prop-remove" });
                     removeBtn.innerHTML = "×";
                     removeBtn.title = "Unhide property permanently";
-
                     if (this.plugin.settings.temporaryHiddenProperties.includes(prop)) {
                         showInTempBtn.classList.add("is-active");
                         showInTempBtn.title = "Will show in temporary view";
                     }
-
                     showInTempBtn.addEventListener("click", async (e) => {
                         e.stopPropagation();
-
                         if (!this.plugin.settings.temporaryHiddenProperties.includes(prop)) {
                             this.plugin.settings.temporaryHiddenProperties.push(prop);
                             await this.plugin.saveSettings();
-
                             new Notice(`"${prop}" will appear in temporary view`);
-
                             showInTempBtn.classList.add("is-active");
                             showInTempBtn.title = "Will show in temporary view";
                         } else {
                             this.plugin.settings.temporaryHiddenProperties.remove(prop);
                             await this.plugin.saveSettings();
-
                             new Notice(`"${prop}" removed from temporary view`);
-
                             showInTempBtn.classList.remove("is-active");
                             showInTempBtn.title = "Show this property in temporary view";
                         }
                     });
-
                     removeBtn.addEventListener("click", async (e) => {
                         e.stopPropagation();
-
                         this.plugin.settings.hiddenProperties.remove(prop);
-
                         if (this.plugin.settings.temporaryHiddenProperties.includes(prop)) {
                             this.plugin.settings.temporaryHiddenProperties.remove(prop);
                         }
-
                         await this.plugin.saveSettings();
-
                         updateHiddenList();
                         countSpan.textContent = `(${this.plugin.settings.hiddenProperties.length})`;
                         new Notice(`Property "${prop}" is now permanently visible`);
                     });
                 });
             }
-
             toggleIcon.textContent = isExpanded ? "▲" : "▼";
         };
-
         updateHiddenList();
-
         dropdownHeader.addEventListener("click", () => {
             isExpanded = !isExpanded;
-            if (isExpanded) {
-                hiddenList.style.display = "block";
-            } else {
-                hiddenList.style.display = "none";
-            }
+            hiddenList.style.display = isExpanded ? "block" : "none";
             toggleIcon.textContent = isExpanded ? "▲" : "▼";
         });
-
         hiddenList.style.display = "none";
     }
 }
