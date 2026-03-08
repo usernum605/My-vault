@@ -41,7 +41,6 @@ views:
 ```
 
 > [!link]- Real Links (Base)
-> - [[Islamic time plugin issue]]
 > - [[Quran]]
 > - [[Rebuild icons]]
 > - [[Content create]]
@@ -57,6 +56,7 @@ views:
 > - [[سلسلة أحداث يوم الحساب]]
 > - [[سلسلة الموت]]
 > - [[Fully Ai Game]]
+> - [[Islamic time plugin issue]]
 > - [[Prompt]]
 > - [[Termux commands Ai]]
 > - [[Termux commands Pomo]]

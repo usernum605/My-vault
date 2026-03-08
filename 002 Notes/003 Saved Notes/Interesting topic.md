@@ -13,7 +13,8 @@ The Topic:
   - Learning
 ---
 ##### فيديوهات سوف اشاهدها
-- ![](https://www.youtube.com/live/U9zLZTFeiBM?si=w4rfSJQkenQxCM3m)
+- ![](https://youtu.be/zBsLsGFufdg?si=p3aiqS158E-Jayel)
+- ![](
 ##### تذكر
 
 ![[Tathakar]]

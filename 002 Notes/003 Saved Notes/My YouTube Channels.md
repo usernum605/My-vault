@@ -10,6 +10,8 @@ cssclasses:
   - dashboard
   - Disappear
 ui: preview
+links pages:
+  - "[[Interesting topic]]"
 ---
 [YouTube](https://www.youtube.com/)
 
@@ -64,6 +66,7 @@ ui: preview
 - https://www.youtube.com/@Hxer0
 
 - https://m.youtube.com/@drmakerr
+- https://youtube.com/@pt_110
 
 - https://m.youtube.com/@5aledAmin
 
@@ -75,4 +78,4 @@ ui: preview
 
 - https://youtube.com/@introvert_programmer
 
-- https://youtube.com/@pythonarab?si=QokksNxyjnOUYHWH
+- https://youtube.com/@pythonarab

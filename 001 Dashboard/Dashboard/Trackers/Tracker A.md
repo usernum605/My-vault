@@ -9,6 +9,7 @@ cssclasses:
 links pages:
   - "[[Tracker B]]"
 node_size: 15
+ui: preview-force
 ---
 # Tracker Read Quran
 
