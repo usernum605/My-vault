@@ -46,11 +46,10 @@ module.exports = class StyleshVault extends Plugin {
         this.renderedIcons = new Map();
         this.pendingIconRenders = new Set();
 
-        // NEW: Track which files have had their icons rendered to avoid re-rendering on mode switch
+        // Track which files have had their icons rendered to avoid re-rendering on mode switch
         this.renderedFiles = new Set();
         this.currentRenderedFile = null;
 
-        this.forceModeWatchers = new Map();
         this.newlyCreatedFiles = new Map();
         this.newFileTimer = null;
 
@@ -58,16 +57,61 @@ module.exports = class StyleshVault extends Plugin {
         this.updateCssVariables();
         this.updateHiddenPropertiesCSS();
 
+        // ========== FORCE VIEW MODE (Event‑based, no setInterval) ==========
+        this.registerEvent(
+    this.app.workspace.on('layout-change', () => {
+        const markdownLeaves = this.app.workspace.getLeavesOfType("markdown");
+        markdownLeaves.forEach(leaf => {
+            const file = leaf.view?.file;
+            if (!file) return;
+            const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
+            const uiMode = fm?.[this.settings.uiProperty];
+            if (uiMode === 'preview-force' || uiMode === 'edit-force') {
+                this.checkForceModeForLeaf(leaf);
+            }
+        });
+    })
+);
+
+        this.registerEvent(
+    this.app.workspace.on('active-leaf-change', (leaf) => {
+        if (!leaf) return;
+        const file = leaf.view?.file;
+        if (!file) return;
+        const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
+        const uiMode = fm?.[this.settings.uiProperty];
+        if (uiMode === 'preview-force' || uiMode === 'edit-force') {
+            this.checkForceModeForLeaf(leaf);
+        }
+    })
+);
+
+        this.registerEvent(
+    this.app.metadataCache.on('changed', (file) => {
+        if (this.app.workspace.getActiveFile()?.path === file.path) {
+            const activeLeaf = this.app.workspace.activeLeaf;
+            if (!activeLeaf) return;
+            const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
+            const uiMode = fm?.[this.settings.uiProperty];
+            if (uiMode === 'preview-force' || uiMode === 'edit-force') {
+                this.checkForceModeForLeaf(activeLeaf);
+            }
+        }
+    })
+);
+        // ===================================================================
+
         this.registerEvent(this.app.workspace.on("file-open", (file) => {
-        setTimeout(() => {
-        this.handleViewMode(file);
-        this.cleanupDuplicates(file);
-        this.debouncedUpdate();
-        this.addShowFullPropertiesButtons();
-        this.checkNewlyCreatedFile(file);
-        this.updateHiddenPropertiesCSS(); // أضف هذا السطر
-    }, 100);
-}));
+            setTimeout(() => {
+                const activeLeaf = this.app.workspace.activeLeaf;
+                if (activeLeaf) this.checkForceModeForLeaf(activeLeaf);
+                this.cleanupDuplicates(file);
+                this.debouncedUpdate();
+                this.addShowFullPropertiesButtons();
+                this.checkNewlyCreatedFile(file);
+                this.updateHiddenPropertiesCSS();
+            }, 100);
+        }));
 
         await this.initCache();
 
@@ -104,7 +148,7 @@ module.exports = class StyleshVault extends Plugin {
                 this.renderedIcons.clear();
                 this.iconRenderPromises.clear();
                 this.pendingIconRenders.clear();
-                this.renderedFiles.clear(); // NEW: Clear file cache as well
+                this.renderedFiles.clear();
                 await this.clearImageCache();
                 this.updateAllViews();
                 new Notice('Icons refreshed and cache cleared');
@@ -132,6 +176,10 @@ module.exports = class StyleshVault extends Plugin {
         this.app.workspace.onLayoutReady(() => {
             this.setupPropertyContextMenus();
             this.addShowFullPropertiesButtons();
+
+            // Apply force mode to all already open markdown leaves at startup
+            const markdownLeaves = this.app.workspace.getLeavesOfType("markdown");
+            markdownLeaves.forEach(leaf => this.checkForceModeForLeaf(leaf));
         });
 
         this.registerDomEvent(document, 'contextmenu', (evt) => {
@@ -181,7 +229,6 @@ module.exports = class StyleshVault extends Plugin {
 
         this.registerEvent(this.app.workspace.on("file-open", (file) => {
             setTimeout(() => {
-                this.handleViewMode(file);
                 this.cleanupDuplicates(file);
                 this.debouncedUpdate();
                 this.addShowFullPropertiesButtons();
@@ -200,42 +247,6 @@ module.exports = class StyleshVault extends Plugin {
             }
         }));
 
-        this.app.workspace.onLayoutReady(() => {
-            this.setupPropertyContextMenus();
-
-            this.app.workspace.iterateAllLeaves((leaf) => {
-                if (leaf.view instanceof MarkdownView && leaf.view.file) {
-                    const fm = this.app.metadataCache.getFileCache(leaf.view.file)?.frontmatter;
-                    const uiMode = fm?.[this.settings.uiProperty];
-                    if (uiMode) {
-                        this.enforceUIModeForLeaf(leaf, uiMode);
-                    }
-                    this.checkNewlyCreatedFile(leaf.view.file);
-                }
-            });
-
-            setTimeout(() => {
-                this.debouncedUpdate();
-            }, 200);
-
-            setTimeout(() => this.addShowFullPropertiesButtons(), 300);
-
-            setTimeout(() => {
-                this.openDefaultNote();
-            }, 500);
-
-            this.registerEvent(this.app.workspace.on('active-leaf-change', debounce((leaf) => {
-                if (leaf && leaf.view instanceof MarkdownView && leaf.view.file) {
-                    const fm = this.app.metadataCache.getFileCache(leaf.view.file)?.frontmatter;
-                    const uiMode = fm?.[this.settings.uiProperty];
-                    if (uiMode) {
-                        this.enforceUIModeForLeaf(leaf, uiMode);
-                    }
-                    this.checkNewlyCreatedFile(leaf.view.file);
-                }
-            }, 100)));
-        });
-
         this.addCommand({
             id: 'show-temporary-properties',
             name: 'Show Hidden Properties Temporarily',
@@ -251,10 +262,42 @@ module.exports = class StyleshVault extends Plugin {
             }
         });
 
-        this.updateScrollbarStyle(); 
+        this.updateScrollbarStyle();
 
         this.setupPropertyEditListeners();
     }
+
+    // ========== FORCE MODE FUNCTION ==========
+    checkForceModeForLeaf(leaf) {
+        if (!leaf || !(leaf.view instanceof MarkdownView) || !leaf.view.file) return;
+
+        const file = leaf.view.file;
+        const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
+        const uiMode = fm?.[this.settings.uiProperty]; // e.g., 'preview-force', 'edit-force', 'preview', 'edit'
+        if (!uiMode) return;
+
+        let targetMode = null;
+        if (uiMode === 'preview-force' || uiMode === 'preview') {
+            targetMode = 'preview';
+        } else if (uiMode === 'edit-force' || uiMode === 'edit') {
+            targetMode = 'source';
+        } else {
+            return;
+        }
+
+        const state = leaf.getViewState();
+        const currentMode = state.state?.mode;
+        if (currentMode !== targetMode) {
+            leaf.setViewState({
+                ...state,
+                state: {
+                    ...state.state,
+                    mode: targetMode
+                }
+            }).catch(err => console.error('Error enforcing force mode:', err));
+        }
+    }
+    // =========================================
 
     checkNewlyCreatedFile(file) {
         if (!file || !file.path || !this.settings.showPropertiesOnCreate) return false;
@@ -422,56 +465,56 @@ module.exports = class StyleshVault extends Plugin {
             new Notice('Temporary properties have been hidden');
         }
     }
+
     updateHiddenPropertiesCSS() {
-    let styleEl = document.getElementById('pp-hidden-props') || document.head.createEl('style', { id: 'pp-hidden-props' });
+        let styleEl = document.getElementById('pp-hidden-props') || document.head.createEl('style', { id: 'pp-hidden-props' });
 
-    const rules = [];
-    const currentFile = this.app.workspace.getActiveFile();
-    const currentFilePath = currentFile ? currentFile.path : null;
+        const rules = [];
+        const currentFile = this.app.workspace.getActiveFile();
+        const currentFilePath = currentFile ? currentFile.path : null;
 
-    const isNewlyCreated = currentFilePath ? this.checkNewlyCreatedFile(currentFile) : false;
-    const hasTemporaryVisible = currentFilePath && this.temporaryVisibleProps.has(currentFilePath);
+        const isNewlyCreated = currentFilePath ? this.checkNewlyCreatedFile(currentFile) : false;
+        const hasTemporaryVisible = currentFilePath && this.temporaryVisibleProps.has(currentFilePath);
 
-    this.settings.hiddenProperties.forEach(prop => {
-        let shouldShow = false;
+        this.settings.hiddenProperties.forEach(prop => {
+            let shouldShow = false;
 
-        if (isNewlyCreated) {
-            shouldShow = true;
-        }
-        else if (this.editingProperties.has(prop)) {
-            shouldShow = true;
-        }
-        else if (currentFilePath && 
-                this.temporaryVisibleProps.has(currentFilePath) && 
+            if (isNewlyCreated) {
+                shouldShow = true;
+            }
+            else if (this.editingProperties.has(prop)) {
+                shouldShow = true;
+            }
+            else if (currentFilePath &&
+                this.temporaryVisibleProps.has(currentFilePath) &&
                 this.temporaryVisibleProps.get(currentFilePath).props.has(prop)) {
-            shouldShow = true;
-        }
+                shouldShow = true;
+            }
 
-        if (shouldShow) {
-            rules.push(`
-                .metadata-property[data-property-key="${prop}"] { 
+            if (shouldShow) {
+                rules.push(`
+                .metadata-property[data-property-key="${prop}"] {
                     opacity: 1 !important;
                     display: block !important;
                 }
             `);
-        } else {
-            rules.push(`.metadata-property[data-property-key="${prop}"] { display: none !important; }`);
-        }
-    });
+            } else {
+                rules.push(`.metadata-property[data-property-key="${prop}"] { display: none !important; }`);
+            }
+        });
 
-    if (isNewlyCreated) {
-        rules.push(`
+        if (isNewlyCreated) {
+            rules.push(`
             .new-file-notice {
                 display: flex !important;
             }
         `);
+        }
+
+        styleEl.innerText = rules.join("\n");
+
+        this.toggleNewFileNotice(currentFile, isNewlyCreated);
     }
-
-    styleEl.innerText = rules.join("\n");
-
-    this.toggleNewFileNotice(currentFile, isNewlyCreated);
-}
-
 
     addShowFullPropertiesButtons() {
         const propertiesContainers = document.querySelectorAll('.metadata-container');
@@ -512,7 +555,7 @@ module.exports = class StyleshVault extends Plugin {
 
         const menu = new Menu();
 
-        menu.addItem(item => 
+        menu.addItem(item =>
             item
                 .setTitle(isHidden ? `Unhide property "${propertyKey}"` : `Hide property "${propertyKey}"`)
                 .setIcon(isHidden ? "eye" : "eye-off")
@@ -593,115 +636,6 @@ module.exports = class StyleshVault extends Plugin {
                 }
             }
         });
-    }
-
-    async handleViewMode(file) {
-        if (!file || !(file instanceof TFile)) return;
-
-        await new Promise(resolve => setTimeout(resolve, 50));
-
-        const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
-        const uiMode = fm?.[this.settings.uiProperty];
-        if (!uiMode) return;
-
-        this.app.workspace.iterateAllLeaves((leaf) => {
-            if (leaf.view instanceof MarkdownView && leaf.view.file && leaf.view.file.path === file.path) {
-                this.enforceUIModeForLeaf(leaf, uiMode);
-            }
-        });
-    }
-
-    async enforceUIModeForLeaf(leaf, uiMode) {
-        const state = leaf.getViewState();
-        const currentMode = state.state?.mode;
-
-        let targetMode = null;
-        let isForceMode = false;
-
-        if (uiMode === 'preview-force') {
-            targetMode = 'preview';
-            isForceMode = true;
-        } else if (uiMode === 'edit-force') {
-            targetMode = 'source';
-            isForceMode = true;
-        } else if (uiMode === 'preview') {
-            targetMode = 'preview';
-        } else if (uiMode === 'edit') {
-            targetMode = 'source';
-        }
-
-        if (!targetMode || currentMode === targetMode) return;
-
-        await leaf.setViewState({
-            ...state,
-            state: {
-                ...state.state,
-                mode: targetMode
-            }
-        });
-
-        if (isForceMode) {
-            this.setupForceModeWatcher(leaf, uiMode);
-        }
-    }
-
-    setupForceModeWatcher(leaf, uiMode) {
-        const leafId = this.getLeafId(leaf);
-
-        if (this.forceModeWatchers.has(leafId)) {
-            clearInterval(this.forceModeWatchers.get(leafId).interval);
-            this.forceModeWatchers.delete(leafId);
-        }
-
-        let targetMode;
-        if (uiMode === 'preview-force') {
-            targetMode = 'preview';
-        } else if (uiMode === 'edit-force') {
-            targetMode = 'source';
-        } else {
-            return;
-        }
-
-        const watcher = {
-            interval: setInterval(() => {
-                if (!leaf.view || !(leaf.view instanceof MarkdownView)) {
-                    this.removeForceModeWatcher(leafId);
-                    return;
-                }
-
-                const state = leaf.getViewState();
-                const currentMode = state.state?.mode;
-
-                if (currentMode !== targetMode) {
-                    console.log(`Force mode: Reverting from ${currentMode} to ${targetMode}`);
-
-                    leaf.setViewState({
-                        ...state,
-                        state: {
-                            ...state.state,
-                            mode: targetMode
-                        }
-                    }).catch(err => {
-                        console.error('Error reverting force mode:', err);
-                    });
-                }
-            }, 100),
-            targetMode: targetMode
-        };
-
-        this.forceModeWatchers.set(leafId, watcher);
-    }
-
-    getLeafId(leaf) {
-        return leaf.id || leaf.view?.file?.path || Math.random().toString(36).substr(2, 9);
-    }
-
-    removeForceModeWatcher(leafId) {
-        if (this.forceModeWatchers.has(leafId)) {
-            const watcher = this.forceModeWatchers.get(leafId);
-            clearInterval(watcher.interval);
-            this.forceModeWatchers.delete(leafId);
-        }
     }
 
     cleanupDuplicates(file) {
@@ -789,7 +723,7 @@ module.exports = class StyleshVault extends Plugin {
         this.pendingFetches.clear();
         this.renderedIcons.clear();
         this.iconRenderPromises.clear();
-        this.renderedFiles.clear(); // NEW: Clear file cache
+        this.renderedFiles.clear();
         await this.saveCache();
         this.debouncedUpdate();
     }
@@ -916,17 +850,14 @@ module.exports = class StyleshVault extends Plugin {
         contentEl.classList.add("has-banner");
     }
 
-    // NEW: Ensure icons are visible without re-rendering
     ensureIconsVisible(containers, contentEl, fm, sourcePath) {
         const iconValue = fm?.[this.settings.iconProperty];
 
         if (!iconValue) return;
 
-        // Check if icons exist in both views
         if (this.settings.iconInTitle) {
             const titleIcon = contentEl.querySelector(".pp-title-icon");
             if (!titleIcon && iconValue) {
-                // Icon missing in this view, render it
                 this.renderIcon(contentEl, containers, fm, sourcePath);
             } else if (titleIcon && titleIcon.getAttribute("data-icon") !== iconValue) {
                 this.updateIconContent(titleIcon, iconValue, sourcePath);
@@ -961,19 +892,16 @@ module.exports = class StyleshVault extends Plugin {
 
             contentEl.querySelectorAll(".markdown-embed .banner-image, .markdown-embed .icon-wrapper, .markdown-embed .pp-title-icon").forEach(el => el.remove());
 
-            // Check if this file already has rendered icons
             const iconValue = fm?.[this.settings.iconProperty] || 'no-icon';
             const fileKey = `${file.path}-${iconValue}`;
 
             if (!this.renderedFiles.has(fileKey)) {
-                // First time rendering this file (or icon changed)
                 await this.renderBanner(contentEl, containers, fm, file.path);
                 await this.renderIcon(contentEl, containers, fm, file.path);
                 this.renderedFiles.add(fileKey);
                 this.currentRenderedFile = fileKey;
             } else {
-                // File already has icons rendered, just ensure they're visible in both views
-                await this.renderBanner(contentEl, containers, fm, file.path); // Banner still needs to be handled (but it's already efficient)
+                await this.renderBanner(contentEl, containers, fm, file.path);
                 this.ensureIconsVisible(containers, contentEl, fm, file.path);
             }
         } catch (error) {
@@ -1002,11 +930,6 @@ module.exports = class StyleshVault extends Plugin {
 
         this.iconRenderTimeouts.forEach(timeout => clearTimeout(timeout));
         this.iconRenderTimeouts.clear();
-
-        this.forceModeWatchers.forEach((watcher, leafId) => {
-            clearInterval(watcher.interval);
-        });
-        this.forceModeWatchers.clear();
 
         if (this.newFileTimer) {
             clearInterval(this.newFileTimer);
@@ -1046,7 +969,7 @@ module.exports = class StyleshVault extends Plugin {
         this.renderedIcons.clear();
         this.iconRenderPromises.clear();
         this.pendingIconRenders.clear();
-        this.renderedFiles.clear(); // NEW: Clear file cache
+        this.renderedFiles.clear();
     }
 
     updateAllViews() {
@@ -1133,13 +1056,11 @@ module.exports = class StyleshVault extends Plugin {
 
         const renderKey = `${sourcePath}-${iconValue}`;
 
-        // NEW: Check if icons already exist before rendering
-        const existingIcons = this.settings.iconInTitle 
+        const existingIcons = this.settings.iconInTitle
             ? contentEl.querySelectorAll(".pp-title-icon").length
             : containers.some(c => c.querySelector(":scope > .icon-wrapper"));
 
         if (existingIcons > 0) {
-            // Icons already exist, just ensure they have the right icon value
             if (this.settings.iconInTitle) {
                 contentEl.querySelectorAll(".pp-title-icon").forEach(iconEl => {
                     if (iconEl.getAttribute("data-icon") !== iconValue) {
@@ -1224,7 +1145,6 @@ module.exports = class StyleshVault extends Plugin {
         }
     }
 
-    // NEW: Update icon content without full re-render
     async updateIconContent(container, iconValue, sourcePath) {
         container.setAttribute("data-icon", iconValue);
         container.empty();
@@ -1256,7 +1176,7 @@ module.exports = class StyleshVault extends Plugin {
             if (formattedSrc.startsWith("http")) {
                 imgSrc = await Promise.race([
                     this.resolveLink(formattedSrc, sourcePath),
-                    new Promise((_, reject) => 
+                    new Promise((_, reject) =>
                         setTimeout(() => reject(new Error("Image load timeout")), 5000)
                     )
                 ]);
@@ -1294,23 +1214,24 @@ module.exports = class StyleshVault extends Plugin {
     }
 
     hideBacklinksOnStartup() {
-    setTimeout(() => {
-        this.closeBacklinksLeaf();
-    }, 1000);
-
-    this.registerEvent(
-        this.app.workspace.on('layout-change', () => {
+        setTimeout(() => {
             this.closeBacklinksLeaf();
-        })
-    );
+        }, 1000);
+
+        this.registerEvent(
+            this.app.workspace.on('layout-change', () => {
+                this.closeBacklinksLeaf();
+            })
+        );
     }
+
     closeBacklinksLeaf() {
-    this.app.workspace.iterateAllLeaves((leaf) => {
-        if (leaf.view?.getViewType?.() === 'backlink') {
-            leaf.detach();
-            console.log('Closed backlinks leaf');
-        }
-    });
+        this.app.workspace.iterateAllLeaves((leaf) => {
+            if (leaf.view?.getViewType?.() === 'backlink') {
+                leaf.detach();
+                console.log('Closed backlinks leaf');
+            }
+        });
     }
 
     updateFileExplorer() {
@@ -1327,9 +1248,9 @@ module.exports = class StyleshVault extends Plugin {
 
                 if (file instanceof TFile) {
                     iconValue = this.app.metadataCache.getFileCache(file)?.frontmatter?.[this.settings.iconProperty];
-                } else if (file instanceof TFolder) { 
-                    iconValue = this.settings.folderIcons[file.path] || 'lucide-folder'; 
-                    isFolder = true; 
+                } else if (file instanceof TFolder) {
+                    iconValue = this.settings.folderIcons[file.path] || 'lucide-folder';
+                    isFolder = true;
                 }
 
                 this.renderFileExplorerIcon(item, iconValue, path, isFolder);
@@ -1379,7 +1300,7 @@ module.exports = class StyleshVault extends Plugin {
                     if (formattedSrc.startsWith("http")) {
                         imgSrc = await Promise.race([
                             this.resolveLink(formattedSrc, sourcePath),
-                            new Promise((_, reject) => 
+                            new Promise((_, reject) =>
                                 setTimeout(() => reject(new Error("Image load timeout")), 5000)
                             )
                         ]);
@@ -1450,9 +1371,9 @@ module.exports = class StyleshVault extends Plugin {
     renderFileExplorerIcon(itemEl, iconValue, sourcePath, isFolder) {
         let iconEl = itemEl.querySelector(".pp-file-icon");
 
-        if (!iconValue && !isFolder) { 
-            if (iconEl) iconEl.remove(); 
-            return; 
+        if (!iconValue && !isFolder) {
+            if (iconEl) iconEl.remove();
+            return;
         }
 
         if (isFolder && !iconValue) {
@@ -1479,7 +1400,7 @@ module.exports = class StyleshVault extends Plugin {
         return link.replace(/^!?\[\[|\]\]$/g, "");
     }
 
-    isEmoji(str) { 
+    isEmoji(str) {
         const emojiRegex = /^\p{Emoji}$/u;
         return emojiRegex.test(str) && !str.includes(".") && !str.includes("/");
     }
@@ -1561,39 +1482,39 @@ module.exports = class StyleshVault extends Plugin {
         }
     }
 
-    async loadSettings() { 
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData()); 
-    if (!this.settings.temporaryHiddenProperties) {
-        this.settings.temporaryHiddenProperties = [];
+    async loadSettings() {
+        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+        if (!this.settings.temporaryHiddenProperties) {
+            this.settings.temporaryHiddenProperties = [];
+        }
+        if (!this.settings.temporaryViewTimeout) {
+            this.settings.temporaryViewTimeout = 60;
+        }
+        if (this.settings.showPropertiesOnCreate === undefined) {
+            this.settings.showPropertiesOnCreate = true;
+        }
+        if (!this.settings.showPropertiesOnCreateDuration) {
+            this.settings.showPropertiesOnCreateDuration = 60;
+        }
     }
-    if (!this.settings.temporaryViewTimeout) {
-        this.settings.temporaryViewTimeout = 60;
-    }
-    if (this.settings.showPropertiesOnCreate === undefined) {
-        this.settings.showPropertiesOnCreate = true;
-    }
-    if (!this.settings.showPropertiesOnCreateDuration) {
-        this.settings.showPropertiesOnCreateDuration = 60;
-    }
-  }
 
-    async saveSettings() { 
-        await this.saveData(this.settings); 
-        this.updateCssVariables(); 
-        this.updateHiddenPropertiesCSS(); 
-        this.debouncedUpdate(); 
+    async saveSettings() {
+        await this.saveData(this.settings);
+        this.updateCssVariables();
+        this.updateHiddenPropertiesCSS();
+        this.debouncedUpdate();
     }
 };
 
 class IconSuggestModal extends SuggestModal {
-    constructor(app, plugin, targetItem) { 
-        super(app); 
-        this.plugin = plugin; 
-        this.targetItem = targetItem; 
-        this.iconIds = getIconIds(); 
+    constructor(app, plugin, targetItem) {
+        super(app);
+        this.plugin = plugin;
+        this.targetItem = targetItem;
+        this.iconIds = getIconIds();
     }
 
-    getSuggestions(query) { 
+    getSuggestions(query) {
         const suggestions = this.iconIds.filter(icon => icon.toLowerCase().includes(query.toLowerCase()));
 
         if (query && !suggestions.includes(query) && query.length > 0) {
@@ -1640,31 +1561,30 @@ class IconSuggestModal extends SuggestModal {
         }
 
         if (this.targetItem instanceof TFile) {
-            this.app.fileManager.processFrontMatter(this.targetItem, (fm) => { 
-                fm[this.plugin.settings.iconProperty] = iconValue; 
+            this.app.fileManager.processFrontMatter(this.targetItem, (fm) => {
+                fm[this.plugin.settings.iconProperty] = iconValue;
             });
-            // Clear cache for this file so it re-renders with new icon
             const oldKeys = Array.from(this.plugin.renderedFiles).filter(key => key.startsWith(this.targetItem.path));
             oldKeys.forEach(key => this.plugin.renderedFiles.delete(key));
-        } else if (this.targetItem instanceof TFolder) { 
-            this.plugin.settings.folderIcons[this.targetItem.path] = iconValue; 
-            this.plugin.saveSettings(); 
+        } else if (this.targetItem instanceof TFolder) {
+            this.plugin.settings.folderIcons[this.targetItem.path] = iconValue;
+            this.plugin.saveSettings();
         }
     }
 }
 
 class BannerSuggestModal extends SuggestModal {
-    constructor(app, plugin, targetFile) { 
-        super(app); 
-        this.plugin = plugin; 
-        this.targetFile = targetFile; 
+    constructor(app, plugin, targetFile) {
+        super(app);
+        this.plugin = plugin;
+        this.targetFile = targetFile;
     }
 
     getSuggestions(query) {
         const files = this.app.vault.getFiles();
         const ext = ["png", "jpg", "jpeg", "gif", "bmp", "svg", "webp"];
 
-        const fileSuggestions = files.filter(f => 
+        const fileSuggestions = files.filter(f =>
             ext.includes(f.extension) && f.path.toLowerCase().includes(query.toLowerCase())
         );
 
@@ -1711,8 +1631,8 @@ class BannerSuggestModal extends SuggestModal {
             bannerValue = `[[${item.path}]]`;
         }
 
-        this.app.fileManager.processFrontMatter(this.targetFile, (fm) => { 
-            fm[this.plugin.settings.bannerProperty] = bannerValue; 
+        this.app.fileManager.processFrontMatter(this.targetFile, (fm) => {
+            fm[this.plugin.settings.bannerProperty] = bannerValue;
         });
     }
 }
@@ -1737,7 +1657,7 @@ class BannerPositionModal extends Modal {
             attr: { min: "0", max: "100", value: String(currentPos) }
         });
 
-        const valueDisplay = sliderContainer.createEl("span", { 
+        const valueDisplay = sliderContainer.createEl("span", {
             text: `${currentPos}%`,
             cls: "position-value"
         });
@@ -1793,17 +1713,17 @@ class DefaultNoteSuggestModal extends SuggestModal {
         }
 
         const queryLower = query.toLowerCase();
-        return files.filter(file => 
-            file.name.toLowerCase().includes(queryLower) || 
+        return files.filter(file =>
+            file.name.toLowerCase().includes(queryLower) ||
             file.path.toLowerCase().includes(queryLower)
         ).slice(0, 20);
     }
 
     renderSuggestion(file, el) {
         el.createDiv({ text: file.name });
-        el.createDiv({ 
-            text: file.path, 
-            cls: "pp-suggestion-sub" 
+        el.createDiv({
+            text: file.path,
+            cls: "pp-suggestion-sub"
         });
     }
 
@@ -1817,9 +1737,9 @@ class DefaultNoteSuggestModal extends SuggestModal {
 }
 
 class StyleshVaultSettingTab extends PluginSettingTab {
-    constructor(app, plugin) { 
-        super(app, plugin); 
-        this.plugin = plugin; 
+    constructor(app, plugin) {
+        super(app, plugin);
+        this.plugin = plugin;
     }
 
     display() {
@@ -1837,16 +1757,16 @@ class StyleshVaultSettingTab extends PluginSettingTab {
         new Setting(containerEl)
             .setName("Enable Image Cache")
             .setDesc("Cache remote images locally for offline access")
-            .addToggle(t => t.setValue(this.plugin.settings.enableCache).onChange(async v => { 
-                this.plugin.settings.enableCache = v; 
-                await this.plugin.saveSettings(); 
+            .addToggle(t => t.setValue(this.plugin.settings.enableCache).onChange(async v => {
+                this.plugin.settings.enableCache = v;
+                await this.plugin.saveSettings();
             }));
         new Setting(containerEl)
             .setName("Cache Expiry Days")
             .setDesc("How many days to keep cached images")
-            .addText(t => t.setValue(String(this.plugin.settings.cacheExpiryDays)).onChange(async v => { 
-                this.plugin.settings.cacheExpiryDays = Number(v); 
-                await this.plugin.saveSettings(); 
+            .addText(t => t.setValue(String(this.plugin.settings.cacheExpiryDays)).onChange(async v => {
+                this.plugin.settings.cacheExpiryDays = Number(v);
+                await this.plugin.saveSettings();
             }));
 
         containerEl.createEl("h2", { text: "UI Mode" });
@@ -1896,7 +1816,7 @@ class StyleshVaultSettingTab extends PluginSettingTab {
                 .onClick(async () => {
                     this.plugin.settings.defaultNotePath = "";
                     await this.plugin.saveSettings();
-                    defaultNoteSetting.settingEl.parentElement.querySelector('.setting-item-description').textContent = 
+                    defaultNoteSetting.settingEl.parentElement.querySelector('.setting-item-description').textContent =
                         "Note that opens automatically when Obsidian starts (Current: None)";
                     new Notice("Default note cleared");
                 }));
@@ -1947,12 +1867,12 @@ class StyleshVaultSettingTab extends PluginSettingTab {
         const dropdownHeader = hiddenPropsContainer.createDiv({ cls: "hidden-props-dropdown-header" });
         dropdownHeader.createEl("h3", { text: "Hidden Properties" });
 
-        const countSpan = dropdownHeader.createEl("span", { 
+        const countSpan = dropdownHeader.createEl("span", {
             cls: "hidden-props-count",
             text: `(${this.plugin.settings.hiddenProperties.length})`
         });
 
-        const toggleIcon = dropdownHeader.createEl("span", { 
+        const toggleIcon = dropdownHeader.createEl("span", {
             cls: "hidden-props-toggle",
             text: "▼"
         });
@@ -1964,17 +1884,17 @@ class StyleshVaultSettingTab extends PluginSettingTab {
             hiddenList.empty();
 
             if (this.plugin.settings.hiddenProperties.length === 0) {
-                hiddenList.createEl("div", { 
-                    text: "No hidden properties", 
-                    cls: "hidden-props-empty" 
+                hiddenList.createEl("div", {
+                    text: "No hidden properties",
+                    cls: "hidden-props-empty"
                 });
             } else {
                 this.plugin.settings.hiddenProperties.forEach(prop => {
                     const propItem = hiddenList.createDiv({ cls: "hidden-prop-item" });
 
-                    propItem.createEl("span", { 
-                        text: prop, 
-                        cls: "hidden-prop-name" 
+                    propItem.createEl("span", {
+                        text: prop,
+                        cls: "hidden-prop-name"
                     });
 
                     const buttonContainer = propItem.createDiv({ cls: "hidden-prop-buttons" });
@@ -1993,8 +1913,8 @@ class StyleshVaultSettingTab extends PluginSettingTab {
                         showInTempBtn.textContent = "T";
                     }
 
-                    const removeBtn = buttonContainer.createEl("button", { 
-                        cls: "hidden-prop-remove" 
+                    const removeBtn = buttonContainer.createEl("button", {
+                        cls: "hidden-prop-remove"
                     });
                     removeBtn.innerHTML = "×";
                     removeBtn.title = "Unhide property permanently";

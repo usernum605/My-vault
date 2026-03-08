@@ -13,7 +13,7 @@ The Topic:
   - Learning
 ---
 ##### فيديوهات سوف اشاهدها
-- ![](https://youtu.be/zBsLsGFufdg?si=p3aiqS158E-Jayel)
+- ![](https://youtu.be/zBsLsGFufdg)
 - ![](
 ##### تذكر
 
